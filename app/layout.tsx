@@ -13,14 +13,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Prologue / 第一页",
-  description: "AI job-search workspace.",
+  title: "Prologue / 第一页 - AI Job-Search Workspace",
+  description:
+    "Parse resumes, analyze job descriptions, rewrite bullets, track applications, and prepare for interviews in one focused workspace.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>{children}</body>
+    <html lang="en" className="bg-background">
+      <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased`}>
+        {children}
+      </body>
     </html>
   );
 }

@@ -56,3 +56,24 @@ Not included:
 - OpenAI API calls
 - upload flow
 - dashboard logic
+
+## 2026-04-25 — v0 homepage import
+
+Imported the v0-generated homepage prototype as the public landing page.
+
+Included:
+
+- Static landing page composition in `app/page.tsx`
+- Landing components under `components/landing/`
+- The single required shadcn-style `Button` component
+- Tailwind v4 theme tokens for the homepage visual system
+- Homepage metadata update without v0 generator metadata
+
+Not included:
+
+- auth route implementation
+- dashboard routes
+- database logic
+- OpenAI API calls
+- Vercel analytics
+- v0 generated config files
