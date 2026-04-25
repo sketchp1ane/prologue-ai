@@ -1,0 +1,7 @@
+model = "gpt-5.4-mini"
+approval_policy = "never"
+sandbox_mode = "read-only"
+
+[tools]
+web_search = false
+view_image = true

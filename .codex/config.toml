@@ -1,0 +1,58 @@
+# Project-scoped Codex configuration for Prologue.
+# Codex loads project config only after the project is trusted.
+# If gpt-5.5 is unavailable in your account, switch the model to gpt-5.4.
+
+model = "gpt-5.5"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+project_doc_max_bytes = 65536
+project_doc_fallback_filenames = ["CODEX.md", "CONTRIBUTING.md"]
+
+[tools]
+view_image = true
+web_search = { context_size = "medium", allowed_domains = ["developers.openai.com", "platform.openai.com", "nextjs.org", "www.prisma.io", "clerk.com", "vercel.com"] }
+
+[mcp_servers.openaiDeveloperDocs]
+url = "https://developers.openai.com/mcp"
+required = true
+tool_timeout_sec = 60
+
+# Optional. Enable if you want framework/library docs lookup.
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp"]
+required = false
+startup_timeout_sec = 20
+tool_timeout_sec = 60
+
+[[skills.config]]
+path = ".codex/skills/openai-responses-api"
+enabled = true
+
+[[skills.config]]
+path = ".codex/skills/vertical-slice-builder"
+enabled = true
+
+[[skills.config]]
+path = ".codex/skills/prisma-data-model"
+enabled = true
+
+[agents.frontend_reviewer]
+description = "Review Next.js, React, Tailwind, shadcn/ui, accessibility, loading states, and responsive UI."
+config_file = ".codex/agents/frontend-reviewer.toml"
+
+[agents.backend_reviewer]
+description = "Review server actions, API routes, Prisma usage, auth boundaries, rate limiting, and persistence."
+config_file = ".codex/agents/backend-reviewer.toml"
+
+[agents.ai_reviewer]
+description = "Review OpenAI API integration, schemas, prompts, streaming, cost controls, and AI fallbacks."
+config_file = ".codex/agents/ai-reviewer.toml"
+
+[agents.security_reviewer]
+description = "Review privacy, secret handling, authz, prompt-injection risks, unsafe logging, and destructive operations."
+config_file = ".codex/agents/security-reviewer.toml"
+
+[agents]
+max_threads = 6
+max_depth = 1

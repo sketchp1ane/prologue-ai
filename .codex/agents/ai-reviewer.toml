@@ -1,0 +1,7 @@
+model = "gpt-5.4-mini"
+approval_policy = "never"
+sandbox_mode = "read-only"
+
+[tools]
+web_search = { context_size = "medium", allowed_domains = ["developers.openai.com", "platform.openai.com"] }
+view_image = false

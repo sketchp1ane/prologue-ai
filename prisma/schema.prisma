@@ -1,0 +1,12 @@
+// Prisma schema placeholder for Prologue / 第一页.
+// Do not add product models until the data-model task starts.
+// See docs/03_DATA_MODEL.md and docs/PRD.md before editing.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
