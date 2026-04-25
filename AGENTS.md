@@ -167,6 +167,8 @@ A feature is complete only when:
 
 ## Commit style
 
+Follow `docs/13_GIT_WORKFLOW.md` for branch workflow, pull requests, and commit message rules.
+
 Use conventional commits:
 
 - `chore: initialize project`

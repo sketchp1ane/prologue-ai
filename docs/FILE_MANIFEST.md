@@ -39,6 +39,7 @@
 - `docs/10_DESIGN_SYSTEM.md`
 - `docs/11_CURRENT_STATE.md`
 - `docs/12_V0_HANDOFF.md`
+- `docs/13_GIT_WORKFLOW.md`
 - `docs/CODEX_INIT_SCHEME.md`
 - `docs/PLAN_3W.md`
 - `docs/PRD.md`

@@ -41,3 +41,4 @@ pnpm-debug.log*
 
 # generated
 /prisma/migrations/dev-temp-*
+*.tsbuildinfo
