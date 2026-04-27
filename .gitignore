@@ -42,3 +42,6 @@ pnpm-debug.log*
 # generated
 /prisma/migrations/dev-temp-*
 *.tsbuildinfo
+
+# clerk configuration (can include secrets)
+/.clerk/
