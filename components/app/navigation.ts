@@ -1,12 +1,23 @@
 import type { LucideIcon } from "lucide-react";
-import { Briefcase, FileText, LayoutDashboard, MessageSquare, Settings } from "lucide-react";
+import {
+  BarChart3,
+  Briefcase,
+  FileSearch,
+  FileText,
+  LayoutDashboard,
+  MessageSquare,
+  Settings,
+  Users,
+} from "lucide-react";
 
 export type AppNavigationItem = {
   label: string;
   href: string;
   icon: LucideIcon;
+  badge?: string;
 };
 
+// Single flat list - cleaner, less visual hierarchy
 export const appNavigationItems: AppNavigationItem[] = [
   {
     label: "Dashboard",
@@ -14,12 +25,23 @@ export const appNavigationItems: AppNavigationItem[] = [
     icon: LayoutDashboard,
   },
   {
+    label: "JD Extract",
+    href: "/jd-extract",
+    icon: FileSearch,
+    badge: "New",
+  },
+  {
     label: "Resumes",
     href: "/resumes",
     icon: FileText,
   },
   {
-    label: "Applications",
+    label: "Candidates",
+    href: "/candidates",
+    icon: Users,
+  },
+  {
+    label: "Job Posts",
     href: "/applications",
     icon: Briefcase,
   },
@@ -28,6 +50,15 @@ export const appNavigationItems: AppNavigationItem[] = [
     href: "/interviews",
     icon: MessageSquare,
   },
+  {
+    label: "Analytics",
+    href: "/analytics",
+    icon: BarChart3,
+  },
+];
+
+// Bottom nav items (settings, etc.)
+export const appBottomNavItems: AppNavigationItem[] = [
   {
     label: "Settings",
     href: "/settings",

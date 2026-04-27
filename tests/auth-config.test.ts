@@ -18,7 +18,17 @@ describe("Clerk auth configuration", () => {
   it("protects the private workspace routes", () => {
     const proxy = readProjectFile("proxy.ts");
 
-    for (const route of ["/dashboard", "/resumes", "/applications", "/interviews", "/settings"]) {
+    for (const route of [
+      "/analytics",
+      "/dashboard",
+      "/billing",
+      "/candidates",
+      "/jd-extract",
+      "/resumes",
+      "/applications",
+      "/interviews",
+      "/settings",
+    ]) {
       expect(proxy).toContain(`${route}(.*)`);
     }
   });

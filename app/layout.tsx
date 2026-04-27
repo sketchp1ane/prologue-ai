@@ -19,17 +19,25 @@ export const metadata: Metadata = {
     "Parse resumes, analyze job descriptions, rewrite bullets, track applications, and prepare for interviews in one focused workspace.",
 };
 
+const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <ClerkProvider>
-      <html lang="en" className="bg-background">
-        <body
-          suppressHydrationWarning
-          className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased`}
-        >
-          {children}
-        </body>
-      </html>
+  const body = clerkPublishableKey ? (
+    <ClerkProvider publishableKey={clerkPublishableKey}>
+      {children}
     </ClerkProvider>
+  ) : (
+    children
+  );
+
+  return (
+    <html lang="en" className="bg-background">
+      <body
+        suppressHydrationWarning
+        className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased`}
+      >
+        {body}
+      </body>
+    </html>
   );
 }
