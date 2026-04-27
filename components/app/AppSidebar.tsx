@@ -1,35 +1,49 @@
 "use client";
 
-import { ChevronDown, Menu, Plus, Sparkles, X } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, Menu, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { createContext, useContext, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/src/lib/utils";
 
-import { appNavigationGroups, appNavigationItems } from "./navigation";
+import { appBottomNavItems, appNavigationItems } from "./navigation";
+
+// Sidebar context for collapse state
+type SidebarContextType = {
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
+};
+
+const SidebarContext = createContext<SidebarContextType>({
+  collapsed: false,
+  setCollapsed: () => {},
+});
+
+export const useSidebar = () => useContext(SidebarContext);
 
 export function AppSidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <>
-      {/* Mobile Menu Button - shown in AppTopbar area on mobile */}
+    <SidebarContext.Provider value={{ collapsed, setCollapsed }}>
+      {/* Mobile Menu Button */}
       <button
         type="button"
         onClick={() => setMobileOpen(true)}
-        className="fixed left-4 top-4 z-40 flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card shadow-sm lg:hidden"
-        aria-label="Open navigation menu"
+        className="fixed left-4 top-4 z-40 flex h-10 w-10 items-center justify-center rounded-xl bg-card shadow-sm ring-1 ring-border lg:hidden"
+        aria-label="Open menu"
       >
         <Menu className="h-5 w-5 text-foreground" />
       </button>
 
-      {/* Mobile Drawer Overlay */}
+      {/* Mobile Overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-50 bg-foreground/20 backdrop-blur-sm lg:hidden"
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />
@@ -38,207 +52,315 @@ export function AppSidebar() {
       {/* Mobile Drawer */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 transform border-r border-border bg-card transition-transform duration-300 ease-in-out lg:hidden",
+          "fixed inset-y-0 left-0 z-50 w-72 bg-card shadow-xl transition-transform duration-200 ease-out lg:hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex h-full flex-col">
-          <div className="flex h-16 items-center justify-between border-b border-border px-5">
-            <Link
-              href="/"
-              className="flex items-baseline gap-2"
-              aria-label="Prologue home"
-              onClick={() => setMobileOpen(false)}
-            >
-              <span className="text-lg font-semibold tracking-tight text-foreground">
-                Prologue
-              </span>
-              <span className="text-sm text-muted-foreground">/ 第一页</span>
-            </Link>
-            <button
-              type="button"
-              onClick={() => setMobileOpen(false)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              aria-label="Close navigation menu"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+        <MobileSidebarContent
+          pathname={pathname}
+          onClose={() => setMobileOpen(false)}
+        />
+      </aside>
 
-          {/* Mobile New Action Button */}
-          <div className="border-b border-border p-4">
-            <Button className="w-full gap-2 rounded-xl" size="lg">
-              <Plus className="h-4 w-4" />
-              New Application
-            </Button>
-          </div>
+      {/* Desktop Sidebar */}
+      <aside
+        className={cn(
+          "sticky top-0 hidden h-screen flex-col bg-card transition-[width] duration-200 ease-out lg:flex",
+          collapsed ? "w-[72px]" : "w-60"
+        )}
+      >
+        <DesktopSidebarContent
+          pathname={pathname}
+          collapsed={collapsed}
+          onToggle={() => setCollapsed(!collapsed)}
+        />
+      </aside>
+    </SidebarContext.Provider>
+  );
+}
 
-          {/* Mobile Navigation */}
-          <nav className="flex-1 overflow-y-auto p-3">
-            {appNavigationItems.map((item) => {
-              const isActive =
-                pathname === item.href || pathname.startsWith(`${item.href}/`);
+function MobileSidebarContent({
+  pathname,
+  onClose,
+}: {
+  pathname: string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="flex h-full flex-col">
+      {/* Header */}
+      <div className="flex h-14 items-center justify-between px-4">
+        <Link
+          href="/"
+          className="flex items-baseline gap-1.5"
+          onClick={onClose}
+        >
+          <span className="text-base font-semibold text-foreground">
+            Prologue
+          </span>
+          <span className="text-xs text-muted-foreground">/ 第一页</span>
+        </Link>
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
+          aria-label="Close menu"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
 
-              return (
+      {/* New Action */}
+      <div className="px-3 pb-2">
+        <Button className="w-full gap-2 rounded-xl" size="default">
+          <Plus className="h-4 w-4" />
+          New Application
+        </Button>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-3 py-2">
+        <ul className="space-y-1">
+          {appNavigationItems.map((item) => {
+            const isActive =
+              pathname === item.href || pathname.startsWith(`${item.href}/`);
+            return (
+              <li key={item.href}>
                 <Link
-                  key={item.href}
                   href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  aria-current={isActive ? "page" : undefined}
+                  onClick={onClose}
                   className={cn(
-                    "mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                     isActive
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-foreground text-background"
                       : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                   )}
                 >
-                  <item.icon className="h-4 w-4" aria-hidden="true" />
-                  <span>{item.label}</span>
+                  <item.icon className="h-[18px] w-[18px] shrink-0" />
+                  <span className="flex-1">{item.label}</span>
                   {item.badge && (
-                    <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                    <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-primary">
                       {item.badge}
                     </span>
                   )}
                 </Link>
-              );
-            })}
-          </nav>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
 
-          {/* Mobile Upgrade CTA */}
-          <div className="border-t border-border p-4">
-            <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-              <div className="mb-2 flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium text-foreground">
-                  Upgrade to Pro
-                </span>
-              </div>
-              <p className="mb-3 text-xs text-muted-foreground">
-                Unlock unlimited AI rewrites and advanced analytics.
-              </p>
-              <Button size="sm" className="w-full rounded-lg">
-                Upgrade
-              </Button>
-            </div>
-          </div>
-        </div>
-      </aside>
+      {/* Bottom Items */}
+      <div className="px-3 pb-4">
+        <ul className="space-y-1">
+          {appBottomNavItems.map((item) => {
+            const isActive =
+              pathname === item.href || pathname.startsWith(`${item.href}/`);
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  onClick={onClose}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  )}
+                >
+                  <item.icon className="h-[18px] w-[18px] shrink-0" />
+                  <span>{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </div>
+  );
+}
 
-      {/* Desktop Sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r border-border bg-card lg:flex">
-        {/* Logo */}
-        <div className="flex h-16 items-center border-b border-border px-5">
+function DesktopSidebarContent({
+  pathname,
+  collapsed,
+  onToggle,
+}: {
+  pathname: string;
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="flex h-full flex-col">
+      {/* Header */}
+      <div
+        className={cn(
+          "flex h-14 items-center",
+          collapsed ? "justify-center px-2" : "justify-between px-4"
+        )}
+      >
+        <Link
+          href="/"
+          className={cn(
+            "flex items-baseline gap-1.5 transition-opacity",
+            collapsed && "sr-only"
+          )}
+        >
+          <span className="text-base font-semibold text-foreground">
+            Prologue
+          </span>
+          <span className="text-xs text-muted-foreground">/ 第一页</span>
+        </Link>
+        {collapsed && (
           <Link
             href="/"
-            className="flex items-baseline gap-2"
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-foreground text-background"
             aria-label="Prologue home"
           >
-            <span className="text-lg font-semibold tracking-tight text-foreground">
-              Prologue
-            </span>
-            <span className="text-sm text-muted-foreground">/ 第一页</span>
+            <span className="text-sm font-bold">P</span>
           </Link>
-        </div>
+        )}
+        <button
+          type="button"
+          onClick={onToggle}
+          className={cn(
+            "flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground",
+            collapsed && "hidden"
+          )}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          <ChevronsLeft className="h-4 w-4" />
+        </button>
+      </div>
 
-        {/* Workspace Switcher */}
-        <div className="border-b border-border p-3">
+      {/* New Action */}
+      <div className={cn("px-3 pb-2", collapsed && "px-2")}>
+        {collapsed ? (
           <button
             type="button"
-            className="flex w-full items-center gap-3 rounded-xl border border-border bg-secondary/30 px-3 py-2.5 text-left transition-colors hover:bg-secondary/50"
+            className="flex h-10 w-full items-center justify-center rounded-xl bg-foreground text-background transition-colors hover:bg-foreground/90"
+            aria-label="New Application"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-              <span className="text-sm font-semibold text-primary">P</span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-foreground">
-                Personal Workspace
-              </p>
-              <p className="text-xs text-muted-foreground">Free Plan</p>
-            </div>
-            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <Plus className="h-4 w-4" />
           </button>
-        </div>
-
-        {/* New Action Button */}
-        <div className="p-3">
+        ) : (
           <Button className="w-full gap-2 rounded-xl" size="default">
             <Plus className="h-4 w-4" />
             New Application
           </Button>
-        </div>
+        )}
+      </div>
 
-        {/* Navigation Groups */}
-        <nav
-          aria-label="Workspace navigation"
-          className="flex-1 overflow-y-auto px-3 pb-3"
-        >
-          {appNavigationGroups.map((group, groupIndex) => (
-            <div key={group.label || groupIndex} className="mb-4">
-              {group.label && (
-                <p className="mb-2 px-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  {group.label}
-                </p>
-              )}
-              <div className="space-y-1">
-                {group.items.map((item) => {
-                  const isActive =
-                    pathname === item.href ||
-                    pathname.startsWith(`${item.href}/`);
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-3 py-2" aria-label="Main">
+        <ul className="space-y-1">
+          {appNavigationItems.map((item) => {
+            const isActive =
+              pathname === item.href || pathname.startsWith(`${item.href}/`);
 
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      aria-current={isActive ? "page" : undefined}
-                      className={cn(
-                        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                        isActive
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                      )}
-                    >
-                      <item.icon className="h-4 w-4" aria-hidden="true" />
-                      <span>{item.label}</span>
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  title={collapsed ? item.label : undefined}
+                  className={cn(
+                    "group relative flex items-center rounded-xl transition-colors",
+                    collapsed
+                      ? "h-10 w-full justify-center px-0"
+                      : "gap-3 px-3 py-2.5",
+                    isActive
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  )}
+                >
+                  <item.icon className="h-[18px] w-[18px] shrink-0" />
+                  {!collapsed && (
+                    <>
+                      <span className="flex-1 text-sm font-medium">
+                        {item.label}
+                      </span>
                       {item.badge && (
                         <span
                           className={cn(
-                            "ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                            "rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase",
                             isActive
-                              ? "bg-primary-foreground/20 text-primary-foreground"
+                              ? "bg-background/20 text-background"
                               : "bg-primary/10 text-primary"
                           )}
                         >
                           {item.badge}
                         </span>
                       )}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </nav>
+                    </>
+                  )}
+                  {/* Tooltip for collapsed mode */}
+                  {collapsed && (
+                    <span className="pointer-events-none absolute left-full ml-2 hidden whitespace-nowrap rounded-lg bg-foreground px-2 py-1 text-xs font-medium text-background shadow-lg group-hover:block">
+                      {item.label}
+                      {item.badge && (
+                        <span className="ml-1.5 rounded bg-background/20 px-1 py-0.5 text-[10px] uppercase">
+                          {item.badge}
+                        </span>
+                      )}
+                    </span>
+                  )}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
 
-        {/* Upgrade CTA */}
-        <div className="border-t border-border p-3">
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-            <div className="mb-2 flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-foreground">
-                Upgrade to Pro
-              </span>
-            </div>
-            <p className="mb-3 text-xs text-muted-foreground">
-              Unlock unlimited AI rewrites and advanced analytics.
-            </p>
-            <Button size="sm" className="w-full rounded-lg">
-              Upgrade
-            </Button>
-          </div>
-        </div>
-      </aside>
-    </>
+      {/* Bottom Items */}
+      <div className={cn("px-3 pb-3", collapsed && "px-2")}>
+        <ul className="space-y-1">
+          {appBottomNavItems.map((item) => {
+            const isActive =
+              pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  title={collapsed ? item.label : undefined}
+                  className={cn(
+                    "group relative flex items-center rounded-xl transition-colors",
+                    collapsed
+                      ? "h-10 w-full justify-center px-0"
+                      : "gap-3 px-3 py-2.5",
+                    isActive
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  )}
+                >
+                  <item.icon className="h-[18px] w-[18px] shrink-0" />
+                  {!collapsed && (
+                    <span className="text-sm font-medium">{item.label}</span>
+                  )}
+                  {collapsed && (
+                    <span className="pointer-events-none absolute left-full ml-2 hidden whitespace-nowrap rounded-lg bg-foreground px-2 py-1 text-xs font-medium text-background shadow-lg group-hover:block">
+                      {item.label}
+                    </span>
+                  )}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+
+        {/* Expand button when collapsed */}
+        {collapsed && (
+          <button
+            type="button"
+            onClick={onToggle}
+            className="mt-2 flex h-10 w-full items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            aria-label="Expand sidebar"
+          >
+            <ChevronsRight className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+    </div>
   );
 }

@@ -16,11 +16,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/src/lib/utils";
 
-import { appNavigationItems } from "./navigation";
+import { appBottomNavItems, appNavigationItems } from "./navigation";
 
 // Helper to get page title from pathname
 function getPageTitle(pathname: string): { title: string; breadcrumb?: string } {
-  const navItem = appNavigationItems.find(
+  const allItems = [...appNavigationItems, ...appBottomNavItems];
+  const navItem = allItems.find(
     (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
   );
 
