@@ -1,14 +1,16 @@
 import { AppSidebar } from "@/components/app/AppSidebar";
 import { AppTopbar } from "@/components/app/AppTopbar";
 
-export default function WorkspaceLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function WorkspaceLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <div className="min-h-screen bg-background text-foreground lg:grid lg:grid-cols-[16rem_1fr]">
+    <div className="min-h-screen bg-background text-foreground lg:flex">
       <AppSidebar />
-      <div className="min-w-0">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <AppTopbar />
-        <main className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-6 lg:px-8 lg:py-10">
-          {children}
+        <main className="flex-1 px-5 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+          <div className="mx-auto w-full max-w-6xl">{children}</div>
         </main>
       </div>
     </div>
