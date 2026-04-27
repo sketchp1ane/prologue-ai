@@ -9,6 +9,7 @@ const eslintConfig = defineConfig([
     ".next/**",
     "node_modules/**",
     "coverage/**",
+    ".handoff/**",
     "playwright-report/**",
     "out/**",
     "build/**",
