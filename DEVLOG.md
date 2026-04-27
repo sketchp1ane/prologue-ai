@@ -77,3 +77,18 @@ Not included:
 - OpenAI API calls
 - Vercel analytics
 - v0 generated config files
+
+## 2026-04-26 — Root hydration warning guard
+
+Added a targeted hydration-warning guard to the root `<body>` element.
+
+Included:
+
+- `suppressHydrationWarning` on `app/layout.tsx` body to tolerate browser extensions that inject attributes before React hydrates
+
+Not included:
+
+- product UI changes
+- auth logic
+- database logic
+- OpenAI API calls

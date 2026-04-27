@@ -12,18 +12,38 @@
 - Docs created as source of truth.
 - Environment template added.
 - CI workflow added.
+- Static public homepage imported from the v0 prototype.
+- Homepage visual style restored to the original monochrome version.
+- Homepage componentized under `components/landing/`.
+- Homepage is static only and contains no product backend logic.
 
-## Intentionally not implemented
+## Current Homepage Status
 
-- Public homepage UI
-- v0 homepage integration
+The public homepage at `/` is now active app code. It should be treated as the visual baseline for future product pages.
+
+Future app pages should follow `docs/10_DESIGN_SYSTEM.md` for:
+
+- monochrome brand direction
+- neutral shadcn-style tokens
+- typography hierarchy
+- spacing and layout rules
+- card, button, badge, and product mockup patterns
+- empty states
+- AI result cards
+- dashboard restraint
+
+The imported v0 prototype should not be used as a source for backend logic, auth logic, database logic, OpenAI API logic, upload behavior, dashboard behavior, or other business logic. It is a visual source only.
+
+## Not Implemented Yet
+
 - Auth
 - Database models
 - Resume upload
 - Resume parsing
-- Application board logic
+- Application tracking
+- Application board business logic
 - JD extraction
-- Diagnosis report
+- Diagnosis report generation
 - Bullet rewrite
 - Outreach generation
 - Interview review
@@ -32,16 +52,18 @@
 - Cost tracking
 - Deployment hardening
 
-## v0 homepage status
+## Implementation Boundaries
 
-The v0-generated homepage prototype was reviewed in the planning conversation and should be used later as a visual reference. It is not included as active app code in this initialization repository.
+- The homepage is static only.
+- No Clerk auth integration is implemented yet.
+- No Prisma database schema beyond generator and datasource setup is implemented yet.
+- No OpenAI API integration is implemented yet.
+- No dashboard business logic is implemented yet.
+- No resume upload or parsing is implemented yet.
+- No application tracking is implemented yet.
 
-## Next recommended step
+## Next Recommended Step
 
-Ask Codex to verify the initialized repository, install dependencies, and run validation without implementing product features.
+Continue with the task queue in `docs/05_CODEX_TASKS.md`, starting from the next incomplete foundation task.
 
-Suggested prompt:
-
-```txt
-Read AGENTS.md and docs/*.md. Verify the initialized repository. Install dependencies, run pnpm check, and fix only initialization-level issues. Do not implement product features or UI.
-```
+For any future UI work, read `docs/10_DESIGN_SYSTEM.md` first and keep the imported homepage as the visual baseline.
