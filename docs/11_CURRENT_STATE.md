@@ -23,6 +23,11 @@
 - First resume pasted-text CRUD slice added for list, create, detail, rename, and delete.
 - User-scoped resume repository/service functions added.
 - Initial Prisma migration added for the current schema.
+- Application basic creation slice added for pasted JDs.
+- Application `resumeId` is nullable so applications can be created before resume parsing/upload exists.
+- JD Extract service, API route, schema, prompt, and OpenAI client/model helpers added.
+- JD Extract records `AiGeneration` success/failure audit rows without storing full JD input.
+- Application list, new, and detail routes now display persisted user-owned application data.
 
 ## Current Homepage Status
 
@@ -46,9 +51,7 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - Resume upload
 - Resume parsing
 - PDF resume creation
-- Application tracking
 - Application board business logic
-- JD extraction
 - Diagnosis report generation
 - Bullet rewrite
 - Outreach generation
@@ -66,10 +69,11 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - Prisma schema exists for the initial MVP data model, with an initial committed migration for the current schema.
 - Resume CRUD database access is implemented through user-scoped repository/service functions.
 - The active resume creation flow supports pasted text only and stores it in `Resume.sourceText`.
-- No OpenAI API integration is implemented yet.
-- No dashboard business logic is implemented yet.
+- Application creation supports pasted JD text only and stores reviewed JD Extract JSON in `Application.jdExtractJson`.
+- JD Extract is the only implemented OpenAI API integration.
+- No dashboard board business logic is implemented yet.
 - No resume upload or parsing is implemented yet.
-- No application tracking is implemented yet.
+- No diagnosis, bullet rewrite, outreach, interview review, or weekly report generation is implemented yet.
 
 ## Next Recommended Step
 
