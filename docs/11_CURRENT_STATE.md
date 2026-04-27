@@ -20,6 +20,9 @@
 - Static authenticated workspace shell added for dashboard and future product routes.
 - Initial Prisma data model added for resumes, applications, resume bullets, bullet rewrites, interview reviews, and AI generations.
 - Prisma client helper and ownership helper stubs added under `src/lib/db/`.
+- First resume pasted-text CRUD slice added for list, create, detail, rename, and delete.
+- User-scoped resume repository/service functions added.
+- Initial Prisma migration added for the current schema.
 
 ## Current Homepage Status
 
@@ -42,6 +45,7 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 
 - Resume upload
 - Resume parsing
+- PDF resume creation
 - Application tracking
 - Application board business logic
 - JD extraction
@@ -59,8 +63,9 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - The homepage is static only.
 - Clerk is integrated only as foundation auth and route protection.
 - If Clerk environment variables are missing, `/`, `/sign-in`, and `/sign-up` remain reachable for local setup; protected workspace routes redirect to `/sign-in`.
-- Prisma schema exists for the initial MVP data model, but no local or production database migration has been applied by this task.
-- Database access is limited to the Prisma client helper and ownership helper stubs; no CRUD routes or repository flows are implemented yet.
+- Prisma schema exists for the initial MVP data model, with an initial committed migration for the current schema.
+- Resume CRUD database access is implemented through user-scoped repository/service functions.
+- The active resume creation flow supports pasted text only and stores it in `Resume.sourceText`.
 - No OpenAI API integration is implemented yet.
 - No dashboard business logic is implemented yet.
 - No resume upload or parsing is implemented yet.

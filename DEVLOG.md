@@ -190,3 +190,25 @@ Not included:
 
 - Database migration execution
 - schema changes
+
+## 2026-04-27 — Resume pasted-text slice
+
+Implemented the first resume management vertical slice.
+
+Included:
+
+- User-scoped resume repository and service functions
+- Pasted-text resume creation at `/resumes/new`
+- Real resume list at `/resumes` with empty state
+- Resume detail page at `/resumes/[id]`
+- Rename and delete server actions
+- Initial Prisma migration for the existing schema
+- Unit coverage for resume validation and user-scoped query shapes
+
+Not included:
+
+- PDF upload
+- OpenAI calls
+- Resume parsing
+- Application features
+- Homepage changes
