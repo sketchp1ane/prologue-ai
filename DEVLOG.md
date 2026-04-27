@@ -226,3 +226,29 @@ Not included:
 
 - schema changes
 - database migration execution
+
+## 2026-04-28 — Application creation and JD Extract slice
+
+Implemented the first application management and OpenAI JD extraction slice.
+
+Included:
+
+- Nullable `Application.resumeId` schema change and migration for pre-resume application creation
+- User-scoped application repository and service functions
+- Real `/applications`, `/applications/new`, and `/applications/[id]` routes
+- `POST /api/applications/extract-jd` route for authenticated JD extraction
+- OpenAI client/model helpers, JD Extract prompt, schema, and service under `src/lib/ai/`
+- `AiGeneration` success/failure logging for `JD_EXTRACT`
+- Unit coverage for JD Extract schema fixtures and application repository query shapes
+
+Not included:
+
+- dashboard board business logic
+- diagnosis
+- resume parsing
+- PDF upload
+- bullet rewrite
+- streaming
+- outreach
+- interview review
+- weekly report

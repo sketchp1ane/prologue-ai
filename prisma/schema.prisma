@@ -50,7 +50,7 @@ model ResumeBullet {
 model Application {
   id            String           @id @default(cuid())
   userId        String
-  resumeId      String
+  resumeId      String?
   companyName   String
   roleTitle     String
   location      String?
@@ -64,7 +64,7 @@ model Application {
   updatedAt     DateTime         @updatedAt
 
   aiGenerations AiGeneration[]
-  resume        Resume            @relation(fields: [resumeId], references: [id])
+  resume        Resume?           @relation(fields: [resumeId], references: [id])
   rewrites      BulletRewrite[]
   reviews       InterviewReview[]
 
