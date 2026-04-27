@@ -212,3 +212,17 @@ Not included:
 - Resume parsing
 - Application features
 - Homepage changes
+
+## 2026-04-27 — Vercel Prisma build fix
+
+Fixed the Vercel production build after adding Prisma models.
+
+Included:
+
+- `pnpm build` now generates Prisma Client before `next build`
+- Vercel can typecheck imports from `@prisma/client` during deployment
+
+Not included:
+
+- schema changes
+- database migration execution
