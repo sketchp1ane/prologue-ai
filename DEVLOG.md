@@ -114,3 +114,25 @@ Not included:
 - OpenAI API calls
 - resume upload
 - application tracking logic
+
+## 2026-04-27 — Clerk authentication integration
+
+Implemented the Clerk-only foundation slice for the workspace.
+
+Included:
+
+- Root `ClerkProvider` wiring
+- Public `/sign-in` and `/sign-up` Clerk pages
+- Clerk route protection for `/dashboard`, `/resumes`, `/applications`, `/interviews`, and `/settings`
+- Authenticated topbar user area using Clerk user data and `UserButton`
+- Server-side current user id helper under `src/lib/auth/`
+- Clerk route environment variables in `.env.example`
+- Unit coverage for auth route/env configuration
+
+Not included:
+
+- database models
+- Prisma repositories
+- OpenAI API calls
+- resume upload
+- real dashboard data
