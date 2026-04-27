@@ -156,3 +156,24 @@ Not included:
 - OpenAI API calls
 - resume upload
 - real dashboard data
+
+## 2026-04-27 — Initial Prisma data model
+
+Implemented the data-model-only foundation slice.
+
+Included:
+
+- Prisma models for resumes, resume bullets, applications, bullet rewrites, interview reviews, and AI generation audit rows
+- Enums for resume status, application stage, AI feature type, and generation status
+- User-scoped indexes for future Clerk-owned data access
+- Development-safe Prisma client helper under `src/lib/db/`
+- Ownership helper stubs for resumes and applications
+- Unit coverage for ownership helper query shape and failure behavior
+
+Not included:
+
+- Database migration execution
+- UI or CRUD pages
+- OpenAI API calls
+- resume upload
+- application tracking logic

@@ -18,6 +18,8 @@
 - Homepage is static only and contains no product backend logic.
 - Clerk foundation auth added for sign-in, sign-up, and protected workspace routes.
 - Static authenticated workspace shell added for dashboard and future product routes.
+- Initial Prisma data model added for resumes, applications, resume bullets, bullet rewrites, interview reviews, and AI generations.
+- Prisma client helper and ownership helper stubs added under `src/lib/db/`.
 
 ## Current Homepage Status
 
@@ -38,7 +40,6 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 
 ## Not Implemented Yet
 
-- Database models
 - Resume upload
 - Resume parsing
 - Application tracking
@@ -58,7 +59,8 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - The homepage is static only.
 - Clerk is integrated only as foundation auth and route protection.
 - If Clerk environment variables are missing, `/`, `/sign-in`, and `/sign-up` remain reachable for local setup; protected workspace routes redirect to `/sign-in`.
-- No Prisma database schema beyond generator and datasource setup is implemented yet.
+- Prisma schema exists for the initial MVP data model, but no local or production database migration has been applied by this task.
+- Database access is limited to the Prisma client helper and ownership helper stubs; no CRUD routes or repository flows are implemented yet.
 - No OpenAI API integration is implemented yet.
 - No dashboard business logic is implemented yet.
 - No resume upload or parsing is implemented yet.
