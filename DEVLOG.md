@@ -92,3 +92,25 @@ Not included:
 - auth logic
 - database logic
 - OpenAI API calls
+
+## 2026-04-27 — Static app shell placeholders
+
+Implemented the first static authenticated-workspace shell placeholders.
+
+Included:
+
+- Route-group layout for future app pages under `app/(app)/`
+- Left sidebar navigation for Dashboard, Resumes, Applications, Interviews, and Settings
+- Static topbar with product name and placeholder user area
+- Reusable monochrome empty-state component
+- Placeholder pages for `/dashboard`, `/resumes`, `/applications`, `/interviews`, and `/settings`
+- Unit coverage for the initial workspace route list
+
+Not included:
+
+- Real authentication
+- Clerk wiring
+- database models
+- OpenAI API calls
+- resume upload
+- application tracking logic
