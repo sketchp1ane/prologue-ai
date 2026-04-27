@@ -15,7 +15,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build"
+    "check": "pnpm db:generate && pnpm typecheck && pnpm lint && pnpm test && pnpm build"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.34.0",

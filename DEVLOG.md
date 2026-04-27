@@ -177,3 +177,16 @@ Not included:
 - OpenAI API calls
 - resume upload
 - application tracking logic
+
+## 2026-04-27 — CI Prisma generation fix
+
+Fixed the CI validation command after adding Prisma models.
+
+Included:
+
+- `pnpm check` now runs Prisma Client generation before typecheck, lint, tests, and build
+
+Not included:
+
+- Database migration execution
+- schema changes
