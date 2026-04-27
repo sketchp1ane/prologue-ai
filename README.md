@@ -2,22 +2,23 @@
 
 > AI job-search workspace. Turn every application into a repeatable path toward an offer.
 
-This repository is currently at the **initialization stage**. It intentionally contains only the engineering scaffold, project documentation, Codex configuration, MCP configuration, skills, CI, and environment templates.
+This repository is currently at the **foundation stage**. It contains the engineering scaffold, project documentation, Codex configuration, MCP configuration, skills, CI, environment templates, the public homepage, and Clerk-only workspace access control.
 
-No product feature, real business flow, authentication flow, database model, OpenAI API route, upload flow, dashboard, or landing page UI is implemented in this initial commit.
+No product business flow, database model, OpenAI API route, upload flow, or real dashboard data is implemented yet.
 
 ## Current status
 
 ```txt
-Stage: initialization only
-UI implemented: no
+Stage: foundation auth and static shell
+UI implemented: public homepage, auth pages, static workspace shell
 Business logic implemented: no
+Auth implemented: Clerk foundation routes and protected workspace shell
 OpenAI API implemented: no
 Database models implemented: no
 Ready for Codex task execution: yes
 ```
 
-The next development step is to let Codex read `AGENTS.md` and `docs/`, then continue from `docs/05_CODEX_TASKS.md`.
+The next development step is to let Codex read `AGENTS.md` and `docs/`, then continue from the next incomplete task in `docs/05_CODEX_TASKS.md`.
 
 ## Planned product
 
@@ -62,7 +63,7 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-The app currently renders a blank placeholder page by design. It is not expected to show the v0 homepage prototype at this stage.
+The public homepage is available at `/`. Clerk-backed auth pages are available at `/sign-in` and `/sign-up`. If Clerk environment variables are missing, the public pages still load with a setup notice and protected workspace routes redirect to `/sign-in`.
 
 ## Validation commands
 

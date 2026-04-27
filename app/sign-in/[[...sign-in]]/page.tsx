@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SignIn } from "@clerk/nextjs";
 import { Lock, Sparkles } from "lucide-react";
 
+import { ClerkConfigurationNotice } from "@/components/auth/ClerkConfigurationNotice";
 import { SignInPreview } from "@/components/auth/SignInPreview";
 
 export const metadata: Metadata = {
@@ -75,6 +76,8 @@ const clerkAppearance = {
       "text-xs font-medium text-foreground hover:text-foreground/80",
   },
 } as const;
+
+const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 export default function SignInPage() {
   return (
@@ -168,7 +171,11 @@ export default function SignInPage() {
                 </p>
               </div>
 
-              <SignIn appearance={clerkAppearance} />
+              {clerkPublishableKey ? (
+                <SignIn appearance={clerkAppearance} />
+              ) : (
+                <ClerkConfigurationNotice mode="sign-in" />
+              )}
 
               <p className="mt-6 text-center text-sm text-muted-foreground">
                 Don&apos;t have an account?{" "}

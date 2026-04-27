@@ -136,3 +136,23 @@ Not included:
 - OpenAI API calls
 - resume upload
 - real dashboard data
+
+## 2026-04-27 — Clerk local fallback and docs sync
+
+Hardened the foundation auth slice so public routes remain accessible during local setup.
+
+Included:
+
+- Clerk proxy fallback when Clerk environment variables are missing
+- Local setup notices on `/sign-in` and `/sign-up` instead of runtime Clerk errors
+- Protected workspace redirect to `/sign-in` when Clerk is not configured
+- README and current-state documentation updates for the actual foundation state
+- Unit coverage for the Clerk fallback behavior
+
+Not included:
+
+- database models
+- Prisma repositories
+- OpenAI API calls
+- resume upload
+- real dashboard data

@@ -16,6 +16,8 @@
 - Homepage visual style restored to the original monochrome version.
 - Homepage componentized under `components/landing/`.
 - Homepage is static only and contains no product backend logic.
+- Clerk foundation auth added for sign-in, sign-up, and protected workspace routes.
+- Static authenticated workspace shell added for dashboard and future product routes.
 
 ## Current Homepage Status
 
@@ -36,7 +38,6 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 
 ## Not Implemented Yet
 
-- Auth
 - Database models
 - Resume upload
 - Resume parsing
@@ -55,7 +56,8 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 ## Implementation Boundaries
 
 - The homepage is static only.
-- No Clerk auth integration is implemented yet.
+- Clerk is integrated only as foundation auth and route protection.
+- If Clerk environment variables are missing, `/`, `/sign-in`, and `/sign-up` remain reachable for local setup; protected workspace routes redirect to `/sign-in`.
 - No Prisma database schema beyond generator and datasource setup is implemented yet.
 - No OpenAI API integration is implemented yet.
 - No dashboard business logic is implemented yet.

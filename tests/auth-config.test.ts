@@ -32,4 +32,16 @@ describe("Clerk auth configuration", () => {
       expect(proxy).toContain(`${route}(.*)`);
     }
   });
+
+  it("keeps public routes available when Clerk keys are missing locally", () => {
+    const proxy = readProjectFile("proxy.ts");
+    const signInPage = readProjectFile("app/sign-in/[[...sign-in]]/page.tsx");
+    const signUpPage = readProjectFile("app/sign-up/[[...sign-up]]/page.tsx");
+
+    expect(proxy).toContain("hasClerkConfiguration");
+    expect(proxy).toContain('NextResponse.redirect(new URL("/sign-in", request.url))');
+    expect(proxy).toContain("NextResponse.next()");
+    expect(signInPage).toContain("ClerkConfigurationNotice");
+    expect(signUpPage).toContain("ClerkConfigurationNotice");
+  });
 });
