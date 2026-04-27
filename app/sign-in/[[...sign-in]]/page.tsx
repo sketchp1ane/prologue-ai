@@ -160,9 +160,9 @@ export default function SignInPage() {
 
             <div className="rounded-2xl border border-border bg-card/80 p-6 shadow-xl shadow-primary/[0.04] backdrop-blur-sm sm:p-8">
               <div className="mb-6 space-y-1.5">
-                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                   Sign in
-                </h2>
+                </h1>
                 <p className="text-sm text-muted-foreground">
                   Enter your details to access your Prologue workspace.
                 </p>
