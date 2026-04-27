@@ -1,5 +1,6 @@
 "use client";
 
+import { useClerk, useUser } from "@clerk/nextjs";
 import {
   Bell,
   ChevronDown,
@@ -11,25 +12,22 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-
-import { Button } from "@/components/ui/button";
-import { cn } from "@/src/lib/utils";
+import { useEffect, useId, useState } from "react";
 
 import { appBottomNavItems, appNavigationItems } from "./navigation";
 
-// Helper to get page title from pathname
+function isActiveRoute(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 function getPageTitle(pathname: string): { title: string; breadcrumb?: string } {
   const allItems = [...appNavigationItems, ...appBottomNavItems];
-  const navItem = allItems.find(
-    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
-  );
+  const navItem = allItems.find((item) => isActiveRoute(pathname, item.href));
 
   if (navItem) {
     return { title: navItem.label };
   }
 
-  // Handle nested routes
   const segments = pathname.split("/").filter(Boolean);
   if (segments.length > 1) {
     const parentItem = appNavigationItems.find(
@@ -49,11 +47,62 @@ function getPageTitle(pathname: string): { title: string; breadcrumb?: string } 
   return { title: "Dashboard" };
 }
 
+function getInitials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+}
+
 export function AppTopbar() {
   const pathname = usePathname();
+  const { signOut } = useClerk();
+  const { user } = useUser();
   const { title, breadcrumb } = getPageTitle(pathname);
   const [searchOpen, setSearchOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const searchTitleId = useId();
+  const displayName =
+    user?.fullName ??
+    user?.primaryEmailAddress?.emailAddress ??
+    user?.username ??
+    "Account";
+  const email = user?.primaryEmailAddress?.emailAddress ?? "Signed in";
+  const initials = getInitials(displayName) || "A";
+
+  useEffect(() => {
+    if (!searchOpen) {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setSearchOpen(false);
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [searchOpen]);
+
+  useEffect(() => {
+    if (!userMenuOpen) {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setUserMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [userMenuOpen]);
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
@@ -80,7 +129,7 @@ export function AppTopbar() {
             onClick={() => setSearchOpen(true)}
             className="flex w-full items-center gap-3 rounded-xl border border-border bg-secondary/30 px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary/50"
           >
-            <Search className="h-4 w-4" />
+            <Search className="h-4 w-4" aria-hidden="true" />
             <span className="flex-1 text-left">Search applications...</span>
             <kbd className="hidden rounded-md border border-border bg-background px-2 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline-block">
               ⌘K
@@ -97,7 +146,7 @@ export function AppTopbar() {
             className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground lg:hidden"
             aria-label="Search"
           >
-            <Search className="h-5 w-5" />
+            <Search className="h-5 w-5" aria-hidden="true" />
           </button>
 
           {/* Notifications */}
@@ -106,7 +155,7 @@ export function AppTopbar() {
             className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             aria-label="Notifications"
           >
-            <Bell className="h-5 w-5" />
+            <Bell className="h-5 w-5" aria-hidden="true" />
             <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
           </button>
 
@@ -116,7 +165,7 @@ export function AppTopbar() {
             className="hidden h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:flex"
             aria-label="Help"
           >
-            <HelpCircle className="h-5 w-5" />
+            <HelpCircle className="h-5 w-5" aria-hidden="true" />
           </button>
 
           {/* User Menu */}
@@ -126,15 +175,20 @@ export function AppTopbar() {
               onClick={() => setUserMenuOpen(!userMenuOpen)}
               className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-1 pr-3 shadow-sm transition-colors hover:bg-secondary/50"
               aria-expanded={userMenuOpen}
-              aria-haspopup="true"
+              aria-haspopup="menu"
             >
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
-                <span className="text-xs font-medium text-primary">JD</span>
+                <span className="text-xs font-medium text-primary">
+                  {initials}
+                </span>
               </div>
               <span className="hidden text-sm font-medium text-foreground sm:block">
-                John Doe
+                {displayName}
               </span>
-              <ChevronDown className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" />
+              <ChevronDown
+                className="hidden h-3.5 w-3.5 text-muted-foreground sm:block"
+                aria-hidden="true"
+              />
             </button>
 
             {/* User Dropdown */}
@@ -145,39 +199,44 @@ export function AppTopbar() {
                   onClick={() => setUserMenuOpen(false)}
                   aria-hidden="true"
                 />
-                <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-border bg-card p-1.5 shadow-lg">
+                <div
+                  className="absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-border bg-card p-1.5 shadow-lg"
+                  role="menu"
+                >
                   <div className="border-b border-border px-3 py-2.5">
                     <p className="text-sm font-medium text-foreground">
-                      John Doe
+                      {displayName}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      john@example.com
-                    </p>
+                    <p className="text-xs text-muted-foreground">{email}</p>
                   </div>
                   <div className="py-1.5">
                     <Link
                       href="/settings"
                       onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                      role="menuitem"
                     >
-                      <User className="h-4 w-4" />
+                      <User className="h-4 w-4" aria-hidden="true" />
                       Profile
                     </Link>
                     <Link
                       href="/settings"
                       onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                      role="menuitem"
                     >
-                      <Settings className="h-4 w-4" />
+                      <Settings className="h-4 w-4" aria-hidden="true" />
                       Settings
                     </Link>
                   </div>
                   <div className="border-t border-border pt-1.5">
                     <button
                       type="button"
+                      onClick={() => signOut({ redirectUrl: "/" })}
                       className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                      role="menuitem"
                     >
-                      <LogOut className="h-4 w-4" />
+                      <LogOut className="h-4 w-4" aria-hidden="true" />
                       Sign out
                     </button>
                   </div>
@@ -196,10 +255,18 @@ export function AppTopbar() {
             onClick={() => setSearchOpen(false)}
             aria-hidden="true"
           />
-          <div className="fixed left-1/2 top-[20%] z-50 w-full max-w-lg -translate-x-1/2 px-4">
+          <div
+            className="fixed left-1/2 top-[20%] z-50 w-full max-w-lg -translate-x-1/2 px-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={searchTitleId}
+          >
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
               <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-                <Search className="h-5 w-5 text-muted-foreground" />
+                <Search
+                  className="h-5 w-5 text-muted-foreground"
+                  aria-hidden="true"
+                />
                 <input
                   type="text"
                   placeholder="Search applications, resumes, jobs..."
@@ -211,7 +278,10 @@ export function AppTopbar() {
                 </kbd>
               </div>
               <div className="p-4">
-                <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <p
+                  id={searchTitleId}
+                  className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                >
                   Quick Actions
                 </p>
                 <div className="space-y-1">

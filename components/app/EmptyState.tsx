@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { ReactNode } from "react";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 
@@ -60,10 +61,10 @@ export function EmptyState({
                 className="gap-2 rounded-xl"
               >
                 {action.href ? (
-                  <a href={action.href}>
+                  <Link href={action.href}>
                     {action.icon && <action.icon className="h-4 w-4" />}
                     {action.label}
-                  </a>
+                  </Link>
                 ) : (
                   <>
                     {action.icon && <action.icon className="h-4 w-4" />}
@@ -80,7 +81,7 @@ export function EmptyState({
                 className="rounded-xl"
               >
                 {secondaryAction.href ? (
-                  <a href={secondaryAction.href}>{secondaryAction.label}</a>
+                  <Link href={secondaryAction.href}>{secondaryAction.label}</Link>
                 ) : (
                   secondaryAction.label
                 )}

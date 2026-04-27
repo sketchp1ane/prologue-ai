@@ -1,9 +1,14 @@
 import { AppSidebar } from "@/components/app/AppSidebar";
 import { AppTopbar } from "@/components/app/AppTopbar";
+import { requireCurrentUserId } from "@/src/lib/auth/current-user";
 
-export default function WorkspaceLayout({
+export const dynamic = "force-dynamic";
+
+export default async function WorkspaceLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  await requireCurrentUserId();
+
   return (
     <div className="min-h-screen bg-secondary/30 text-foreground lg:flex">
       <AppSidebar />

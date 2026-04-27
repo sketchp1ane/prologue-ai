@@ -3,7 +3,15 @@
 import { Menu, PanelLeft, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createContext, useContext, useState } from "react";
+import type { ReactNode, RefObject } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 
 import { cn } from "@/src/lib/utils";
 
@@ -26,10 +34,33 @@ const SidebarContext = createContext<SidebarContextType>({
 
 export const useSidebar = () => useContext(SidebarContext);
 
+function isActiveRoute(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function AppSidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const mobileCloseButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!mobileOpen) {
+      return;
+    }
+
+    mobileCloseButtonRef.current?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMobileOpen(false);
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [mobileOpen]);
 
   return (
     <SidebarContext.Provider value={{ collapsed, setCollapsed }}>
@@ -58,10 +89,13 @@ export function AppSidebar() {
           "fixed inset-y-0 left-0 z-50 w-[260px] bg-card shadow-xl transition-transform duration-200 ease-out lg:hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
+        aria-hidden={!mobileOpen}
+        inert={!mobileOpen ? true : undefined}
       >
         <MobileSidebarContent
           pathname={pathname}
           onClose={() => setMobileOpen(false)}
+          closeButtonRef={mobileCloseButtonRef}
         />
       </aside>
 
@@ -87,9 +121,11 @@ export function AppSidebar() {
 function MobileSidebarContent({
   pathname,
   onClose,
+  closeButtonRef,
 }: {
   pathname: string;
   onClose: () => void;
+  closeButtonRef: RefObject<HTMLButtonElement | null>;
 }) {
   return (
     <div className="flex h-full flex-col">
@@ -102,6 +138,7 @@ function MobileSidebarContent({
           <span className="text-xs text-muted-foreground">/ 第一页</span>
         </Link>
         <button
+          ref={closeButtonRef}
           type="button"
           onClick={onClose}
           className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
@@ -129,9 +166,7 @@ function MobileSidebarContent({
             <li key={item.href}>
               <NavItemExpanded
                 item={item}
-                isActive={
-                  pathname === item.href || pathname.startsWith(`${item.href}/`)
-                }
+                isActive={isActiveRoute(pathname, item.href)}
                 onClick={onClose}
               />
             </li>
@@ -146,9 +181,7 @@ function MobileSidebarContent({
             <li key={item.href}>
               <NavItemExpanded
                 item={item}
-                isActive={
-                  pathname === item.href || pathname.startsWith(`${item.href}/`)
-                }
+                isActive={isActiveRoute(pathname, item.href)}
                 onClick={onClose}
               />
             </li>
@@ -198,10 +231,10 @@ function DesktopSidebarContent({
             <button
               type="button"
               onClick={onToggle}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-secondary hover:text-foreground"
-              aria-label="Collapse sidebar"
-            >
-              <PanelLeft className="h-[15px] w-[15px]" />
+            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-secondary hover:text-foreground"
+            aria-label="Collapse sidebar"
+          >
+              <PanelLeft className="h-[15px] w-[15px]" aria-hidden="true" />
             </button>
           </>
         )}
@@ -216,7 +249,7 @@ function DesktopSidebarContent({
               className="flex h-9 w-9 items-center justify-center rounded-lg bg-foreground text-background transition-colors hover:bg-foreground/90"
               aria-label="New Application"
             >
-              <Plus className="h-[15px] w-[15px]" />
+              <Plus className="h-[15px] w-[15px]" aria-hidden="true" />
             </button>
           </NavTooltip>
         ) : (
@@ -240,8 +273,7 @@ function DesktopSidebarContent({
       >
         <ul className={cn(collapsed ? "space-y-1" : "space-y-0.5")}>
           {appNavigationItems.map((item) => {
-            const isActive =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const isActive = isActiveRoute(pathname, item.href);
             return (
               <li key={item.href}>
                 {collapsed ? (
@@ -259,8 +291,7 @@ function DesktopSidebarContent({
       <div className={cn("pb-3 pt-1", collapsed ? "px-3" : "px-3")}>
         <ul className={cn(collapsed ? "space-y-1" : "space-y-0.5")}>
           {appBottomNavItems.map((item) => {
-            const isActive =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const isActive = isActiveRoute(pathname, item.href);
             return (
               <li key={item.href}>
                 {collapsed ? (
@@ -282,7 +313,10 @@ function DesktopSidebarContent({
                   className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground/70 transition-colors hover:bg-secondary hover:text-foreground"
                   aria-label="Expand sidebar"
                 >
-                  <PanelLeft className="h-[15px] w-[15px] rotate-180" />
+                  <PanelLeft
+                    className="h-[15px] w-[15px] rotate-180"
+                    aria-hidden="true"
+                  />
                 </button>
               </NavTooltip>
             </li>
@@ -322,6 +356,7 @@ function NavItemExpanded({
           isActive ? "text-foreground" : "text-muted-foreground/80 group-hover:text-foreground"
         )}
         strokeWidth={isActive ? 2.25 : 2}
+        aria-hidden="true"
       />
       <span className="flex-1 truncate">{item.label}</span>
       {item.badge && (
@@ -349,11 +384,15 @@ function NavItemCollapsed({
   item: AppNavigationItem;
   isActive: boolean;
 }) {
+  const tooltipId = useId();
+
   return (
-    <NavTooltip label={item.label} badge={item.badge}>
+    <NavTooltip id={tooltipId} label={item.label} badge={item.badge}>
       <Link
         href={item.href}
+        aria-label={item.label}
         aria-current={isActive ? "page" : undefined}
+        aria-describedby={tooltipId}
         className={cn(
           "relative flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
           isActive
@@ -361,7 +400,11 @@ function NavItemCollapsed({
             : "text-muted-foreground hover:bg-secondary hover:text-foreground"
         )}
       >
-        <item.icon className="h-[15px] w-[15px]" strokeWidth={2} />
+        <item.icon
+          className="h-[15px] w-[15px]"
+          strokeWidth={2}
+          aria-hidden="true"
+        />
         {item.badge && !isActive && (
           <span
             aria-hidden="true"
@@ -376,20 +419,23 @@ function NavItemCollapsed({
 /* ---------------- Tooltip (collapsed mode) ---------------- */
 
 function NavTooltip({
+  id,
   label,
   badge,
   children,
 }: {
+  id?: string;
   label: string;
   badge?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className="group relative">
       {children}
       <span
+        id={id}
         role="tooltip"
-        className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-xs font-medium text-background opacity-0 shadow-md transition-opacity duration-150 group-hover:opacity-100"
+        className="pointer-events-none absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-xs font-medium text-background opacity-0 shadow-md transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
       >
         {label}
         {badge && (

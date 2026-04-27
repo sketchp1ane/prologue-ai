@@ -5,6 +5,7 @@ import {
   FileSearch,
   FileText,
   LayoutDashboard,
+  MessageSquare,
   Settings,
   Users,
 } from "lucide-react";
@@ -43,6 +44,11 @@ export const appNavigationItems: AppNavigationItem[] = [
     label: "Job Posts",
     href: "/applications",
     icon: Briefcase,
+  },
+  {
+    label: "Interviews",
+    href: "/interviews",
+    icon: MessageSquare,
   },
   {
     label: "Analytics",
