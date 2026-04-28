@@ -6,10 +6,13 @@ import {
   createApplicationForUser,
   getApplicationByIdForUser,
   listApplicationsByUser,
+  updateApplicationStageForUser,
 } from "@/src/lib/db/applications";
 import {
   createApplicationSchema,
   type CreateApplicationInput,
+  updateApplicationStageSchema,
+  type UpdateApplicationStageInput,
 } from "@/src/lib/validations/application";
 
 export class ApplicationServiceError extends Error {
@@ -42,4 +45,22 @@ export async function createUserApplication(
     stage: parsed.stage as ApplicationStage,
     userId,
   });
+}
+
+export async function updateUserApplicationStage(
+  userId: string,
+  input: UpdateApplicationStageInput
+) {
+  const parsed = updateApplicationStageSchema.parse(input);
+  const application = await updateApplicationStageForUser({
+    id: parsed.applicationId,
+    stage: parsed.stage as ApplicationStage,
+    userId,
+  });
+
+  if (!application) {
+    throw new ApplicationServiceError("Application could not be updated.");
+  }
+
+  return application;
 }

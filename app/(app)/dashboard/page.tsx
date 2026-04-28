@@ -1,295 +1,237 @@
+import type { ApplicationStage } from "@prisma/client";
 import {
-  ArrowUpRight,
-  BarChart3,
   Briefcase,
+  CalendarClock,
   CheckCircle2,
-  Clock,
-  FileText,
+  Clock3,
+  MapPin,
+  MessageCircle,
   Plus,
-  Sparkles,
-  Target,
-  TrendingUp,
+  Trophy,
 } from "lucide-react";
 import Link from "next/link";
 
-import {
-  AppCard,
-  AppCardContent,
-  AppCardHeader,
-} from "@/components/app/AppCard";
+import { AppCard } from "@/components/app/AppCard";
+import { EmptyState } from "@/components/app/EmptyState";
 import { PageHeader } from "@/components/app/PageHeader";
-import { Button } from "@/components/ui/button";
+import { ApplicationStageSelect } from "@/app/(app)/dashboard/ApplicationStageSelect";
+import {
+  APPLICATION_STAGE_ORDER,
+  getApplicationDashboardStats,
+  getApplicationStageLabel,
+  getApplicationStageOptions,
+  groupApplicationsByStage,
+} from "@/src/lib/applications/stages";
+import { listUserApplications } from "@/src/lib/applications/service";
+import { requireCurrentUserId } from "@/src/lib/auth/current-user";
+import type {
+  ApplicationListItem,
+} from "@/src/lib/db/applications";
 
-const stats = [
-  {
-    label: "Active Applications",
-    value: "12",
-    change: "+3 this week",
-    trend: "up",
-    icon: Briefcase,
-  },
-  {
-    label: "Interview Scheduled",
-    value: "4",
-    change: "2 this week",
-    trend: "up",
-    icon: Clock,
-  },
-  {
-    label: "Resume Score",
-    value: "86%",
-    change: "+5% improved",
-    trend: "up",
-    icon: Target,
-  },
-  {
-    label: "Response Rate",
-    value: "32%",
-    change: "Above average",
-    trend: "up",
-    icon: TrendingUp,
-  },
-];
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
 
-const recentApplications = [
-  {
-    company: "Acme Corp",
-    role: "Senior Product Designer",
-    status: "Interview",
-    statusColor: "bg-green-500",
-    date: "2 days ago",
-  },
-  {
-    company: "Notion",
-    role: "UX Researcher",
-    status: "Applied",
-    statusColor: "bg-blue-500",
-    date: "3 days ago",
-  },
-  {
-    company: "Linear",
-    role: "Design Lead",
-    status: "Reviewing",
-    statusColor: "bg-yellow-500",
-    date: "5 days ago",
-  },
-  {
-    company: "Figma",
-    role: "Product Designer",
-    status: "Wishlist",
-    statusColor: "bg-muted-foreground",
-    date: "1 week ago",
-  },
-];
+export default async function DashboardPage() {
+  const userId = await requireCurrentUserId();
+  const applications = await listUserApplications(userId);
+  const groupedApplications = groupApplicationsByStage(applications);
+  const stats = getApplicationDashboardStats(applications);
+  const stageOptions = getApplicationStageOptions();
 
-const quickActions = [
-  {
-    icon: FileText,
-    label: "Upload Resume",
-    description: "Parse and analyze your resume",
-    href: "/resumes",
-  },
-  {
-    icon: Sparkles,
-    label: "JD Extract",
-    description: "Analyze a job description",
-    href: "/jd-extract",
-  },
-  {
-    icon: Plus,
-    label: "New Application",
-    description: "Track a new job application",
-    href: "/applications",
-  },
-];
+  if (applications.length === 0) {
+    return (
+      <>
+        <PageHeader
+          title="Dashboard"
+          description="Track each application from first paste to final outcome."
+          action={{
+            href: "/applications/new",
+            icon: Plus,
+            label: "New Application",
+          }}
+        />
+        <EmptyState
+          icon={Briefcase}
+          title="No applications yet"
+          description="Paste a job description to create your first tracked application."
+          action={{
+            href: "/applications/new",
+            icon: Plus,
+            label: "Create application",
+          }}
+        />
+      </>
+    );
+  }
 
-export default function DashboardPage() {
+  const statCards = [
+    {
+      icon: Briefcase,
+      label: "Total applications",
+      value: stats.total,
+    },
+    {
+      icon: CheckCircle2,
+      label: "Applied",
+      value: stats.applied,
+    },
+    {
+      icon: MessageCircle,
+      label: "Communicating",
+      value: stats.communicating,
+    },
+    {
+      icon: Clock3,
+      label: "Interviewing",
+      value: stats.interviewing,
+    },
+    {
+      icon: Trophy,
+      label: "Offer",
+      value: stats.offer,
+    },
+  ];
+
   return (
     <>
       <PageHeader
-        title="Welcome back, John"
-        description="Here&apos;s what&apos;s happening with your job search."
+        title="Dashboard"
+        description="Your current application board, grouped by stage."
         action={{
-          label: "New Application",
+          href: "/applications/new",
           icon: Plus,
-          href: "/applications",
+          label: "New Application",
         }}
       />
 
-      {/* Stats Grid */}
-      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <AppCard key={stat.label} hover>
-            <div className="flex items-start justify-between">
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        {statCards.map((stat) => (
+          <AppCard key={stat.label} padding="sm">
+            <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
                 <p className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
                   {stat.value}
                 </p>
-                <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                  {stat.trend === "up" && (
-                    <TrendingUp className="h-3 w-3 text-green-500" />
-                  )}
-                  {stat.change}
-                </p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                <stat.icon className="h-5 w-5 text-primary" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <stat.icon className="h-5 w-5" aria-hidden="true" />
               </div>
             </div>
           </AppCard>
         ))}
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Recent Applications */}
-        <div className="lg:col-span-2">
-          <AppCard padding="none">
-            <AppCardHeader
-              title="Recent Applications"
-              description="Your latest job applications"
-              action={
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  asChild
-                  className="gap-1 text-xs"
-                >
-                  <Link href="/applications">
-                    View all
-                    <ArrowUpRight className="h-3 w-3" />
-                  </Link>
-                </Button>
-              }
-              className="px-5 pt-5 sm:px-6 sm:pt-6"
+      <div className="overflow-x-auto pb-2">
+        <div className="grid min-w-[78rem] grid-cols-6 gap-4">
+          {APPLICATION_STAGE_ORDER.map((stage) => (
+            <DashboardColumn
+              key={stage}
+              applications={groupedApplications[stage]}
+              stage={stage}
+              stageOptions={stageOptions}
             />
-            <AppCardContent className="px-5 pb-5 sm:px-6 sm:pb-6">
-              <div className="space-y-3">
-                {recentApplications.map((app) => (
-                  <div
-                    key={`${app.company}-${app.role}`}
-                    className="flex items-center justify-between rounded-xl border border-border bg-secondary/20 p-3 transition-colors hover:bg-secondary/40"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                        <span className="text-sm font-semibold text-primary">
-                          {app.company.charAt(0)}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">
-                          {app.company}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {app.role}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="hidden text-xs text-muted-foreground sm:block">
-                        {app.date}
-                      </span>
-                      <div className="flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1">
-                        <div
-                          className={`h-2 w-2 rounded-full ${app.statusColor}`}
-                        />
-                        <span className="text-xs font-medium text-foreground">
-                          {app.status}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </AppCardContent>
-          </AppCard>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="space-y-6">
-          <AppCard padding="none">
-            <AppCardHeader
-              title="Quick Actions"
-              className="px-5 pt-5 sm:px-6 sm:pt-6"
-            />
-            <AppCardContent className="px-5 pb-5 sm:px-6 sm:pb-6">
-              <div className="space-y-2">
-                {quickActions.map((action) => (
-                  <Link
-                    key={action.label}
-                    href={action.href}
-                    className="flex items-center gap-3 rounded-xl border border-border bg-secondary/20 p-3 transition-colors hover:bg-secondary/40"
-                  >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-                      <action.icon className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {action.label}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {action.description}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </AppCardContent>
-          </AppCard>
-
-          {/* Weekly Progress */}
-          <AppCard>
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-base font-medium text-foreground">
-                Weekly Progress
-              </h3>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <div className="space-y-4">
-              <div>
-                <div className="mb-1.5 flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    Applications sent
-                  </span>
-                  <span className="font-medium text-foreground">7/10</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-secondary">
-                  <div className="h-full w-[70%] rounded-full bg-primary" />
-                </div>
-              </div>
-              <div>
-                <div className="mb-1.5 flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    Resume improvements
-                  </span>
-                  <span className="font-medium text-foreground">3/5</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-secondary">
-                  <div className="h-full w-[60%] rounded-full bg-primary" />
-                </div>
-              </div>
-              <div>
-                <div className="mb-1.5 flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    Interview prep
-                  </span>
-                  <span className="font-medium text-foreground">2/3</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-secondary">
-                  <div className="h-full w-[66%] rounded-full bg-primary" />
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 flex items-center gap-2 rounded-lg border border-green-500/20 bg-green-500/10 p-2.5">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <span className="text-xs font-medium text-green-700">
-                On track to hit weekly goals
-              </span>
-            </div>
-          </AppCard>
+          ))}
         </div>
       </div>
     </>
+  );
+}
+
+function DashboardColumn({
+  applications,
+  stage,
+  stageOptions,
+}: {
+  applications: ApplicationListItem[];
+  stage: ApplicationStage;
+  stageOptions: ReturnType<typeof getApplicationStageOptions>;
+}) {
+  return (
+    <section className="rounded-2xl border border-border bg-secondary/20 p-3">
+      <div className="mb-3 flex items-center justify-between gap-3 px-1">
+        <h2 className="text-sm font-medium text-foreground">
+          {getApplicationStageLabel(stage)}
+        </h2>
+        <span className="rounded-full border border-border bg-background px-2 py-0.5 text-xs font-medium text-muted-foreground">
+          {applications.length}
+        </span>
+      </div>
+
+      {applications.length > 0 ? (
+        <div className="space-y-3">
+          {applications.map((application) => (
+            <DashboardApplicationCard
+              key={application.id}
+              application={application}
+              stageOptions={stageOptions}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-dashed border-border bg-background/70 p-4 text-center text-xs leading-5 text-muted-foreground">
+          No applications in this stage.
+        </div>
+      )}
+    </section>
+  );
+}
+
+function DashboardApplicationCard({
+  application,
+  stageOptions,
+}: {
+  application: ApplicationListItem;
+  stageOptions: ReturnType<typeof getApplicationStageOptions>;
+}) {
+  return (
+    <AppCard padding="none" className="rounded-xl">
+      <div className="space-y-4 p-4">
+        <div className="space-y-1">
+          <Link
+            href={`/applications/${application.id}`}
+            className="block text-sm font-medium text-foreground transition hover:text-muted-foreground"
+          >
+            {application.companyName}
+          </Link>
+          <p className="line-clamp-2 text-sm text-muted-foreground">
+            {application.roleTitle}
+          </p>
+        </div>
+
+        <div className="space-y-2 text-xs text-muted-foreground">
+          {application.location && (
+            <p className="flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+              <span className="truncate">{application.location}</span>
+            </p>
+          )}
+          <p className="flex items-center gap-1.5">
+            <CalendarClock className="h-3.5 w-3.5" aria-hidden="true" />
+            Updated {formatDate(application.updatedAt)}
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-border bg-secondary/20 p-2.5">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="text-xs text-muted-foreground">Current stage</span>
+            <span className="truncate text-xs font-medium text-foreground">
+              {getApplicationStageLabel(application.stage)}
+            </span>
+          </div>
+          <ApplicationStageSelect
+            applicationId={application.id}
+            currentStage={application.stage}
+            label={`Update stage for ${application.companyName} ${application.roleTitle}`}
+            options={stageOptions}
+          />
+        </div>
+      </div>
+    </AppCard>
   );
 }

@@ -7,26 +7,35 @@ import {
   createApplicationForUser,
   getApplicationByIdForUser,
   listApplicationsByUser,
+  updateApplicationStageForUser,
 } from "../src/lib/db/applications";
 
 type ApplicationDb = NonNullable<Parameters<typeof listApplicationsByUser>[1]>;
 
-function createApplicationDb(params?: { findFirstResult?: unknown }) {
+function createApplicationDb(params?: {
+  findFirstResult?: unknown;
+  updateCount?: number;
+}) {
   const findMany = vi.fn().mockResolvedValue([]);
   const findFirst = vi.fn().mockResolvedValue(params?.findFirstResult ?? null);
   const create = vi.fn().mockResolvedValue({ id: "application_1" });
+  const updateMany = vi.fn().mockResolvedValue({
+    count: params?.updateCount ?? 1,
+  });
 
   return {
     application: {
       create,
       findFirst,
       findMany,
+      updateMany,
     },
     db: {
       application: {
         create,
         findFirst,
         findMany,
+        updateMany,
       },
     } as unknown as ApplicationDb,
   };
@@ -102,5 +111,49 @@ describe("application repository", () => {
         userId: "user_1",
       },
     });
+  });
+
+  it("updates application stage only when id and userId both match", async () => {
+    const existingApplication = { id: "application_1", userId: "user_1" };
+    const { application, db } = createApplicationDb({
+      findFirstResult: existingApplication,
+      updateCount: 1,
+    });
+
+    await expect(
+      updateApplicationStageForUser(
+        {
+          id: "application_1",
+          stage: "INTERVIEWING",
+          userId: "user_1",
+        },
+        db
+      )
+    ).resolves.toBe(existingApplication);
+
+    expect(application.updateMany).toHaveBeenCalledWith({
+      data: {
+        stage: "INTERVIEWING",
+      },
+      where: {
+        id: "application_1",
+        userId: "user_1",
+      },
+    });
+  });
+
+  it("returns null when a stage update matches no user-owned application", async () => {
+    const { db } = createApplicationDb({ updateCount: 0 });
+
+    await expect(
+      updateApplicationStageForUser(
+        {
+          id: "application_2",
+          stage: "OFFER",
+          userId: "user_1",
+        },
+        db
+      )
+    ).resolves.toBeNull();
   });
 });

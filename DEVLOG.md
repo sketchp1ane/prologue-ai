@@ -300,3 +300,30 @@ Not included:
 - Interview Review
 - Weekly Report
 - Homepage changes
+
+## 2026-04-28 — Dashboard application board
+
+Replaced the dashboard placeholder with the real current-user application board.
+
+Included:
+
+- `/dashboard` now reads persisted applications for the current Clerk user
+- Dashboard statistics for total, applied, communicating, interviewing, and offer counts
+- Fixed board columns derived from the current `ApplicationStage` enum
+- Application cards with company, role, location, current stage, updated date, detail link, and stage selector
+- Server Action-backed stage updates scoped by both `id` and Clerk `userId`
+- Centralized stage grouping, labels, options, and dashboard statistic helpers
+- Unit coverage for stage update scoping, stage update validation, and dashboard grouping/stat helpers
+
+Not included:
+
+- Drag-and-drop
+- Resume Parse
+- PDF upload
+- Diagnosis Report
+- Bullet Rewrite
+- Streaming
+- Outreach
+- Interview Review
+- Weekly Report
+- Homepage changes

@@ -32,6 +32,8 @@
 - `/applications` lists the current user's applications only.
 - `/applications/[id]` shows basic application fields, original JD text, and extracted JD details for the current user only.
 - Application routes include empty, loading, and error states for the completed slice.
+- `/dashboard` reads the current user's applications, shows stage-based statistics, groups cards into fixed `ApplicationStage` columns, and supports stage updates.
+- Dashboard stage updates are persisted through user-scoped repository/service functions and do not use drag-and-drop.
 
 ## Current Homepage Status
 
@@ -55,7 +57,6 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - Resume upload
 - Resume parsing
 - PDF resume creation
-- Application board business logic
 - Diagnosis report generation
 - Bullet rewrite
 - Outreach generation
@@ -75,13 +76,14 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - The active resume creation flow supports pasted text only and stores it in `Resume.sourceText`.
 - Application creation supports pasted JD text only and stores reviewed JD Extract JSON in `Application.jdExtractJson`.
 - Application reads and writes are user-scoped through Clerk `userId` and repository/service functions.
+- Dashboard reads current-user applications only and updates stages only when both `Application.id` and `userId` match.
+- Dashboard board columns are fixed from the current `ApplicationStage` enum and use a selector fallback instead of drag-and-drop.
 - JD Extract is the only implemented OpenAI API integration.
-- No dashboard board business logic is implemented yet.
 - No resume upload or parsing is implemented yet.
 - No diagnosis, bullet rewrite, outreach, interview review, or weekly report generation is implemented yet.
 
 ## Next Recommended Step
 
-Stop after the closed Application creation vertical slice. The next feature slice should start separately from `docs/05_CODEX_TASKS.md` and must not expand this task into Resume Parse, Diagnosis, Bullet Rewrite, Outreach, Interview Review, or Weekly Report.
+Stop after the closed Dashboard application board slice. The next feature slice should start separately from `docs/05_CODEX_TASKS.md` and must not expand this task into Resume Parse, Diagnosis, Bullet Rewrite, Outreach, Interview Review, or Weekly Report.
 
 For any future UI work, read `docs/10_DESIGN_SYSTEM.md` first and keep the imported homepage as the visual baseline.

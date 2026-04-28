@@ -72,3 +72,28 @@ export async function createApplicationForUser(
     },
   });
 }
+
+export async function updateApplicationStageForUser(
+  params: {
+    id: string;
+    stage: ApplicationStage;
+    userId: string;
+  },
+  db: ApplicationDb = prisma
+) {
+  const result = await db.application.updateMany({
+    data: {
+      stage: params.stage,
+    },
+    where: {
+      id: params.id,
+      userId: params.userId,
+    },
+  });
+
+  if (result.count === 0) {
+    return null;
+  }
+
+  return getApplicationByIdForUser(params.userId, params.id, db);
+}

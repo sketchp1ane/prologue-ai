@@ -83,5 +83,13 @@ export const createApplicationSchema = z.object({
   stage: applicationStageSchema.default("PREPARING"),
 });
 
+export const updateApplicationStageSchema = z.object({
+  applicationId: applicationIdSchema,
+  stage: applicationStageSchema,
+});
+
 export type CreateApplicationInput = z.infer<typeof createApplicationSchema>;
 export type ExtractJdRequestInput = z.infer<typeof extractJdRequestSchema>;
+export type UpdateApplicationStageInput = z.infer<
+  typeof updateApplicationStageSchema
+>;
