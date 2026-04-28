@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import { FileSearch, Loader2, Save, Sparkles } from "lucide-react";
@@ -43,10 +44,15 @@ function SaveApplicationButton() {
 
 type ApplicationCreateFormProps = {
   initialError?: string | null;
+  resumes: {
+    id: string;
+    title: string;
+  }[];
 };
 
 export function ApplicationCreateForm({
   initialError,
+  resumes,
 }: ApplicationCreateFormProps) {
   const [jdText, setJdText] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -268,6 +274,44 @@ export function ApplicationCreateForm({
                 className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
               />
             </div>
+          </div>
+
+          <div className="space-y-2 rounded-xl border border-border bg-secondary/20 p-4">
+            <label
+              htmlFor="resumeId"
+              className="text-sm font-medium text-foreground"
+            >
+              Attached resume
+            </label>
+            {resumes.length > 0 ? (
+              <>
+                <select
+                  id="resumeId"
+                  name="resumeId"
+                  defaultValue=""
+                  className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                >
+                  <option value="">No resume attached</option>
+                  {resumes.map((resume) => (
+                    <option key={resume.id} value={resume.id}>
+                      {resume.title}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  Optional. You can change this later from the application
+                  detail page.
+                </p>
+              </>
+            ) : (
+              <p className="text-sm leading-6 text-muted-foreground">
+                No resumes yet.{" "}
+                <Link href="/resumes/new" className="text-foreground underline">
+                  Paste a resume
+                </Link>{" "}
+                to attach one to this application.
+              </p>
+            )}
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">

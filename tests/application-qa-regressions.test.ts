@@ -27,6 +27,8 @@ describe("application QA regressions", () => {
 
     expect(form).toContain("useFormStatus");
     expect(form).toContain("Saving...");
+    expect(form).toContain("No resume attached");
+    expect(form).toContain('href="/resumes/new"');
     expect(loading).toContain("Loading your tracked applications.");
     expect(error).toContain("Applications could not load");
   });
@@ -51,11 +53,18 @@ describe("application QA regressions", () => {
     const stageSelect = readProjectFile(
       "components/applications/ApplicationStageSelect.tsx"
     );
+    const resumeSelect = readProjectFile(
+      "components/applications/ApplicationResumeSelect.tsx"
+    );
     const actions = readProjectFile("app/(app)/applications/actions.ts");
 
     expect(detailPage).toContain("ApplicationStageSelect");
+    expect(detailPage).toContain("ApplicationResumeSelect");
     expect(detailPage).toContain('href="/applications"');
     expect(detailPage).toContain('href="/dashboard"');
+    expect(detailPage).toContain('href={`/resumes/${application.resume.id}`}');
+    expect(detailPage).toContain("Attached resume");
+    expect(detailPage).toContain("No resume attached");
     expect(detailPage).toContain('label="Company"');
     expect(detailPage).toContain('label="Role"');
     expect(detailPage).toContain('label="Location"');
@@ -77,7 +86,10 @@ describe("application QA regressions", () => {
     expect(notFound).toContain('href="/applications"');
     expect(notFound).toContain('href="/dashboard"');
     expect(stageSelect).toContain("updateApplicationStageAction");
+    expect(resumeSelect).toContain("updateApplicationResumeAction");
+    expect(resumeSelect).toContain("No resume attached");
     expect(actions).toContain("updateUserApplicationStage");
+    expect(actions).toContain("updateUserApplicationResume");
     expect(actions).toContain(
       "revalidatePath(`/applications/${parsed.data.applicationId}`)"
     );

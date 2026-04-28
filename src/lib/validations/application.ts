@@ -17,6 +17,14 @@ export const applicationIdSchema = trimmedString.pipe(
     .max(128, "Application id is invalid.")
 );
 
+export const applicationResumeIdSchema = trimmedString
+  .pipe(z.string().max(128, "Resume id is invalid."))
+  .transform((value) => (value.length > 0 ? value : null));
+
+const optionalApplicationResumeIdSchema = applicationResumeIdSchema
+  .optional()
+  .transform((value) => value ?? null);
+
 export const applicationCompanySchema = trimmedString.pipe(
   z
     .string()
@@ -79,6 +87,7 @@ export const createApplicationSchema = z.object({
   jdExtractJson: jdExtractSchema.optional(),
   jdText: applicationJdTextSchema,
   location: applicationLocationSchema,
+  resumeId: optionalApplicationResumeIdSchema,
   roleTitle: applicationRoleSchema,
   stage: applicationStageSchema.default("PREPARING"),
 });
@@ -88,8 +97,16 @@ export const updateApplicationStageSchema = z.object({
   stage: applicationStageSchema,
 });
 
+export const updateApplicationResumeSchema = z.object({
+  applicationId: applicationIdSchema,
+  resumeId: applicationResumeIdSchema,
+});
+
 export type CreateApplicationInput = z.infer<typeof createApplicationSchema>;
 export type ExtractJdRequestInput = z.infer<typeof extractJdRequestSchema>;
+export type UpdateApplicationResumeInput = z.infer<
+  typeof updateApplicationResumeSchema
+>;
 export type UpdateApplicationStageInput = z.infer<
   typeof updateApplicationStageSchema
 >;

@@ -1,5 +1,28 @@
 # DEVLOG
 
+## 2026-04-28 — Application resume binding
+
+Implemented optional Resume attachment for Applications.
+
+Included:
+
+- `/applications/new` now lists the current user's resumes as an optional attachment before saving
+- `/applications/new` shows a small `/resumes/new` hint when no resumes exist
+- `/applications/[id]` shows the attached resume with a link to `/resumes/[id]` or `No resume attached`
+- Application detail supports attaching, detaching, and changing the linked resume
+- Application create/update paths only attach resumes owned by the current Clerk `userId`
+- Unit regression coverage for optional `resumeId` validation, ownership checks, attach, detach, and UI contracts
+
+Not included:
+
+- Schema changes
+- Resume Parse
+- PDF upload
+- Diagnosis Report
+- Bullet Rewrite
+- OpenAI calls
+- Homepage changes
+
 ## 2026-04-28 — Resume text CRUD Task C hardening
 
 Audited and lightly hardened the existing pasted-text Resume CRUD slice.

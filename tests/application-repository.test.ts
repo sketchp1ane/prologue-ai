@@ -7,6 +7,7 @@ import {
   createApplicationForUser,
   getApplicationByIdForUser,
   listApplicationsByUser,
+  updateApplicationResumeForUser,
   updateApplicationStageForUser,
 } from "../src/lib/db/applications";
 
@@ -14,6 +15,7 @@ type ApplicationDb = NonNullable<Parameters<typeof listApplicationsByUser>[1]>;
 
 function createApplicationDb(params?: {
   findFirstResult?: unknown;
+  resumeFindFirstResult?: unknown;
   updateCount?: number;
 }) {
   const findMany = vi.fn().mockResolvedValue([]);
@@ -22,6 +24,9 @@ function createApplicationDb(params?: {
   const updateMany = vi.fn().mockResolvedValue({
     count: params?.updateCount ?? 1,
   });
+  const resumeFindFirst = vi
+    .fn()
+    .mockResolvedValue(params?.resumeFindFirstResult ?? null);
 
   return {
     application: {
@@ -37,7 +42,13 @@ function createApplicationDb(params?: {
         findMany,
         updateMany,
       },
+      resume: {
+        findFirst: resumeFindFirst,
+      },
     } as unknown as ApplicationDb,
+    resume: {
+      findFirst: resumeFindFirst,
+    },
   };
 }
 
@@ -65,6 +76,16 @@ describe("application repository", () => {
     await getApplicationByIdForUser("user_1", "application_1", db);
 
     expect(application.findFirst).toHaveBeenCalledWith({
+      include: {
+        resume: {
+          select: {
+            id: true,
+            status: true,
+            title: true,
+            updatedAt: true,
+          },
+        },
+      },
       where: {
         id: "application_1",
         userId: "user_1",
@@ -94,6 +115,7 @@ describe("application repository", () => {
         jdExtractJson,
         jdText: "A long enough job description for a frontend role.",
         location: null,
+        resumeId: null,
         roleTitle: "Frontend Engineer",
         userId: "user_1",
       },
@@ -106,11 +128,68 @@ describe("application repository", () => {
         jdExtractJson,
         jdText: "A long enough job description for a frontend role.",
         location: null,
+        resumeId: null,
         roleTitle: "Frontend Engineer",
         stage: "PREPARING",
         userId: "user_1",
       },
     });
+  });
+
+  it("creates applications with a resume only after checking resume ownership", async () => {
+    const { application, db, resume } = createApplicationDb({
+      resumeFindFirstResult: { id: "resume_1" },
+    });
+
+    await createApplicationForUser(
+      {
+        companyName: "Acme",
+        jdText: "A long enough job description for a frontend role.",
+        location: null,
+        resumeId: "resume_1",
+        roleTitle: "Frontend Engineer",
+        userId: "user_1",
+      },
+      db
+    );
+
+    expect(resume.findFirst).toHaveBeenCalledWith({
+      select: {
+        id: true,
+      },
+      where: {
+        id: "resume_1",
+        userId: "user_1",
+      },
+    });
+    expect(application.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        resumeId: "resume_1",
+        userId: "user_1",
+      }),
+    });
+  });
+
+  it("does not create applications with another user's resume", async () => {
+    const { application, db } = createApplicationDb({
+      resumeFindFirstResult: null,
+    });
+
+    await expect(
+      createApplicationForUser(
+        {
+          companyName: "Acme",
+          jdText: "A long enough job description for a frontend role.",
+          location: null,
+          resumeId: "resume_2",
+          roleTitle: "Frontend Engineer",
+          userId: "user_1",
+        },
+        db
+      )
+    ).resolves.toBeNull();
+
+    expect(application.create).not.toHaveBeenCalled();
   });
 
   it("updates application stage only when id and userId both match", async () => {
@@ -155,5 +234,93 @@ describe("application repository", () => {
         db
       )
     ).resolves.toBeNull();
+  });
+
+  it("updates application resume only when application and resume are user-owned", async () => {
+    const existingApplication = { id: "application_1", userId: "user_1" };
+    const { application, db, resume } = createApplicationDb({
+      findFirstResult: existingApplication,
+      resumeFindFirstResult: { id: "resume_1" },
+      updateCount: 1,
+    });
+
+    await expect(
+      updateApplicationResumeForUser(
+        {
+          id: "application_1",
+          resumeId: "resume_1",
+          userId: "user_1",
+        },
+        db
+      )
+    ).resolves.toBe(existingApplication);
+
+    expect(resume.findFirst).toHaveBeenCalledWith({
+      select: {
+        id: true,
+      },
+      where: {
+        id: "resume_1",
+        userId: "user_1",
+      },
+    });
+    expect(application.updateMany).toHaveBeenCalledWith({
+      data: {
+        resumeId: "resume_1",
+      },
+      where: {
+        id: "application_1",
+        userId: "user_1",
+      },
+    });
+  });
+
+  it("detaches application resumes by setting resumeId to null", async () => {
+    const existingApplication = { id: "application_1", userId: "user_1" };
+    const { application, db, resume } = createApplicationDb({
+      findFirstResult: existingApplication,
+      updateCount: 1,
+    });
+
+    await expect(
+      updateApplicationResumeForUser(
+        {
+          id: "application_1",
+          resumeId: null,
+          userId: "user_1",
+        },
+        db
+      )
+    ).resolves.toBe(existingApplication);
+
+    expect(resume.findFirst).not.toHaveBeenCalled();
+    expect(application.updateMany).toHaveBeenCalledWith({
+      data: {
+        resumeId: null,
+      },
+      where: {
+        id: "application_1",
+        userId: "user_1",
+      },
+    });
+  });
+
+  it("returns null when attaching a resume that is not user-owned", async () => {
+    const { application, db } = createApplicationDb({
+      resumeFindFirstResult: null,
+    });
+
+    await expect(
+      updateApplicationResumeForUser(
+        {
+          id: "application_1",
+          resumeId: "resume_2",
+          userId: "user_1",
+        },
+        db
+      )
+    ).resolves.toBeNull();
+
+    expect(application.updateMany).not.toHaveBeenCalled();
   });
 });
