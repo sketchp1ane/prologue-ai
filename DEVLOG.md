@@ -364,6 +364,23 @@ Not included:
 - Weekly Report
 - Homepage changes
 
+## 2026-04-28 — Collapsed sidebar topbar search centering
+
+Fixed the authenticated workspace topbar so the desktop search control stays centered in the content area when the sidebar is collapsed.
+
+Included:
+
+- Replaced the topbar's desktop flex distribution with a three-column grid
+- Kept the page title left-aligned, search centered, and account actions right-aligned
+- Preserved the mobile search button behavior and existing search modal
+
+Not included:
+
+- Search implementation
+- Sidebar persistence
+- Product feature changes
+- Homepage changes
+
 ## 2026-04-28 — Application resume detach-on-delete fix
 
 Fixed the application-to-resume relation so deleting an attached resume keeps the application record.

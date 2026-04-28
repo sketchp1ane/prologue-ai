@@ -106,9 +106,9 @@ export function AppTopbar() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
-      <div className="flex h-16 items-center justify-between gap-4 px-5 sm:px-6 lg:px-8">
+      <div className="grid h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(14rem,32rem)_minmax(0,1fr)] lg:px-8 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,39rem)_minmax(0,1fr)]">
         {/* Left: Page Title / Breadcrumb */}
-        <div className="flex min-w-0 items-center gap-3 pl-12 lg:pl-0">
+        <div className="flex min-w-0 items-center gap-3 justify-self-start pl-12 lg:pl-0">
           {breadcrumb && (
             <>
               <span className="hidden text-sm text-muted-foreground sm:block">
@@ -123,7 +123,7 @@ export function AppTopbar() {
         </div>
 
         {/* Center: Search (Desktop) */}
-        <div className="hidden flex-1 justify-center lg:flex lg:max-w-md">
+        <div className="hidden w-full justify-center lg:flex">
           <button
             type="button"
             onClick={() => setSearchOpen(true)}
@@ -138,7 +138,7 @@ export function AppTopbar() {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-max items-center gap-2 justify-self-end">
           {/* Mobile Search */}
           <button
             type="button"
@@ -173,11 +173,11 @@ export function AppTopbar() {
             <button
               type="button"
               onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-1 pr-3 shadow-sm transition-colors hover:bg-secondary/50"
+              className="flex min-w-max items-center gap-2 whitespace-nowrap rounded-full border border-border bg-card py-1 pl-1 pr-3 shadow-sm transition-colors hover:bg-secondary/50"
               aria-expanded={userMenuOpen}
               aria-haspopup="menu"
             >
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10">
                 <span className="text-xs font-medium text-primary">
                   {initials}
                 </span>
@@ -186,7 +186,7 @@ export function AppTopbar() {
                 {displayName}
               </span>
               <ChevronDown
-                className="hidden h-3.5 w-3.5 text-muted-foreground sm:block"
+                className="hidden h-3.5 w-3.5 shrink-0 text-muted-foreground sm:block"
                 aria-hidden="true"
               />
             </button>
