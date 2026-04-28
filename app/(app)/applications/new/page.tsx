@@ -1,4 +1,6 @@
 import { PageHeader } from "@/components/app/PageHeader";
+import { requireCurrentUserId } from "@/src/lib/auth/current-user";
+import { listUserResumes } from "@/src/lib/resumes/service";
 
 import { ApplicationCreateForm } from "./ApplicationCreateForm";
 
@@ -15,7 +17,11 @@ function readError(params: Record<string, string | string[] | undefined> | undef
 export default async function NewApplicationPage({
   searchParams,
 }: NewApplicationPageProps) {
-  const params = await searchParams;
+  const [params, userId] = await Promise.all([
+    searchParams,
+    requireCurrentUserId(),
+  ]);
+  const resumes = await listUserResumes(userId);
 
   return (
     <>
@@ -27,7 +33,13 @@ export default async function NewApplicationPage({
           label: "Back to applications",
         }}
       />
-      <ApplicationCreateForm initialError={readError(params)} />
+      <ApplicationCreateForm
+        initialError={readError(params)}
+        resumes={resumes.map((resume) => ({
+          id: resume.id,
+          title: resume.title,
+        }))}
+      />
     </>
   );
 }

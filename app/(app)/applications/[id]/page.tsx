@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   Briefcase,
+  FileText,
   LayoutDashboard,
   MapPin,
   type LucideIcon,
@@ -14,6 +15,7 @@ import {
   AppCardHeader,
 } from "@/components/app/AppCard";
 import { PageHeader } from "@/components/app/PageHeader";
+import { ApplicationResumeSelect } from "@/components/applications/ApplicationResumeSelect";
 import { ApplicationStageSelect } from "@/components/applications/ApplicationStageSelect";
 import { Button } from "@/components/ui/button";
 import { jdExtractSchema, type JdExtract } from "@/src/lib/ai/schemas/jd-extract";
@@ -23,6 +25,7 @@ import {
 } from "@/src/lib/applications/stages";
 import { getUserApplication } from "@/src/lib/applications/service";
 import { requireCurrentUserId } from "@/src/lib/auth/current-user";
+import { listUserResumes } from "@/src/lib/resumes/service";
 
 type ApplicationDetailPageProps = {
   params: Promise<{
@@ -73,7 +76,10 @@ export default async function ApplicationDetailPage({
     params,
     requireCurrentUserId(),
   ]);
-  const application = await getUserApplication(userId, id);
+  const [application, resumes] = await Promise.all([
+    getUserApplication(userId, id),
+    listUserResumes(userId),
+  ]);
 
   if (!application) {
     notFound();
@@ -210,6 +216,58 @@ export default async function ApplicationDetailPage({
                 label="Updated"
                 value={formatDate(application.updatedAt)}
               />
+            </AppCardContent>
+          </AppCard>
+
+          <AppCard>
+            <AppCardHeader
+              title="Attached resume"
+              description="Optional resume for future diagnosis."
+            />
+            <AppCardContent className="space-y-4">
+              {application.resume ? (
+                <Link
+                  href={`/resumes/${application.resume.id}`}
+                  className="flex items-start gap-3 rounded-xl border border-border bg-secondary/20 p-3 transition hover:border-primary/20"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-primary">
+                    <FileText className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium text-foreground">
+                      {application.resume.title}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {application.resume.status.toLowerCase()} · Updated{" "}
+                      {formatDate(application.resume.updatedAt)}
+                    </span>
+                  </span>
+                </Link>
+              ) : (
+                <div className="rounded-xl border border-dashed border-border bg-secondary/20 p-4 text-sm text-muted-foreground">
+                  No resume attached
+                </div>
+              )}
+
+              {resumes.length > 0 ? (
+                <ApplicationResumeSelect
+                  applicationId={application.id}
+                  currentResumeId={application.resume?.id ?? null}
+                  label={`Update attached resume for ${application.companyName} ${application.roleTitle}`}
+                  resumes={resumes.map((resume) => ({
+                    id: resume.id,
+                    title: resume.title,
+                  }))}
+                />
+              ) : (
+                <p className="text-sm leading-6 text-muted-foreground">
+                  No resumes yet.{" "}
+                  <Link href="/resumes/new" className="text-foreground underline">
+                    Paste a resume
+                  </Link>{" "}
+                  to attach one here.
+                </p>
+              )}
             </AppCardContent>
           </AppCard>
 

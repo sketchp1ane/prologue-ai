@@ -7,16 +7,23 @@ import { ZodError } from "zod";
 import {
   ApplicationServiceError,
   createUserApplication,
+  updateUserApplicationResume,
   updateUserApplicationStage,
 } from "@/src/lib/applications/service";
 import { requireCurrentUserId } from "@/src/lib/auth/current-user";
 import { jdExtractSchema } from "@/src/lib/ai/schemas/jd-extract";
 import {
   createApplicationSchema,
+  updateApplicationResumeSchema,
   updateApplicationStageSchema,
 } from "@/src/lib/validations/application";
 
 type UpdateApplicationStageState = {
+  error: string | null;
+  status: "idle" | "success";
+};
+
+type UpdateApplicationResumeState = {
   error: string | null;
   status: "idle" | "success";
 };
@@ -80,6 +87,7 @@ export async function createApplicationAction(formData: FormData) {
     jdExtractJson: extractJson.data,
     jdText: readFormString(formData, "jdText"),
     location: readFormString(formData, "location"),
+    resumeId: readFormString(formData, "resumeId"),
     roleTitle: readFormString(formData, "roleTitle"),
     stage: readFormString(formData, "stage") || "PREPARING",
   });
@@ -88,7 +96,22 @@ export async function createApplicationAction(formData: FormData) {
     redirect(withMessage("/applications/new", firstError(parsed.error)));
   }
 
-  const application = await createUserApplication(userId, parsed.data);
+  let application: Awaited<ReturnType<typeof createUserApplication>>;
+
+  try {
+    application = await createUserApplication(userId, parsed.data);
+  } catch (error) {
+    if (error instanceof ApplicationServiceError) {
+      redirect(
+        withMessage(
+          "/applications/new",
+          "Choose one of your resumes or leave it unattached."
+        )
+      );
+    }
+
+    throw error;
+  }
 
   revalidatePath("/applications");
   redirect(`/applications/${application.id}`);
@@ -118,6 +141,47 @@ export async function updateApplicationStageAction(
     if (error instanceof ApplicationServiceError) {
       return {
         error: "We could not update this application stage.",
+        status: "idle",
+      };
+    }
+
+    throw error;
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/applications");
+  revalidatePath(`/applications/${parsed.data.applicationId}`);
+
+  return {
+    error: null,
+    status: "success",
+  };
+}
+
+export async function updateApplicationResumeAction(
+  _previousState: UpdateApplicationResumeState,
+  formData: FormData
+): Promise<UpdateApplicationResumeState> {
+  const parsed = updateApplicationResumeSchema.safeParse({
+    applicationId: readFormString(formData, "applicationId"),
+    resumeId: readFormString(formData, "resumeId"),
+  });
+
+  if (!parsed.success) {
+    return {
+      error: "Choose a valid resume and try again.",
+      status: "idle",
+    };
+  }
+
+  const userId = await requireCurrentUserId();
+
+  try {
+    await updateUserApplicationResume(userId, parsed.data);
+  } catch (error) {
+    if (error instanceof ApplicationServiceError) {
+      return {
+        error: "We could not update this application resume.",
         status: "idle",
       };
     }
