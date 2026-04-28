@@ -78,5 +78,15 @@ describe("application validation", () => {
       applicationId: "application_1",
       resumeId: null,
     });
+
+    expect(
+      updateApplicationResumeSchema.parse({
+        applicationId: "application_1",
+        resumeId: null,
+      })
+    ).toEqual({
+      applicationId: "application_1",
+      resumeId: null,
+    });
   });
 });
