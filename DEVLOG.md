@@ -1,5 +1,46 @@
 # DEVLOG
 
+## 2026-04-28 — Workspace Data v1 QA closeout
+
+Closed the Workspace Data v1 day with a documentation and validation pass only.
+
+Implemented today:
+
+- Real current-user dashboard application data and stage-grouped board
+- Server Action-backed application stage updates that persist through user-scoped service and repository functions
+- Hardened `/applications/[id]` with safe missing/unauthorized handling, saved JD display, stage updates, and attached resume controls
+- Pasted-text Resume CRUD for create, list, detail, rename, and delete
+- Optional application-to-resume attachment, detach, and change flows using only the current user's resumes
+
+QA confirmations:
+
+- Homepage files were not modified for this closeout task
+- No new AI feature was added; JD Extract remains the only implemented OpenAI integration
+- Application list, detail, create, stage update, and resume attachment paths are scoped by Clerk `userId`
+- Resume list, detail, create, rename, and delete paths are scoped by Clerk `userId`
+- Application stage updates are persisted by `updateMany` with both `id` and `userId`
+- Resume attachment validates the selected resume belongs to the current user before create or update
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test` passed: 12 test files, 44 tests
+- `pnpm build` passed
+- `pnpm check` passed
+
+Known limitations:
+
+- Manual browser QA was not performed in this closeout task
+- Resume upload and Resume Parse are not implemented
+- Diagnosis, Bullet Rewrite, Outreach, Interview Review, and Weekly Report are not implemented
+- JD Extract requires OpenAI configuration at runtime, but this task did not call OpenAI
+- Dashboard stage changes use a selector fallback; drag-and-drop is not implemented
+
+Next recommended task:
+
+- Start a separate Resume Parse slice from `docs/05_CODEX_TASKS.md` only if that is the next selected product task. Do not bundle Diagnosis or Bullet Rewrite into that slice.
+
 ## 2026-04-28 — Application resume binding
 
 Implemented optional Resume attachment for Applications.

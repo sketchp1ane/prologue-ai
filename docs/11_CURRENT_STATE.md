@@ -35,6 +35,10 @@
 - Application routes include empty, loading, and error states for the completed slice.
 - `/dashboard` reads the current user's applications, shows stage-based statistics, groups cards into fixed `ApplicationStage` columns, and supports stage updates.
 - Dashboard stage updates are persisted through user-scoped repository/service functions and do not use drag-and-drop.
+- `/applications/new` can optionally attach one of the current user's resumes when saving an application.
+- `/applications/[id]` shows the currently attached resume, supports attach/detach/change, and only offers resumes owned by the current user.
+- Application-to-resume attachment and update paths verify the resume belongs to the same Clerk `userId` before writing.
+- Workspace Data v1 QA closeout completed with documentation updates only and required validation commands passing.
 
 ## Current Homepage Status
 
@@ -79,15 +83,18 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - Application creation supports pasted JD text only and stores reviewed JD Extract JSON in `Application.jdExtractJson`.
 - Application reads and writes are user-scoped through Clerk `userId` and repository/service functions.
 - Application detail loads and stage updates are scoped by both `Application.id` and Clerk `userId`; missing and unauthorized records render the same safe not-found state.
+- Application resume attachment writes are scoped by both `Application.id` and Clerk `userId`, and non-null `resumeId` values are accepted only after a current-user resume lookup succeeds.
 - Dashboard reads current-user applications only and updates stages only when both `Application.id` and `userId` match.
 - Dashboard and application detail share the same Server Action-backed stage selector.
 - Dashboard board columns are fixed from the current `ApplicationStage` enum and use a selector fallback instead of drag-and-drop.
+- Resume deletion detaches related applications through `ON DELETE SET NULL` rather than deleting application records.
+- Workspace Data v1 validation passed on 2026-04-28 with `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `pnpm check`.
 - JD Extract is the only implemented OpenAI API integration.
 - No resume upload or parsing is implemented yet.
 - No diagnosis, bullet rewrite, outreach, interview review, or weekly report generation is implemented yet.
 
 ## Next Recommended Step
 
-Stop after the closed Dashboard application board slice. The next feature slice should start separately from `docs/05_CODEX_TASKS.md` and must not expand this task into Resume Parse, Diagnosis, Bullet Rewrite, Outreach, Interview Review, or Weekly Report.
+Stop after the Workspace Data v1 closeout. The next feature slice should start separately from `docs/05_CODEX_TASKS.md`; if Resume Parse is selected next, keep it separate from Diagnosis, Bullet Rewrite, Outreach, Interview Review, and Weekly Report.
 
 For any future UI work, read `docs/10_DESIGN_SYSTEM.md` first and keep the imported homepage as the visual baseline.
