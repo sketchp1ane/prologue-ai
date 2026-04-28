@@ -17,7 +17,9 @@ export const applicationIdSchema = trimmedString.pipe(
     .max(128, "Application id is invalid.")
 );
 
-export const applicationResumeIdSchema = trimmedString
+export const applicationResumeIdSchema = z
+  .union([z.string(), z.null()])
+  .transform((value) => (value ?? "").trim())
   .pipe(z.string().max(128, "Resume id is invalid."))
   .transform((value) => (value.length > 0 ? value : null));
 
