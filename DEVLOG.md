@@ -278,3 +278,25 @@ Not included:
 - Interview Review
 - Weekly Report
 - Homepage changes
+
+## 2026-04-28 — Application resume detach-on-delete fix
+
+Fixed the application-to-resume relation so deleting an attached resume keeps the application record.
+
+Included:
+
+- `Application.resumeId` now uses `onDelete: SetNull` in the Prisma schema
+- Migration to replace the application resume foreign key with `ON DELETE SET NULL`
+- Regression coverage for the schema and migration relation behavior
+
+Not included:
+
+- Resume Parse
+- PDF upload
+- Diagnosis Report
+- Bullet Rewrite
+- Streaming
+- Outreach
+- Interview Review
+- Weekly Report
+- Homepage changes

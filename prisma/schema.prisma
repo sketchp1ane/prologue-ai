@@ -64,7 +64,7 @@ model Application {
   updatedAt     DateTime         @updatedAt
 
   aiGenerations AiGeneration[]
-  resume        Resume?           @relation(fields: [resumeId], references: [id])
+  resume        Resume?           @relation(fields: [resumeId], references: [id], onDelete: SetNull)
   rewrites      BulletRewrite[]
   reviews       InterviewReview[]
 
