@@ -1,5 +1,20 @@
 # DEVLOG
 
+## 2026-04-28 — End-of-day documentation maintenance
+
+Synchronized source-of-truth docs after updating local `main`.
+
+Included:
+
+- Updated README current status from foundation-only to Workspace Data v1
+- Refreshed architecture, data model, OpenAI contract, acceptance, task queue, current state, and risk docs to match implemented slices
+- Rebuilt the tracked file manifest
+- Kept this as a docs-only maintenance branch
+
+Validation:
+
+- `pnpm check` passed
+
 ## 2026-04-28 — Applications status badge polish
 
 Aligned the Applications list UI with the draggable dashboard board.
@@ -117,7 +132,7 @@ Known limitations:
 - Resume upload and Resume Parse are not implemented
 - Diagnosis, Bullet Rewrite, Outreach, Interview Review, and Weekly Report are not implemented
 - JD Extract requires OpenAI configuration at runtime, but this task did not call OpenAI
-- Dashboard stage changes use a selector fallback; drag-and-drop is not implemented
+- At that closeout point, dashboard stage changes used a selector fallback; drag-and-drop landed later the same day
 
 Next recommended task:
 

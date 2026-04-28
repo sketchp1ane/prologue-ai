@@ -36,6 +36,7 @@
 - Application routes include empty, loading, and error states for the completed slice.
 - `/dashboard` reads the current user's applications, shows stage-based statistics, and groups cards into fixed `ApplicationStage` columns.
 - Dashboard supports cross-stage drag-and-drop for stage changes, plus a compact stage select fallback for keyboard and mobile use.
+- `/applications` uses the shared application stage badge and lighter compact card styling aligned with the dashboard board.
 - `/applications/new` can optionally attach one of the current user's resumes when saving an application.
 - `/applications/[id]` shows the currently attached resume, supports attach/detach/change, and only offers resumes owned by the current user.
 - Application-to-resume attachment and update paths verify the resume belongs to the same Clerk `userId` before writing.
@@ -91,12 +92,13 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - Dashboard board columns are fixed from the current `ApplicationStage` enum and do not persist within-column ordering.
 - Resume deletion detaches related applications through `ON DELETE SET NULL` rather than deleting application records.
 - Workspace Data v1 validation passed on 2026-04-28 with `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `pnpm check`.
+- Dashboard draggable board and Applications badge polish landed after the Workspace Data v1 closeout.
 - JD Extract is the only implemented OpenAI API integration.
 - No resume upload or parsing is implemented yet.
 - No diagnosis, bullet rewrite, outreach, interview review, or weekly report generation is implemented yet.
 
 ## Next Recommended Step
 
-Stop after the Workspace Data v1 closeout. The next feature slice should start separately from `docs/05_CODEX_TASKS.md`; if Resume Parse is selected next, keep it separate from Diagnosis, Bullet Rewrite, Outreach, Interview Review, and Weekly Report.
+Start the Resume Parse slice from `docs/05_CODEX_TASKS.md` next unless a different maintenance or hardening task is explicitly selected. Keep Resume Parse separate from Diagnosis, Bullet Rewrite, Outreach, Interview Review, and Weekly Report.
 
 For any future UI work, read `docs/10_DESIGN_SYSTEM.md` first and keep the imported homepage as the visual baseline.

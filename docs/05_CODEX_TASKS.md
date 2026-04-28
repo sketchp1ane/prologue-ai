@@ -34,6 +34,8 @@ Not included:
 
 ### T01 — Verify scaffold and dependency install
 
+Status: completed.
+
 Prompt:
 
 ```txt
@@ -47,6 +49,8 @@ Acceptance:
 - no product feature is implemented
 
 ### T02 — Data model
+
+Status: completed.
 
 Prompt:
 
@@ -62,9 +66,13 @@ Acceptance:
 
 ### T03 — Auth and app shell
 
+Status: completed.
+
 Implement Clerk auth, protected route structure, dashboard layout placeholder, nav placeholders, and settings placeholder. Keep UI minimal and consistent with the future v0 homepage visual direction.
 
 ### T04 — Import and harden v0 homepage
+
+Status: completed.
 
 Import the v0-generated homepage prototype only after T01-T03 are stable.
 
@@ -76,15 +84,21 @@ Read AGENTS.md, docs/10_DESIGN_SYSTEM.md, and docs/11_CURRENT_STATE.md. Import t
 
 ### T05 — Resume create/list/detail skeleton
 
+Status: completed.
+
 Implement resume upload/paste UI shell, list, detail, rename, and delete flow placeholders before AI parsing.
 
 ## Phase 2 — Core product and AI features
 
 ### T06 — Resume parse with OpenAI
 
+Status: next recommended product slice.
+
 Implement resume parse service and route with schema validation and fallback.
 
 ### T07 — Application board and JD extract
+
+Status: completed before T06.
 
 Implement application creation from JD, JD extraction, stage board, and stage update.
 

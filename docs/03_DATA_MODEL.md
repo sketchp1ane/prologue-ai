@@ -2,9 +2,9 @@
 
 ## Current stage
 
-`prisma/schema.prisma` currently contains only generator and datasource configuration. Product models are intentionally deferred to the data-model task.
+`prisma/schema.prisma` contains the initial MVP data model, committed migrations, and a generated-client setup. Product records are scoped with `userId` and repository functions must keep enforcing current-user access.
 
-## Entities to implement later
+## Current entities
 
 ### User
 
@@ -16,43 +16,71 @@ Managed by auth provider. Store only external `userId` references in app tables.
 id
 userId
 title
-sourceType: pdf | pasted_text
 fileUrl?
-rawText?
+filePath?
+sourceText?
 parsedJson
+status: uploading | parsing | ready | failed
 createdAt
 updatedAt
 ```
+
+Current implementation supports pasted-text resumes only. Pasted resumes store content in `sourceText`, use `READY`, and do not create parsed JSON or bullets yet.
 
 ### Application
 
 ```txt
 id
 userId
-resumeId
+resumeId?
 companyName
 roleTitle
-jobDescription
-stage: wishlist | applied | screening | interview | offer | rejected
+location?
+jdText
+stage: preparing | applied | communicating | interviewing | offer | archived
 jdExtractJson
 diagnosisJson
+greetingJson
+weeklyBatchId
 createdAt
 updatedAt
 ```
 
-### ResumeBullet
+Applications can be created before a resume is attached. `resumeId` is nullable and the relation uses `ON DELETE SET NULL` so deleting a resume detaches related applications instead of deleting them.
 
-Optional normalized table if needed later. MVP may keep bullets inside `parsedJson` until rewrite needs normalization.
+### ResumeBullet
 
 ```txt
 id
 userId
 resumeId
-path
-content
+sectionType
+sectionTitle?
+orderIndex
+originalText
+currentText
+metadata
 createdAt
 updatedAt
 ```
+
+This table exists for future parsing/rewrite flows but is not populated by the current pasted-text resume flow.
+
+### BulletRewrite
+
+```txt
+id
+userId
+resumeBulletId
+applicationId
+originalText
+variantsJson
+selectedVariantIndex?
+createdAt
+updatedAt
+```
+
+Planned for Bullet Rewrite; not used by the current UI.
 
 ### AiGeneration
 
@@ -61,30 +89,40 @@ id
 userId
 applicationId?
 resumeId?
-type: resume_parse | jd_extract | diagnosis | rewrite | outreach | interview_review | weekly_report
+feature: resume_parse | jd_extract | diagnosis | rewrite | greeting | interview_review | weekly_insight
 model
 promptVersion
 inputHash
 outputJson?
 outputText?
 usageJson?
+inputTokens?
+outputTokens?
+estimatedCost?
+metadata?
 status: success | failed
 errorMessage?
 createdAt
+updatedAt
 ```
 
-### InterviewNote
+JD Extract records success/failure audit rows without storing the full JD input.
+
+### InterviewReview
 
 ```txt
 id
 userId
 applicationId
-questionsJson
-selfReflection
+question
+answer
+feedback?
 aiReviewJson?
 createdAt
 updatedAt
 ```
+
+Planned for Interview Review; not used by the current UI.
 
 ## Authorization
 
@@ -92,4 +130,4 @@ Every user-owned query must filter by `userId`.
 
 ## MVP simplification
 
-Keep resume structured content in JSON first. Normalize only if a real feature requires it.
+Keep resume structured content in JSON first. Populate normalized resume bullets only when Resume Parse or Bullet Rewrite requires them.

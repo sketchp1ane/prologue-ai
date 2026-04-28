@@ -2,7 +2,7 @@
 
 ## Current stage
 
-No OpenAI API calls are implemented in this initialization package.
+JD Extract is implemented through `src/lib/ai/services/extract-jd.ts` and exposed by `POST /api/applications/extract-jd`. All other AI feature contracts in this document remain planned.
 
 ## Model routing
 
@@ -28,6 +28,8 @@ Codex may adjust model names only after checking current OpenAI docs.
 ## Feature contracts
 
 ### Resume parse
+
+Status: planned.
 
 Input:
 
@@ -77,6 +79,8 @@ Output shape:
 
 ### JD extract
 
+Status: implemented.
+
 Output includes:
 
 ```ts
@@ -94,6 +98,8 @@ Output includes:
 
 ### Diagnosis
 
+Status: planned.
+
 Output includes:
 
 ```ts
@@ -109,6 +115,8 @@ Output includes:
 ```
 
 ### Bullet rewrite
+
+Status: planned.
 
 Streaming output should produce three variants:
 
