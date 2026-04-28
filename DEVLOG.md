@@ -252,3 +252,29 @@ Not included:
 - outreach
 - interview review
 - weekly report
+
+## 2026-04-28 — Application creation vertical slice closure
+
+Closed today's Application creation vertical slice and stopped before unrelated AI/product features.
+
+Included:
+
+- `/applications/new` supports pasted JD text, JD Extract, reviewed/editable extracted fields, and Save Application
+- Application persistence stores company name, role title, location, stage, original JD text, reviewed JD Extract JSON, and Clerk `userId`
+- `/applications` lists persisted applications for the current user only
+- `/applications/[id]` shows saved application metadata, original JD text, and extracted JD details
+- Application create/list/detail database access is scoped by `userId`
+- Route-level loading and error states for application pages
+- Save Application pending state and a recoverable JD Extract network-error state
+
+Not included:
+
+- Resume Parse
+- PDF upload
+- Diagnosis Report
+- Bullet Rewrite
+- Streaming
+- Outreach
+- Interview Review
+- Weekly Report
+- Homepage changes

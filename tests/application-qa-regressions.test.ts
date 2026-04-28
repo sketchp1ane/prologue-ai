@@ -14,7 +14,21 @@ describe("application QA regressions", () => {
 
     expect(form).toContain("Paste a job description before extracting.");
     expect(form).toContain("disabled={isExtracting}");
+    expect(form).toContain("Could not reach JD extraction.");
     expect(form).not.toContain("disabled={isExtracting || jdText.trim().length === 0}");
+  });
+
+  it("shows save and route-level async states for applications", () => {
+    const form = readProjectFile(
+      "app/(app)/applications/new/ApplicationCreateForm.tsx"
+    );
+    const loading = readProjectFile("app/(app)/applications/loading.tsx");
+    const error = readProjectFile("app/(app)/applications/error.tsx");
+
+    expect(form).toContain("useFormStatus");
+    expect(form).toContain("Saving...");
+    expect(loading).toContain("Loading your tracked applications.");
+    expect(error).toContain("Applications could not load");
   });
 
   it("returns a clear development error when OpenAI is not configured", () => {

@@ -27,7 +27,11 @@
 - Application `resumeId` is nullable so applications can be created before resume parsing/upload exists.
 - JD Extract service, API route, schema, prompt, and OpenAI client/model helpers added.
 - JD Extract records `AiGeneration` success/failure audit rows without storing full JD input.
-- Application list, new, and detail routes now display persisted user-owned application data.
+- Application creation vertical slice is closed: `/applications/new` supports pasted JD text, JD Extract, reviewed/editable extracted fields, and Save Application.
+- Applications persist `companyName`, `roleTitle`, `location`, `stage`, `jdText`, reviewed `jdExtractJson`, and `userId`.
+- `/applications` lists the current user's applications only.
+- `/applications/[id]` shows basic application fields, original JD text, and extracted JD details for the current user only.
+- Application routes include empty, loading, and error states for the completed slice.
 
 ## Current Homepage Status
 
@@ -70,6 +74,7 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - Resume CRUD database access is implemented through user-scoped repository/service functions.
 - The active resume creation flow supports pasted text only and stores it in `Resume.sourceText`.
 - Application creation supports pasted JD text only and stores reviewed JD Extract JSON in `Application.jdExtractJson`.
+- Application reads and writes are user-scoped through Clerk `userId` and repository/service functions.
 - JD Extract is the only implemented OpenAI API integration.
 - No dashboard board business logic is implemented yet.
 - No resume upload or parsing is implemented yet.
@@ -77,6 +82,6 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 
 ## Next Recommended Step
 
-Continue with the task queue in `docs/05_CODEX_TASKS.md`, starting from the next incomplete foundation task.
+Stop after the closed Application creation vertical slice. The next feature slice should start separately from `docs/05_CODEX_TASKS.md` and must not expand this task into Resume Parse, Diagnosis, Bullet Rewrite, Outreach, Interview Review, or Weekly Report.
 
 For any future UI work, read `docs/10_DESIGN_SYSTEM.md` first and keep the imported homepage as the visual baseline.

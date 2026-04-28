@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useFormStatus } from "react-dom";
 import { FileSearch, Loader2, Save, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -14,20 +15,6 @@ import {
 } from "@/src/lib/validations/application";
 import type { JdExtract } from "@/src/lib/ai/schemas/jd-extract";
 
-const emptyExtract: JdExtract = {
-  companyName: null,
-  roleTitle: null,
-  location: null,
-  seniority: null,
-  employmentType: null,
-  requiredSkills: [],
-  preferredSkills: [],
-  responsibilities: [],
-  keywords: [],
-  confidence: 0,
-  warnings: [],
-};
-
 function splitLines(value: string) {
   return value
     .split("\n")
@@ -37,6 +24,21 @@ function splitLines(value: string) {
 
 function joinLines(value: string[]) {
   return value.join("\n");
+}
+
+function SaveApplicationButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button type="submit" className="rounded-xl" disabled={pending}>
+      {pending ? (
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+      ) : (
+        <Save className="h-4 w-4" aria-hidden="true" />
+      )}
+      {pending ? "Saving..." : "Save Application"}
+    </Button>
+  );
 }
 
 type ApplicationCreateFormProps = {
@@ -124,28 +126,33 @@ export function ApplicationCreateForm({
     }
 
     startExtract(async () => {
-      const response = await fetch("/api/applications/extract-jd", {
-        body: JSON.stringify({ jdText: trimmedJdText }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-      });
-      const body = (await response.json()) as {
-        data?: JdExtract;
-        error?: { message?: string };
-      };
+      try {
+        const response = await fetch("/api/applications/extract-jd", {
+          body: JSON.stringify({ jdText: trimmedJdText }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          method: "POST",
+        });
+        const body = (await response.json()) as {
+          data?: JdExtract;
+          error?: { message?: string };
+        };
 
-      if (!response.ok || !body.data) {
+        if (!response.ok || !body.data) {
+          setExtractError(
+            body.error?.message ??
+              "Could not extract this job description. Enter fields manually."
+          );
+          return;
+        }
+
+        applyExtract(body.data);
+      } catch {
         setExtractError(
-          body.error?.message ??
-            "Could not extract this job description. Enter fields manually."
+          "Could not reach JD extraction. Check your connection and enter fields manually."
         );
-        applyExtract(emptyExtract);
-        return;
       }
-
-      applyExtract(body.data);
     });
   }
 
@@ -205,7 +212,11 @@ export function ApplicationCreateForm({
           </Button>
         </div>
         {extractError && (
-          <div className="mt-4 rounded-xl border border-destructive/30 bg-card px-4 py-3 text-sm text-destructive shadow-sm">
+          <div
+            className="mt-4 rounded-xl border border-destructive/30 bg-card px-4 py-3 text-sm text-destructive shadow-sm"
+            role="alert"
+            aria-live="polite"
+          >
             {extractError}
           </div>
         )}
@@ -359,10 +370,7 @@ export function ApplicationCreateForm({
         </div>
 
         <div className="mt-6 flex justify-end border-t border-border pt-5">
-          <Button type="submit" className="rounded-xl">
-            <Save className="h-4 w-4" aria-hidden="true" />
-            Save Application
-          </Button>
+          <SaveApplicationButton />
         </div>
       </section>
     </form>
