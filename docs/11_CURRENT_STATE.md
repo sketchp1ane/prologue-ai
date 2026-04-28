@@ -31,10 +31,11 @@
 - Application creation vertical slice is closed: `/applications/new` supports pasted JD text, JD Extract, reviewed/editable extracted fields, and Save Application.
 - Applications persist `companyName`, `roleTitle`, `location`, `stage`, `jdText`, reviewed `jdExtractJson`, and `userId`.
 - `/applications` lists the current user's applications only.
+- `/applications` uses compact application list cards with shared stage badge styling.
 - `/applications/[id]` shows basic application fields, original JD text, extracted JD details, top navigation, a stage selector, and safe missing/unauthorized handling for the current user only.
 - Application routes include empty, loading, and error states for the completed slice.
-- `/dashboard` reads the current user's applications, shows stage-based statistics, groups cards into fixed `ApplicationStage` columns, and supports stage updates.
-- Dashboard stage updates are persisted through user-scoped repository/service functions and do not use drag-and-drop.
+- `/dashboard` reads the current user's applications, shows stage-based statistics, and groups cards into fixed `ApplicationStage` columns.
+- Dashboard supports cross-stage drag-and-drop for stage changes, plus a compact stage select fallback for keyboard and mobile use.
 - `/applications/new` can optionally attach one of the current user's resumes when saving an application.
 - `/applications/[id]` shows the currently attached resume, supports attach/detach/change, and only offers resumes owned by the current user.
 - Application-to-resume attachment and update paths verify the resume belongs to the same Clerk `userId` before writing.
@@ -85,8 +86,9 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - Application detail loads and stage updates are scoped by both `Application.id` and Clerk `userId`; missing and unauthorized records render the same safe not-found state.
 - Application resume attachment writes are scoped by both `Application.id` and Clerk `userId`, and non-null `resumeId` values are accepted only after a current-user resume lookup succeeds.
 - Dashboard reads current-user applications only and updates stages only when both `Application.id` and `userId` match.
-- Dashboard and application detail share the same Server Action-backed stage selector.
-- Dashboard board columns are fixed from the current `ApplicationStage` enum and use a selector fallback instead of drag-and-drop.
+- Dashboard drag-and-drop and the compact fallback selector both reuse the same user-scoped stage update path.
+- Application detail continues to use the Server Action-backed stage selector.
+- Dashboard board columns are fixed from the current `ApplicationStage` enum and do not persist within-column ordering.
 - Resume deletion detaches related applications through `ON DELETE SET NULL` rather than deleting application records.
 - Workspace Data v1 validation passed on 2026-04-28 with `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `pnpm check`.
 - JD Extract is the only implemented OpenAI API integration.

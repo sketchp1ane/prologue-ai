@@ -56,6 +56,20 @@ describe("application validation", () => {
         stage: "SCREENING",
       })
     ).toThrow();
+
+    expect(() =>
+      updateApplicationStageSchema.parse({
+        applicationId: "application_1",
+        stage: "SCREENING",
+      })
+    ).toThrow();
+
+    expect(() =>
+      updateApplicationStageSchema.parse({
+        applicationId: "",
+        stage: "APPLIED",
+      })
+    ).toThrow();
   });
 
   it("validates and normalizes resume attachment input", () => {

@@ -1,5 +1,61 @@
 # DEVLOG
 
+## 2026-04-28 — Applications status badge polish
+
+Aligned the Applications list UI with the draggable dashboard board.
+
+Included:
+
+- Added a shared `ApplicationStageBadge` component for compact stage display
+- Moved stage theme colors into shared stage metadata
+- Updated the dashboard board to reuse the shared stage theme
+- Reworked `/applications` list cards with a lighter avatar, tighter metadata, responsive badge placement, and a subdued arrow affordance
+- Kept `/applications` read-only for stage state; stage changes remain on dashboard drag/drop and existing selectors
+- Added regression coverage for shared badge wiring and removal of the local stage label formatter
+
+Validation:
+
+- `pnpm typecheck` passed
+- `pnpm lint` passed
+- `pnpm test` passed: 12 test files, 46 tests
+- `pnpm build` passed
+- `pnpm check` passed
+
+Not included:
+
+- Application list filtering, grouping, sorting, or direct stage mutation
+- Database schema changes
+- OpenAI integration changes
+
+## 2026-04-28 — Dashboard draggable board
+
+Optimized the authenticated dashboard application board.
+
+Included:
+
+- Replaced the server-rendered application columns with a client-side draggable board
+- Added `@dnd-kit/core` for cross-stage drag-and-drop only
+- Kept the existing stage selector pattern available on application detail pages
+- Added a compact card-level stage select as a keyboard and mobile fallback
+- Trimmed dashboard cards to company, role, optional location, and updated timestamp
+- Added a dedicated shared stage metadata module for client-safe labels and ordering
+- Added a drag-focused Server Action that reuses existing validation and user-scoped stage updates
+- Added regression coverage for draggable board wiring and invalid stage update validation
+
+Validation:
+
+- `pnpm typecheck` passed
+- `pnpm lint` passed
+- `pnpm test` passed: 12 test files, 45 tests
+- `pnpm check` passed
+- Local dev server was already running on `http://localhost:3000`; `/dashboard` correctly redirected to Clerk sign-in while signed out
+
+Known limitations:
+
+- Browser visual QA could not run because the local Playwright Chromium executable is not installed
+- Drag-and-drop changes only persist the stage, not within-column ordering
+- Resume upload, Resume Parse, Diagnosis, Bullet Rewrite, Outreach, Interview Review, and Weekly Report remain unimplemented
+
 ## 2026-04-28 — Dashboard redesign PR review
 
 Reviewed PR #11 for merge safety without changing the dashboard visual direction.

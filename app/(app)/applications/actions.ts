@@ -28,6 +28,13 @@ type UpdateApplicationResumeState = {
   status: "idle" | "success";
 };
 
+type MoveApplicationStageState = {
+  applicationId?: string;
+  error: string | null;
+  stage?: string;
+  status: "idle" | "success";
+};
+
 function readFormString(formData: FormData, key: string) {
   const value = formData.get(key);
 
@@ -154,6 +161,47 @@ export async function updateApplicationStageAction(
 
   return {
     error: null,
+    status: "success",
+  };
+}
+
+export async function moveApplicationStageAction(
+  input: unknown
+): Promise<MoveApplicationStageState> {
+  const parsed = updateApplicationStageSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return {
+      error: "Choose a valid stage and try again.",
+      status: "idle",
+    };
+  }
+
+  const userId = await requireCurrentUserId();
+
+  try {
+    await updateUserApplicationStage(userId, parsed.data);
+  } catch (error) {
+    if (error instanceof ApplicationServiceError) {
+      return {
+        applicationId: parsed.data.applicationId,
+        error: "We could not update this application stage.",
+        stage: parsed.data.stage,
+        status: "idle",
+      };
+    }
+
+    throw error;
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/applications");
+  revalidatePath(`/applications/${parsed.data.applicationId}`);
+
+  return {
+    applicationId: parsed.data.applicationId,
+    error: null,
+    stage: parsed.data.stage,
     status: "success",
   };
 }

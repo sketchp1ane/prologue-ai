@@ -3,6 +3,10 @@ import "server-only";
 import { ApplicationStage } from "@prisma/client";
 
 import type { ApplicationListItem } from "@/src/lib/db/applications";
+import {
+  APPLICATION_STAGE_LABELS,
+  APPLICATION_STAGE_ORDER as SHARED_APPLICATION_STAGE_ORDER,
+} from "./stage-metadata";
 
 export type ApplicationStageOption = {
   value: ApplicationStage;
@@ -17,16 +21,8 @@ export type ApplicationDashboardStats = {
   offer: number;
 };
 
-const APPLICATION_STAGE_LABELS: Record<ApplicationStage, string> = {
-  [ApplicationStage.PREPARING]: "Preparing",
-  [ApplicationStage.APPLIED]: "Applied",
-  [ApplicationStage.COMMUNICATING]: "Communicating",
-  [ApplicationStage.INTERVIEWING]: "Interviewing",
-  [ApplicationStage.OFFER]: "Offer",
-  [ApplicationStage.ARCHIVED]: "Archived",
-};
-
-export const APPLICATION_STAGE_ORDER = Object.values(ApplicationStage);
+export const APPLICATION_STAGE_ORDER =
+  SHARED_APPLICATION_STAGE_ORDER as readonly ApplicationStage[];
 
 export function getApplicationStageLabel(stage: ApplicationStage) {
   return APPLICATION_STAGE_LABELS[stage];

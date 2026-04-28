@@ -94,4 +94,52 @@ describe("application QA regressions", () => {
       "revalidatePath(`/applications/${parsed.data.applicationId}`)"
     );
   });
+
+  it("renders the dashboard with a draggable compact application board", () => {
+    const dashboard = readProjectFile("app/(app)/dashboard/page.tsx");
+    const board = readProjectFile(
+      "components/applications/ApplicationBoard.tsx"
+    );
+    const actions = readProjectFile("app/(app)/applications/actions.ts");
+
+    expect(dashboard).toContain("ApplicationBoard");
+    expect(dashboard).toContain("updatedAt.toISOString()");
+    expect(board).toContain("DndContext");
+    expect(board).toContain("useDraggable");
+    expect(board).toContain("useDroppable");
+    expect(board).toContain("moveApplicationStageAction");
+    expect(board).toContain("Updated {formatRelativeDate");
+    expect(board).toContain("application.location");
+    expect(board).toContain("GripVertical");
+    expect(board).toContain("APPLICATION_STAGE_ORDER.map");
+    expect(board).not.toContain("ApplicationStageSelect");
+    expect(board).not.toContain("border-t border-border/70 pt-3");
+    expect(actions).toContain("export async function moveApplicationStageAction");
+    expect(actions).toContain("updateApplicationStageSchema.safeParse(input)");
+  });
+
+  it("uses shared stage badge styling on the applications list", () => {
+    const applicationsPage = readProjectFile("app/(app)/applications/page.tsx");
+    const badge = readProjectFile(
+      "components/applications/ApplicationStageBadge.tsx"
+    );
+    const board = readProjectFile(
+      "components/applications/ApplicationBoard.tsx"
+    );
+    const stageMetadata = readProjectFile(
+      "src/lib/applications/stage-metadata.ts"
+    );
+
+    expect(applicationsPage).toContain("ApplicationStageBadge");
+    expect(applicationsPage).toContain("stage={application.stage}");
+    expect(applicationsPage).not.toContain("function stageLabel");
+    expect(applicationsPage).not.toContain("stageLabel(application.stage)");
+    expect(badge).toContain("APPLICATION_STAGE_LABELS");
+    expect(badge).toContain("APPLICATION_STAGE_THEME");
+    expect(badge).toContain("rounded-full");
+    expect(badge).toContain("theme.dot");
+    expect(board).toContain("APPLICATION_STAGE_THEME");
+    expect(board).not.toContain("const STAGE_THEME");
+    expect(stageMetadata).toContain("export const APPLICATION_STAGE_THEME");
+  });
 });
