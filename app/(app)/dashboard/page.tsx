@@ -21,7 +21,6 @@ import { cn } from "@/src/lib/utils";
 type StageTheme = {
   dot: string;
   accent: string;
-  text: string;
   countBg: string;
 };
 
@@ -29,37 +28,31 @@ const STAGE_THEME: Record<ApplicationStage, StageTheme> = {
   [ApplicationStage.PREPARING]: {
     dot: "bg-zinc-400",
     accent: "bg-zinc-300",
-    text: "text-zinc-600",
     countBg: "bg-zinc-100 text-zinc-700",
   },
   [ApplicationStage.APPLIED]: {
     dot: "bg-blue-500",
     accent: "bg-blue-400",
-    text: "text-blue-700",
     countBg: "bg-blue-50 text-blue-700",
   },
   [ApplicationStage.COMMUNICATING]: {
     dot: "bg-amber-500",
     accent: "bg-amber-400",
-    text: "text-amber-700",
     countBg: "bg-amber-50 text-amber-700",
   },
   [ApplicationStage.INTERVIEWING]: {
     dot: "bg-purple-500",
     accent: "bg-purple-400",
-    text: "text-purple-700",
     countBg: "bg-purple-50 text-purple-700",
   },
   [ApplicationStage.OFFER]: {
     dot: "bg-emerald-500",
     accent: "bg-emerald-400",
-    text: "text-emerald-700",
     countBg: "bg-emerald-50 text-emerald-700",
   },
   [ApplicationStage.ARCHIVED]: {
     dot: "bg-zinc-300",
     accent: "bg-zinc-200",
-    text: "text-zinc-500",
     countBg: "bg-zinc-100 text-zinc-600",
   },
 };
@@ -135,7 +128,6 @@ export default async function DashboardPage() {
         }}
       />
 
-      {/* Overview metrics — flatter, more editorial */}
       <AppCard padding="none" className="mb-8 overflow-hidden">
         <div className="grid grid-cols-2 divide-y divide-border sm:grid-cols-4 sm:divide-x sm:divide-y-0">
           {summaryStats.map((stat, idx) => (
@@ -162,7 +154,6 @@ export default async function DashboardPage() {
         </div>
       </AppCard>
 
-      {/* Board */}
       <div className="mb-3 flex items-end justify-between">
         <div>
           <h2 className="text-base font-medium text-foreground">
@@ -203,7 +194,6 @@ function DashboardColumn({
 
   return (
     <section className="flex min-w-0 flex-col">
-      {/* Stage header — no heavy container, just dot + label + count + thin accent rule */}
       <div className="flex items-center justify-between gap-2 px-1 pb-2.5">
         <div className="flex min-w-0 items-center gap-2">
           <span
@@ -224,7 +214,6 @@ function DashboardColumn({
         </span>
       </div>
 
-      {/* Thin colored accent rule */}
       <div className={cn("mb-3 h-px w-full", theme.accent)} aria-hidden="true" />
 
       {applications.length > 0 ? (
@@ -259,7 +248,6 @@ function DashboardApplicationCard({
 }) {
   return (
     <article className="group relative rounded-xl border border-border bg-card p-3.5 shadow-sm transition hover:border-foreground/20 hover:shadow-md">
-      {/* Header: company + role */}
       <div className="space-y-0.5">
         <Link
           href={`/applications/${application.id}`}
@@ -272,7 +260,6 @@ function DashboardApplicationCard({
         </p>
       </div>
 
-      {/* Meta row: location · updated */}
       <div className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
         {application.location && (
           <>
@@ -287,7 +274,6 @@ function DashboardApplicationCard({
         </span>
       </div>
 
-      {/* Integrated stage control — borderless, looks like a chip until interacted */}
       <div className="mt-3 flex items-center gap-2 border-t border-border/70 pt-3">
         <span
           className={cn("h-1.5 w-1.5 shrink-0 rounded-full", theme.dot)}
