@@ -45,7 +45,7 @@ export function ApplicationStageSelect({
         defaultValue={currentStage}
         disabled={isPending}
         onChange={(event) => event.currentTarget.form?.requestSubmit()}
-        className="h-9 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-medium text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
+        className="h-7 w-full cursor-pointer rounded-md border border-transparent bg-transparent px-1.5 text-xs font-medium text-foreground outline-none transition hover:border-border hover:bg-secondary/40 focus-visible:border-ring focus-visible:bg-background focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
