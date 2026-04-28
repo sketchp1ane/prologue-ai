@@ -121,6 +121,12 @@ export default async function ResumeDetailPage({
                 </span>
               </div>
               <div className="flex items-center justify-between gap-4">
+                <span className="text-muted-foreground">Updated</span>
+                <span className="text-right text-foreground">
+                  {formatDate(resume.updatedAt)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
                 <span className="text-muted-foreground">Source</span>
                 <span className="text-foreground">Pasted text</span>
               </div>

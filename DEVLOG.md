@@ -1,5 +1,26 @@
 # DEVLOG
 
+## 2026-04-28 — Resume text CRUD Task C hardening
+
+Audited and lightly hardened the existing pasted-text Resume CRUD slice.
+
+Included:
+
+- Confirmed `/resumes`, `/resumes/new`, and `/resumes/[id]` remain the active pasted-text resume routes
+- Confirmed Resume records store pasted content in `Resume.sourceText`
+- Confirmed pasted-text resumes are created with `ResumeStatus.READY`
+- Confirmed list, detail, rename, and delete data access remains scoped by Clerk `userId`
+- Added explicit updated timestamp metadata to the resume detail panel
+
+Not included:
+
+- PDF upload
+- OpenAI calls
+- Resume parsing
+- ResumeBullet generation
+- Diagnosis
+- Homepage changes
+
 ## 2026-04-25 — Repository initialization
 
 Initialized the Prologue / 第一页 repository scaffold.

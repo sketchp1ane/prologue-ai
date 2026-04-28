@@ -22,6 +22,7 @@
 - Prisma client helper and ownership helper stubs added under `src/lib/db/`.
 - First resume pasted-text CRUD slice added for list, create, detail, rename, and delete.
 - User-scoped resume repository/service functions added.
+- Resume detail metadata shows status, created time, updated time, and pasted-text source.
 - Initial Prisma migration added for the current schema.
 - Application basic creation slice added for pasted JDs.
 - Application `resumeId` is nullable so applications can be created before resume parsing/upload exists.
@@ -74,6 +75,7 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - Prisma schema exists for the initial MVP data model, with an initial committed migration for the current schema.
 - Resume CRUD database access is implemented through user-scoped repository/service functions.
 - The active resume creation flow supports pasted text only and stores it in `Resume.sourceText`.
+- Pasted-text resume records are created in the non-AI `READY` state and do not create parsed JSON or resume bullets.
 - Application creation supports pasted JD text only and stores reviewed JD Extract JSON in `Application.jdExtractJson`.
 - Application reads and writes are user-scoped through Clerk `userId` and repository/service functions.
 - Application detail loads and stage updates are scoped by both `Application.id` and Clerk `userId`; missing and unauthorized records render the same safe not-found state.
