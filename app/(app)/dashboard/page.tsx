@@ -14,7 +14,7 @@ import Link from "next/link";
 import { AppCard } from "@/components/app/AppCard";
 import { EmptyState } from "@/components/app/EmptyState";
 import { PageHeader } from "@/components/app/PageHeader";
-import { ApplicationStageSelect } from "@/app/(app)/dashboard/ApplicationStageSelect";
+import { ApplicationStageSelect } from "@/components/applications/ApplicationStageSelect";
 import {
   APPLICATION_STAGE_ORDER,
   getApplicationDashboardStats,

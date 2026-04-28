@@ -30,7 +30,7 @@
 - Application creation vertical slice is closed: `/applications/new` supports pasted JD text, JD Extract, reviewed/editable extracted fields, and Save Application.
 - Applications persist `companyName`, `roleTitle`, `location`, `stage`, `jdText`, reviewed `jdExtractJson`, and `userId`.
 - `/applications` lists the current user's applications only.
-- `/applications/[id]` shows basic application fields, original JD text, and extracted JD details for the current user only.
+- `/applications/[id]` shows basic application fields, original JD text, extracted JD details, top navigation, a stage selector, and safe missing/unauthorized handling for the current user only.
 - Application routes include empty, loading, and error states for the completed slice.
 - `/dashboard` reads the current user's applications, shows stage-based statistics, groups cards into fixed `ApplicationStage` columns, and supports stage updates.
 - Dashboard stage updates are persisted through user-scoped repository/service functions and do not use drag-and-drop.
@@ -76,7 +76,9 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - The active resume creation flow supports pasted text only and stores it in `Resume.sourceText`.
 - Application creation supports pasted JD text only and stores reviewed JD Extract JSON in `Application.jdExtractJson`.
 - Application reads and writes are user-scoped through Clerk `userId` and repository/service functions.
+- Application detail loads and stage updates are scoped by both `Application.id` and Clerk `userId`; missing and unauthorized records render the same safe not-found state.
 - Dashboard reads current-user applications only and updates stages only when both `Application.id` and `userId` match.
+- Dashboard and application detail share the same Server Action-backed stage selector.
 - Dashboard board columns are fixed from the current `ApplicationStage` enum and use a selector fallback instead of drag-and-drop.
 - JD Extract is the only implemented OpenAI API integration.
 - No resume upload or parsing is implemented yet.

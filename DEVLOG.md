@@ -327,3 +327,27 @@ Not included:
 - Interview Review
 - Weekly Report
 - Homepage changes
+
+## 2026-04-28 — Application detail hardening
+
+Hardened `/applications/[id]` as the stable basic application detail page.
+
+Included:
+
+- Current-user scoped application detail load with safe not-found handling for missing or unauthorized records
+- Top navigation back to `/applications` and `/dashboard`
+- Shared Server Action-backed stage selector used by both the dashboard and application detail page
+- Basic detail fields for company, role, location, stage, created date, and updated date
+- Original JD text display
+- Saved JD Extract display for seniority, employment type, required skills, preferred skills, responsibilities, keywords, confidence, and warnings
+- Safe empty and invalid states for missing or schema-invalid `jdExtractJson`
+- Regression coverage for the application detail page scope and UI contract
+
+Not included:
+
+- Diagnosis tabs
+- Resume Parse
+- Bullet Rewrite
+- Outreach
+- OpenAI calls
+- Homepage changes

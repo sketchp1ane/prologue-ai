@@ -42,4 +42,44 @@ describe("application QA regressions", () => {
       "Add it to .env.local and restart the dev server."
     );
   });
+
+  it("hardens the application detail page without expanding AI scope", () => {
+    const detailPage = readProjectFile("app/(app)/applications/[id]/page.tsx");
+    const notFound = readProjectFile(
+      "app/(app)/applications/[id]/not-found.tsx"
+    );
+    const stageSelect = readProjectFile(
+      "components/applications/ApplicationStageSelect.tsx"
+    );
+    const actions = readProjectFile("app/(app)/applications/actions.ts");
+
+    expect(detailPage).toContain("ApplicationStageSelect");
+    expect(detailPage).toContain('href="/applications"');
+    expect(detailPage).toContain('href="/dashboard"');
+    expect(detailPage).toContain('label="Company"');
+    expect(detailPage).toContain('label="Role"');
+    expect(detailPage).toContain('label="Location"');
+    expect(detailPage).toContain('label="Stage"');
+    expect(detailPage).toContain('label="Created"');
+    expect(detailPage).toContain('label="Updated"');
+    expect(detailPage).toContain("Original JD");
+    expect(detailPage).toContain("Seniority");
+    expect(detailPage).toContain("Employment type");
+    expect(detailPage).toContain("Required skills");
+    expect(detailPage).toContain("Preferred skills");
+    expect(detailPage).toContain("Responsibilities");
+    expect(detailPage).toContain("Keywords");
+    expect(detailPage).toContain("Warnings");
+    expect(detailPage).toContain("could not be displayed safely");
+    expect(detailPage).not.toContain("Diagnosis");
+    expect(detailPage).not.toContain("Bullet Rewrite");
+    expect(notFound).toContain("may not belong to the current workspace");
+    expect(notFound).toContain('href="/applications"');
+    expect(notFound).toContain('href="/dashboard"');
+    expect(stageSelect).toContain("updateApplicationStageAction");
+    expect(actions).toContain("updateUserApplicationStage");
+    expect(actions).toContain(
+      "revalidatePath(`/applications/${parsed.data.applicationId}`)"
+    );
+  });
 });

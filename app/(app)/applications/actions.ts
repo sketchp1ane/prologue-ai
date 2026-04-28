@@ -4,10 +4,22 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 
+import {
+  ApplicationServiceError,
+  createUserApplication,
+  updateUserApplicationStage,
+} from "@/src/lib/applications/service";
 import { requireCurrentUserId } from "@/src/lib/auth/current-user";
-import { createUserApplication } from "@/src/lib/applications/service";
 import { jdExtractSchema } from "@/src/lib/ai/schemas/jd-extract";
-import { createApplicationSchema } from "@/src/lib/validations/application";
+import {
+  createApplicationSchema,
+  updateApplicationStageSchema,
+} from "@/src/lib/validations/application";
+
+type UpdateApplicationStageState = {
+  error: string | null;
+  status: "idle" | "success";
+};
 
 function readFormString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -80,4 +92,45 @@ export async function createApplicationAction(formData: FormData) {
 
   revalidatePath("/applications");
   redirect(`/applications/${application.id}`);
+}
+
+export async function updateApplicationStageAction(
+  _previousState: UpdateApplicationStageState,
+  formData: FormData
+): Promise<UpdateApplicationStageState> {
+  const parsed = updateApplicationStageSchema.safeParse({
+    applicationId: readFormString(formData, "applicationId"),
+    stage: readFormString(formData, "stage"),
+  });
+
+  if (!parsed.success) {
+    return {
+      error: "Choose a valid stage and try again.",
+      status: "idle",
+    };
+  }
+
+  const userId = await requireCurrentUserId();
+
+  try {
+    await updateUserApplicationStage(userId, parsed.data);
+  } catch (error) {
+    if (error instanceof ApplicationServiceError) {
+      return {
+        error: "We could not update this application stage.",
+        status: "idle",
+      };
+    }
+
+    throw error;
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/applications");
+  revalidatePath(`/applications/${parsed.data.applicationId}`);
+
+  return {
+    error: null,
+    status: "success",
+  };
 }

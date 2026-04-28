@@ -2,7 +2,7 @@
 
 import { useActionState, useId } from "react";
 
-import { updateApplicationStageAction } from "./actions";
+import { updateApplicationStageAction } from "@/app/(app)/applications/actions";
 
 type StageOption = {
   label: string;

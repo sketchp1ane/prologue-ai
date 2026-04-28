@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Briefcase, MapPin } from "lucide-react";
+import {
+  ArrowLeft,
+  Briefcase,
+  LayoutDashboard,
+  MapPin,
+  type LucideIcon,
+} from "lucide-react";
 
 import {
   AppCard,
@@ -8,8 +14,13 @@ import {
   AppCardHeader,
 } from "@/components/app/AppCard";
 import { PageHeader } from "@/components/app/PageHeader";
+import { ApplicationStageSelect } from "@/components/applications/ApplicationStageSelect";
 import { Button } from "@/components/ui/button";
 import { jdExtractSchema, type JdExtract } from "@/src/lib/ai/schemas/jd-extract";
+import {
+  getApplicationStageLabel,
+  getApplicationStageOptions,
+} from "@/src/lib/applications/stages";
 import { getUserApplication } from "@/src/lib/applications/service";
 import { requireCurrentUserId } from "@/src/lib/auth/current-user";
 
@@ -29,18 +40,30 @@ function formatDate(date: Date) {
   }).format(date);
 }
 
-function stageLabel(stage: string) {
-  return stage
-    .toLowerCase()
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
+function parseExtract(value: unknown):
+  | { status: "missing"; data: null }
+  | { status: "invalid"; data: null }
+  | { status: "valid"; data: JdExtract } {
+  if (!value) {
+    return {
+      data: null,
+      status: "missing",
+    };
+  }
 
-function parseExtract(value: unknown): JdExtract | null {
   const parsed = jdExtractSchema.safeParse(value);
 
-  return parsed.success ? parsed.data : null;
+  if (!parsed.success) {
+    return {
+      data: null,
+      status: "invalid",
+    };
+  }
+
+  return {
+    data: parsed.data,
+    status: "valid",
+  };
 }
 
 export default async function ApplicationDetailPage({
@@ -57,6 +80,7 @@ export default async function ApplicationDetailPage({
   }
 
   const extract = parseExtract(application.jdExtractJson);
+  const stageOptions = getApplicationStageOptions();
 
   return (
     <>
@@ -65,11 +89,41 @@ export default async function ApplicationDetailPage({
         description={`${application.companyName} · Updated ${formatDate(
           application.updatedAt
         )}`}
-        secondaryAction={{
-          href: "/applications",
-          label: "Back to applications",
-        }}
-      />
+      >
+        <Button variant="outline" asChild className="rounded-xl">
+          <Link href="/applications">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Applications
+          </Link>
+        </Button>
+        <Button variant="outline" asChild className="rounded-xl">
+          <Link href="/dashboard">
+            <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
+            Dashboard
+          </Link>
+        </Button>
+      </PageHeader>
+
+      <AppCard padding="sm" className="mb-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-foreground">
+              Current stage
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {getApplicationStageLabel(application.stage)}
+            </p>
+          </div>
+          <div className="w-full sm:w-64">
+            <ApplicationStageSelect
+              applicationId={application.id}
+              currentStage={application.stage}
+              label={`Update stage for ${application.companyName} ${application.roleTitle}`}
+              options={stageOptions}
+            />
+          </div>
+        </div>
+      </AppCard>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="space-y-5">
@@ -98,20 +152,28 @@ export default async function ApplicationDetailPage({
               description="Saved from the reviewed JD extract."
             />
             <AppCardContent>
-              {extract ? (
+              {extract.status === "valid" ? (
                 <div className="space-y-5">
-                  <DetailGrid extract={extract} />
-                  <ListSection title="Required skills" items={extract.requiredSkills} />
+                  <DetailGrid extract={extract.data} />
+                  <ListSection
+                    title="Required skills"
+                    items={extract.data.requiredSkills}
+                  />
                   <ListSection
                     title="Preferred skills"
-                    items={extract.preferredSkills}
+                    items={extract.data.preferredSkills}
                   />
                   <ListSection
                     title="Responsibilities"
-                    items={extract.responsibilities}
+                    items={extract.data.responsibilities}
                   />
-                  <ListSection title="Keywords" items={extract.keywords} />
-                  <ListSection title="Warnings" items={extract.warnings} />
+                  <ListSection title="Keywords" items={extract.data.keywords} />
+                  <ListSection title="Warnings" items={extract.data.warnings} />
+                </div>
+              ) : extract.status === "invalid" ? (
+                <div className="rounded-xl border border-dashed border-border bg-secondary/20 p-6 text-sm text-muted-foreground">
+                  The saved JD extract could not be displayed safely. The
+                  original JD text is still available above.
                 </div>
               ) : (
                 <div className="rounded-xl border border-dashed border-border bg-secondary/20 p-6 text-sm text-muted-foreground">
@@ -131,20 +193,23 @@ export default async function ApplicationDetailPage({
             <AppCardContent className="space-y-3 text-sm">
               <MetaRow label="Company" value={application.companyName} />
               <MetaRow label="Role" value={application.roleTitle} />
-              <MetaRow label="Stage" value={stageLabel(application.stage)} />
+              <MetaRow
+                label="Location"
+                value={application.location || "Not specified"}
+                icon={application.location ? MapPin : undefined}
+              />
+              <MetaRow
+                label="Stage"
+                value={getApplicationStageLabel(application.stage)}
+              />
               <MetaRow
                 label="Created"
                 value={formatDate(application.createdAt)}
               />
-              {application.location && (
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-muted-foreground">Location</span>
-                  <span className="flex items-center gap-1.5 text-right text-foreground">
-                    <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-                    {application.location}
-                  </span>
-                </div>
-              )}
+              <MetaRow
+                label="Updated"
+                value={formatDate(application.updatedAt)}
+              />
             </AppCardContent>
           </AppCard>
 
@@ -160,20 +225,28 @@ export default async function ApplicationDetailPage({
   );
 }
 
-function MetaRow({ label, value }: { label: string; value: string }) {
+function MetaRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon?: LucideIcon;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="flex items-center justify-between gap-4">
       <span className="text-muted-foreground">{label}</span>
-      <span className="text-right text-foreground">{value}</span>
+      <span className="flex items-center gap-1.5 text-right text-foreground">
+        {Icon && <Icon className="h-3.5 w-3.5" aria-hidden="true" />}
+        {value}
+      </span>
     </div>
   );
 }
 
 function DetailGrid({ extract }: { extract: JdExtract }) {
   const rows = [
-    ["Company", extract.companyName],
-    ["Role", extract.roleTitle],
-    ["Location", extract.location],
     ["Seniority", extract.seniority],
     ["Employment type", extract.employmentType],
     ["Confidence", `${Math.round(extract.confidence * 100)}%`],
