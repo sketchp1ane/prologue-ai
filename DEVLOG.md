@@ -1,5 +1,31 @@
 # DEVLOG
 
+## 2026-04-28 — Dashboard redesign PR review
+
+Reviewed PR #11 for merge safety without changing the dashboard visual direction.
+
+Included:
+
+- Confirmed the redesigned dashboard still uses current-user database reads, enum-backed stage grouping, and the existing Server Action-backed stage selector
+- Removed unused generated stage theme fields and nonessential generated comments from the dashboard page
+- Confirmed changed files do not contain bidi controls, zero-width characters, non-breaking spaces, or BOMs
+- Rebasing/merge-tested the PR branch against current `main`
+
+Validation:
+
+- `pnpm typecheck` passed
+- `pnpm lint` passed
+- `pnpm test` passed: 12 test files, 44 tests
+- `pnpm build` passed
+- `pnpm check` passed
+
+Not included:
+
+- Subjective visual redesign changes
+- New product features
+- Database schema changes
+- OpenAI integration changes
+
 ## 2026-04-28 — Workspace Data v1 QA closeout
 
 Closed the Workspace Data v1 day with a documentation and validation pass only.
