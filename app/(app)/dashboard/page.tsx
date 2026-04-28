@@ -2,7 +2,6 @@ import { ApplicationStage } from "@prisma/client";
 import { Briefcase, Plus } from "lucide-react";
 import Link from "next/link";
 
-import { AppCard } from "@/components/app/AppCard";
 import { EmptyState } from "@/components/app/EmptyState";
 import { PageHeader } from "@/components/app/PageHeader";
 import { ApplicationStageSelect } from "@/components/applications/ApplicationStageSelect";
@@ -18,44 +17,52 @@ import { requireCurrentUserId } from "@/src/lib/auth/current-user";
 import type { ApplicationListItem } from "@/src/lib/db/applications";
 import { cn } from "@/src/lib/utils";
 
-type StageTheme = {
+type StageMeta = {
   dot: string;
-  accent: string;
-  countBg: string;
+  bar: string;
+  caption: string;
 };
 
-const STAGE_THEME: Record<ApplicationStage, StageTheme> = {
+const STAGE_META: Record<ApplicationStage, StageMeta> = {
   [ApplicationStage.PREPARING]: {
-    dot: "bg-zinc-400",
-    accent: "bg-zinc-300",
-    countBg: "bg-zinc-100 text-zinc-700",
+    dot: "bg-zinc-300",
+    bar: "bg-zinc-200",
+    caption: "Drafting tailored materials",
   },
   [ApplicationStage.APPLIED]: {
-    dot: "bg-blue-500",
-    accent: "bg-blue-400",
-    countBg: "bg-blue-50 text-blue-700",
+    dot: "bg-zinc-400",
+    bar: "bg-zinc-300",
+    caption: "Submitted, awaiting response",
   },
   [ApplicationStage.COMMUNICATING]: {
-    dot: "bg-amber-500",
-    accent: "bg-amber-400",
-    countBg: "bg-amber-50 text-amber-700",
+    dot: "bg-zinc-500",
+    bar: "bg-zinc-400",
+    caption: "Recruiter or hiring-manager outreach",
   },
   [ApplicationStage.INTERVIEWING]: {
-    dot: "bg-purple-500",
-    accent: "bg-purple-400",
-    countBg: "bg-purple-50 text-purple-700",
+    dot: "bg-zinc-700",
+    bar: "bg-zinc-600",
+    caption: "Active interview loops",
   },
   [ApplicationStage.OFFER]: {
     dot: "bg-emerald-500",
-    accent: "bg-emerald-400",
-    countBg: "bg-emerald-50 text-emerald-700",
+    bar: "bg-emerald-500",
+    caption: "Offer in hand",
   },
   [ApplicationStage.ARCHIVED]: {
     dot: "bg-zinc-300",
-    accent: "bg-zinc-200",
-    countBg: "bg-zinc-100 text-zinc-600",
+    bar: "bg-zinc-200",
+    caption: "Closed — no longer active",
   },
 };
+
+const PIPELINE_STAGES: ApplicationStage[] = [
+  ApplicationStage.PREPARING,
+  ApplicationStage.APPLIED,
+  ApplicationStage.COMMUNICATING,
+  ApplicationStage.INTERVIEWING,
+  ApplicationStage.OFFER,
+];
 
 function formatRelativeDate(date: Date) {
   const now = new Date();
@@ -109,18 +116,11 @@ export default async function DashboardPage() {
   const activePipeline =
     stats.applied + stats.communicating + stats.interviewing;
 
-  const summaryStats = [
-    { label: "Total", value: stats.total, hint: "applications" },
-    { label: "Active pipeline", value: activePipeline, hint: "in progress" },
-    { label: "Interviewing", value: stats.interviewing, hint: "this stage" },
-    { label: "Offers", value: stats.offer, hint: "received" },
-  ];
-
   return (
     <>
       <PageHeader
         title="Dashboard"
-        description="Your current application board, grouped by stage."
+        description="Your application pipeline at a glance."
         action={{
           href: "/applications/new",
           icon: Plus,
@@ -128,157 +128,298 @@ export default async function DashboardPage() {
         }}
       />
 
-      <AppCard padding="none" className="mb-8 overflow-hidden">
-        <div className="grid grid-cols-2 divide-y divide-border sm:grid-cols-4 sm:divide-x sm:divide-y-0">
-          {summaryStats.map((stat, idx) => (
-            <div
-              key={stat.label}
-              className={cn(
-                "px-5 py-5 sm:px-6 sm:py-6",
-                idx === 1 && "border-l border-border sm:border-l-0"
-              )}
+      <PipelineRibbon
+        total={stats.total}
+        active={activePipeline}
+        interviewing={stats.interviewing}
+        offers={stats.offer}
+        grouped={groupedApplications}
+      />
+
+      <section aria-labelledby="pipeline-heading" className="mt-10">
+        <header className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <h2
+              id="pipeline-heading"
+              className="text-base font-medium text-foreground"
             >
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {stat.label}
-              </p>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-3xl font-semibold tracking-tight text-foreground tabular-nums">
-                  {stat.value}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {stat.hint}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </AppCard>
+              Pipeline
+            </h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Applications grouped by stage. Update the stage on any card to
+              move it.
+            </p>
+          </div>
+        </header>
 
-      <div className="mb-3 flex items-end justify-between">
-        <div>
-          <h2 className="text-base font-medium text-foreground">
-            Application board
-          </h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Move applications across stages as they progress.
-          </p>
+        <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          {APPLICATION_STAGE_ORDER.map((stage) => {
+            const apps = groupedApplications[stage];
+            return apps.length > 0 ? (
+              <StageSection
+                key={stage}
+                stage={stage}
+                apps={apps}
+                stageOptions={stageOptions}
+              />
+            ) : (
+              <EmptyStageRow key={stage} stage={stage} />
+            );
+          })}
         </div>
-      </div>
-
-      <div className="-mx-2 overflow-x-auto px-2 pb-2">
-        <div className="grid min-w-[78rem] grid-cols-6 gap-5">
-          {APPLICATION_STAGE_ORDER.map((stage) => (
-            <DashboardColumn
-              key={stage}
-              applications={groupedApplications[stage]}
-              stage={stage}
-              stageOptions={stageOptions}
-            />
-          ))}
-        </div>
-      </div>
+      </section>
     </>
   );
 }
 
-function DashboardColumn({
-  applications,
-  stage,
-  stageOptions,
+/* ---------------- Pipeline Ribbon ---------------- */
+
+function PipelineRibbon({
+  total,
+  active,
+  interviewing,
+  offers,
+  grouped,
 }: {
-  applications: ApplicationListItem[];
-  stage: ApplicationStage;
-  stageOptions: ReturnType<typeof getApplicationStageOptions>;
+  total: number;
+  active: number;
+  interviewing: number;
+  offers: number;
+  grouped: Record<ApplicationStage, ApplicationListItem[]>;
 }) {
-  const theme = STAGE_THEME[stage];
+  const segments = PIPELINE_STAGES.map((stage) => ({
+    stage,
+    count: grouped[stage].length,
+    label: getApplicationStageLabel(stage),
+    meta: STAGE_META[stage],
+  }));
+
+  const visibleSegments = segments.filter((s) => s.count > 0);
+  const segmentTotal = visibleSegments.reduce((sum, s) => sum + s.count, 0);
 
   return (
-    <section className="flex min-w-0 flex-col">
-      <div className="flex items-center justify-between gap-2 px-1 pb-2.5">
-        <div className="flex min-w-0 items-center gap-2">
-          <span
-            className={cn("h-1.5 w-1.5 shrink-0 rounded-full", theme.dot)}
-            aria-hidden="true"
-          />
-          <h3 className="truncate text-sm font-medium text-foreground">
-            {getApplicationStageLabel(stage)}
-          </h3>
+    <section
+      aria-label="Pipeline overview"
+      className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
+    >
+      <div className="grid gap-y-8 px-6 py-7 sm:grid-cols-[auto_1fr] sm:gap-x-12 sm:px-8 sm:py-8">
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            Pipeline
+          </p>
+          <div className="mt-1.5 flex items-baseline gap-2.5">
+            <span className="text-[44px] font-semibold leading-none tracking-tight text-foreground tabular-nums">
+              {total}
+            </span>
+            <span className="text-sm text-muted-foreground">
+              {total === 1 ? "application tracked" : "applications tracked"}
+            </span>
+          </div>
         </div>
-        <span
-          className={cn(
-            "rounded-full px-1.5 py-0.5 text-[11px] font-medium tabular-nums",
-            theme.countBg
-          )}
-        >
-          {applications.length}
-        </span>
+
+        <div className="flex flex-wrap items-end gap-x-10 gap-y-5 sm:justify-end">
+          <RibbonStat label="Active" value={active} hint="in progress" />
+          <RibbonStat
+            label="Interviewing"
+            value={interviewing}
+            hint="this stage"
+          />
+          <RibbonStat
+            label="Offers"
+            value={offers}
+            hint="received"
+            accent="emerald"
+          />
+        </div>
       </div>
 
-      <div className={cn("mb-3 h-px w-full", theme.accent)} aria-hidden="true" />
+      <div
+        className="flex h-1.5 w-full overflow-hidden border-t border-border bg-secondary/50"
+        role="img"
+        aria-label={`Stage distribution: ${visibleSegments
+          .map((s) => `${s.count} ${s.label}`)
+          .join(", ")}`}
+      >
+        {segmentTotal === 0 ? (
+          <div className="h-full w-full" />
+        ) : (
+          visibleSegments.map((s) => (
+            <div
+              key={s.stage}
+              className={cn("h-full", s.meta.bar)}
+              style={{ flexGrow: s.count }}
+              title={`${s.label}: ${s.count}`}
+            />
+          ))
+        )}
+      </div>
 
-      {applications.length > 0 ? (
-        <ul className="flex flex-col gap-2.5">
-          {applications.map((application) => (
-            <li key={application.id}>
-              <DashboardApplicationCard
-                application={application}
-                stageOptions={stageOptions}
-                theme={theme}
-              />
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className="rounded-xl border border-dashed border-border/70 px-3 py-6 text-center text-[11px] leading-5 text-muted-foreground/80">
-          Empty
-        </div>
-      )}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border bg-secondary/20 px-6 py-3.5 sm:px-8">
+        {segments.map((s) => (
+          <span
+            key={s.stage}
+            className="flex items-center gap-2 text-xs"
+            aria-label={`${s.label}: ${s.count}`}
+          >
+            <span
+              aria-hidden="true"
+              className={cn("h-1.5 w-1.5 shrink-0 rounded-full", s.meta.dot)}
+            />
+            <span className="font-medium tabular-nums text-foreground">
+              {s.count}
+            </span>
+            <span className="text-muted-foreground">{s.label}</span>
+          </span>
+        ))}
+      </div>
     </section>
   );
 }
 
-function DashboardApplicationCard({
+function RibbonStat({
+  label,
+  value,
+  hint,
+  accent,
+}: {
+  label: string;
+  value: number;
+  hint: string;
+  accent?: "emerald";
+}) {
+  return (
+    <div className="min-w-[6rem]">
+      <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+        {label}
+      </p>
+      <div className="mt-1.5 flex items-baseline gap-1.5">
+        <span
+          className={cn(
+            "text-2xl font-semibold leading-none tracking-tight tabular-nums",
+            accent === "emerald" ? "text-emerald-600" : "text-foreground"
+          )}
+        >
+          {value}
+        </span>
+        <span className="text-xs text-muted-foreground">{hint}</span>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Stage Section (non-empty) ---------------- */
+
+function StageSection({
+  stage,
+  apps,
+  stageOptions,
+}: {
+  stage: ApplicationStage;
+  apps: ApplicationListItem[];
+  stageOptions: ReturnType<typeof getApplicationStageOptions>;
+}) {
+  const meta = STAGE_META[stage];
+  const label = getApplicationStageLabel(stage);
+
+  return (
+    <section
+      aria-labelledby={`stage-${stage}`}
+      className="grid gap-x-10 gap-y-5 px-6 py-6 sm:px-8 lg:grid-cols-[220px_minmax(0,1fr)]"
+    >
+      <header className="flex items-start gap-3 lg:flex-col lg:gap-3 lg:pt-1">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span
+            aria-hidden="true"
+            className={cn("h-1.5 w-1.5 shrink-0 rounded-full", meta.dot)}
+          />
+          <h3
+            id={`stage-${stage}`}
+            className="text-sm font-medium tracking-tight text-foreground"
+          >
+            {label}
+          </h3>
+          <span className="text-xs font-normal tabular-nums text-muted-foreground">
+            {apps.length}
+          </span>
+        </div>
+        <p className="hidden text-xs leading-relaxed text-muted-foreground lg:block">
+          {meta.caption}
+        </p>
+      </header>
+
+      <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {apps.map((application) => (
+          <li key={application.id}>
+            <ApplicationCard
+              application={application}
+              stageOptions={stageOptions}
+            />
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/* ---------------- Empty Stage Row ---------------- */
+
+function EmptyStageRow({ stage }: { stage: ApplicationStage }) {
+  const meta = STAGE_META[stage];
+  const label = getApplicationStageLabel(stage);
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-6 py-3.5 sm:px-8">
+      <span
+        aria-hidden="true"
+        className={cn("h-1.5 w-1.5 shrink-0 rounded-full opacity-70", meta.dot)}
+      />
+      <span className="text-sm font-medium text-foreground/70">{label}</span>
+      <span className="text-xs text-muted-foreground">{meta.caption}</span>
+      <span className="ml-auto text-[11px] uppercase tracking-wider text-muted-foreground/70">
+        Empty
+      </span>
+    </div>
+  );
+}
+
+/* ---------------- Application Card ---------------- */
+
+function ApplicationCard({
   application,
   stageOptions,
-  theme,
 }: {
   application: ApplicationListItem;
   stageOptions: ReturnType<typeof getApplicationStageOptions>;
-  theme: StageTheme;
 }) {
   return (
-    <article className="group relative rounded-xl border border-border bg-card p-3.5 shadow-sm transition hover:border-foreground/20 hover:shadow-md">
-      <div className="space-y-0.5">
-        <Link
-          href={`/applications/${application.id}`}
-          className="block text-sm font-medium leading-tight text-foreground transition hover:text-muted-foreground"
-        >
+    <article className="group flex h-full flex-col rounded-xl border border-border bg-background p-4 transition hover:border-foreground/25 hover:shadow-sm">
+      <Link
+        href={`/applications/${application.id}`}
+        className="block focus:outline-none"
+      >
+        <p className="truncate text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
           {application.companyName}
-        </Link>
-        <p className="line-clamp-2 text-[13px] leading-snug text-muted-foreground">
-          {application.roleTitle}
         </p>
-      </div>
+        <h4 className="mt-1 line-clamp-2 text-sm font-medium leading-snug text-foreground transition-colors group-hover:text-foreground">
+          {application.roleTitle}
+        </h4>
+      </Link>
 
       <div className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
         {application.location && (
           <>
             <span className="truncate">{application.location}</span>
-            <span aria-hidden="true" className="text-muted-foreground/50">
+            <span aria-hidden="true" className="text-muted-foreground/40">
               ·
             </span>
           </>
         )}
         <span className="shrink-0">
-          Updated {formatRelativeDate(application.updatedAt)}
+          {formatRelativeDate(application.updatedAt)}
         </span>
       </div>
 
-      <div className="mt-3 flex items-center gap-2 border-t border-border/70 pt-3">
-        <span
-          className={cn("h-1.5 w-1.5 shrink-0 rounded-full", theme.dot)}
-          aria-hidden="true"
-        />
+      <div className="mt-3 flex items-center justify-end border-t border-border/80 pt-2.5">
         <ApplicationStageSelect
           applicationId={application.id}
           currentStage={application.stage}
