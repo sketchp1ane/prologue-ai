@@ -1,5 +1,33 @@
 # DEVLOG
 
+## 2026-05-03 — Resume list parse state cards
+
+Updated `/resumes` so the list reflects Resume Parse v1 state instead of only
+showing basic CRUD metadata.
+
+Included:
+
+- Added parsed JSON presence and generated bullet counts to the user-scoped
+  resume list query without selecting full source text
+- Added list-state helpers for Not parsed, Parsing, Ready, and Failed display
+- Reworked resume cards with compact parse-state badges, updated timestamps,
+  parsed JSON presence, bullet record counts, and explicit View / Parse /
+  Re-parse / Retry actions
+- Kept parsing actions routed to the existing resume detail parse workspace
+- Added regression coverage for list query fields and state derivation
+
+Not included:
+
+- PDF upload
+- Diagnosis
+- Bullet Rewrite
+- Homepage changes
+- New dependencies or schema changes
+
+Validation:
+
+- Full validation results are recorded in the task final response
+
 ## 2026-05-03 — Resume detail parse UI
 
 Turned `/resumes/[id]` into the primary Resume Parse v1 operation page.

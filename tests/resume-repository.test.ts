@@ -100,6 +100,14 @@ describe("resume repository", () => {
       },
     });
     expect(resumeListItemSelect).not.toHaveProperty("sourceText");
+    expect(resumeListItemSelect).toMatchObject({
+      _count: {
+        select: {
+          bullets: true,
+        },
+      },
+      parsedJson: true,
+    });
   });
 
   it("loads a resume only by id and userId", async () => {
