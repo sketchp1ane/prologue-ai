@@ -28,6 +28,10 @@
 - Application `resumeId` is nullable so applications can be created before resume parsing/upload exists.
 - JD Extract service, API route, schema, prompt, and OpenAI client/model helpers added.
 - JD Extract records `AiGeneration` success/failure audit rows without storing full JD input.
+- Resume Parse service is connected to `POST /api/resumes/[id]/parse` for pasted-text resumes.
+- Resume Parse drives `Resume.status` through `PARSING`, `READY`, and `FAILED`.
+- Successful Resume Parse saves `Resume.parsedJson` and regenerates `ResumeBullet` rows from parsed experience/project bullets.
+- Resume Parse records success/failure `AiGeneration` audit rows without storing full resume input.
 - Application creation vertical slice is closed: `/applications/new` supports pasted JD text, JD Extract, reviewed/editable extracted fields, and Save Application.
 - Applications persist `companyName`, `roleTitle`, `location`, `stage`, `jdText`, reviewed `jdExtractJson`, and `userId`.
 - `/applications` lists the current user's applications only.
@@ -62,7 +66,7 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 ## Not Implemented Yet
 
 - Resume upload
-- Resume parsing
+- Resume parse UI and parsed resume display
 - PDF resume creation
 - Diagnosis report generation
 - Bullet rewrite
@@ -93,12 +97,12 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - Resume deletion detaches related applications through `ON DELETE SET NULL` rather than deleting application records.
 - Workspace Data v1 validation passed on 2026-04-28 with `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `pnpm check`.
 - Dashboard draggable board and Applications badge polish landed after the Workspace Data v1 closeout.
-- JD Extract is the only implemented OpenAI API integration.
-- No resume upload or parsing is implemented yet.
+- JD Extract and pasted-text Resume Parse are the implemented OpenAI API integrations.
+- No resume upload, parse trigger UI, or parsed resume display is implemented yet.
 - No diagnosis, bullet rewrite, outreach, interview review, or weekly report generation is implemented yet.
 
 ## Next Recommended Step
 
-Start the Resume Parse slice from `docs/05_CODEX_TASKS.md` next unless a different maintenance or hardening task is explicitly selected. Keep Resume Parse separate from Diagnosis, Bullet Rewrite, Outreach, Interview Review, and Weekly Report.
+Add a small Resume detail parse trigger/parsed-data display slice next, or move to Diagnosis if API-only Resume Parse is sufficient for the current demo path. Keep Diagnosis, Bullet Rewrite, Outreach, Interview Review, and Weekly Report as separate slices.
 
 For any future UI work, read `docs/10_DESIGN_SYSTEM.md` first and keep the imported homepage as the visual baseline.
