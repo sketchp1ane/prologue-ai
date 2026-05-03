@@ -33,7 +33,12 @@
 - Successful Resume Parse saves `Resume.parsedJson` and regenerates `ResumeBullet` rows from parsed experience/project bullets.
 - Resume Parse records success/failure `AiGeneration` audit rows without storing full resume input.
 - Resume detail includes a UI parse trigger, parsed Resume Parse v1 display, and generated bullet display.
+- Resume detail supports block-level editing of valid structured parsed resume data and refreshes generated bullet records after saves.
+- Resume detail no longer displays full raw source text and can replace the current resume source with pasted text or a private PDF.
+- Resume detail uses a full-width single-column content layout with inline title editing and header icon actions for details, parsing, source replacement, deletion, and returning to the list.
 - `/resumes/new` supports both pasted-text resume creation and private PDF upload.
+- `/resumes/new` uses one shared resume title and a mutually exclusive source selector for pasted text or private PDF upload.
+- `/resumes` and `/resumes/[id]` render database-unavailable retry states instead of crashing when Prisma cannot initialize a database connection.
 - PDF resumes are stored in Vercel Blob through `src/lib/storage/`, enforce PDF-only files up to 10MB, and preserve pasted text as the stable fallback path.
 - PDF Resume Parse uses OpenAI Responses file inputs from the stored private PDF and records success/failure `AiGeneration` audit rows without storing raw PDF contents.
 - Application creation vertical slice is closed: `/applications/new` supports pasted JD text, JD Extract, reviewed/editable extracted fields, and Save Application.
@@ -85,7 +90,10 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - If Clerk environment variables are missing, `/`, `/sign-in`, and `/sign-up` remain reachable for local setup; protected workspace routes redirect to `/sign-in`.
 - Prisma schema exists for the initial MVP data model, with an initial committed migration for the current schema.
 - Resume CRUD database access is implemented through user-scoped repository/service functions.
-- The active resume creation flow supports pasted text and private PDF upload.
+- The active resume creation flow supports pasted text and private PDF upload through one shared-title form with mutually exclusive source submission.
+- Resume list and detail reads are user-scoped and show retryable unavailable states for Prisma initialization failures.
+- Resume structured edits overwrite `Resume.parsedJson`, regenerate user-scoped `ResumeBullet` rows, and do not edit original PDF files or pasted source text.
+- Resume source replacement keeps the same `resumeId`, clears `Resume.parsedJson`, deletes current-user generated bullets for that resume, and requires the user to manually re-run Resume Parse.
 - Pasted-text resume records are created in the non-AI `READY` state and do not create parsed JSON or resume bullets.
 - PDF resume records are created as `UPLOADING`, uploaded to private Blob storage, then marked `READY` with `fileUrl` and `filePath`.
 - PDF files are limited to `application/pdf` inputs up to 10MB. If PDF parsing fails, the product fallback is to create a pasted-text resume version.

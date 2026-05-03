@@ -1,5 +1,172 @@
 # DEVLOG
 
+## 2026-05-04 — Resume list delete action
+
+Added delete support directly from the resume list.
+
+Included:
+
+- Added a danger-styled delete icon on each resume card
+- Reused the existing user-scoped delete server action
+- Added a confirmation dialog before deletion
+- Kept list delete success and error feedback on the existing toast path
+
+Not included:
+
+- Bulk delete
+- Undo or restore behavior
+
+Validation:
+
+- Full validation results are recorded in the task final response
+
+## 2026-05-04 — Resume toast feedback
+
+Unified temporary resume operation feedback around toast notifications.
+
+Included:
+
+- Added the shared Sonner toaster and route-query toast bridge
+- Replaced resume list, new resume, and detail redirect banners with toasts
+- Moved resume parse success/error feedback to toast notifications
+- Moved structured parsed-resume edit save feedback to toast notifications
+
+Not included:
+
+- Converting persistent states such as empty, missing parsed JSON, database
+  unavailable, source warnings, or delete confirmation warnings into toasts
+- API, validation, database, or Prisma schema changes
+
+Validation:
+
+- Full validation results are recorded in the task final response
+
+## 2026-05-04 — Resume detail header icon actions
+
+Converted resume detail actions from right-side cards to header icon controls.
+
+Included:
+
+- Changed resume detail to a single full-width content column
+- Moved back, detail, parse, replace source, and delete into icon-only header
+  actions with accessible labels and title tooltips
+- Added dialogs for metadata, source replacement, and delete
+  confirmation
+- Added inline title editing directly beside the resume detail page title
+- Reused the existing parse API from a compact header icon action
+
+Not included:
+
+- New Prisma schema fields
+- Raw source text display
+- Automatic parsing after source replacement
+
+Validation:
+
+- Full validation results are recorded in the task final response
+
+## 2026-05-04 — Resume source replacement
+
+Added source replacement on resume detail and removed full raw source display.
+
+Included:
+
+- Removed the raw source text card from the resume detail main column
+- Added a right-side replace-source card for mutually exclusive pasted text or
+  private PDF replacement
+- Kept the existing `resumeId` and application links while clearing old
+  `parsedJson` and generated `ResumeBullet` rows after replacement
+- Added user-scoped repository/service/action paths for source replacement
+- Added best-effort cleanup for replaced or unattached PDF blobs
+- Added English and Simplified Chinese copy for source replacement states
+- Added validation, repository, and service coverage for replacement flows
+
+Not included:
+
+- Automatic Resume Parse after replacing the source
+- New resume version creation
+- Prisma schema changes or source edit history
+
+Validation:
+
+- Full validation results are recorded in the task final response
+
+## 2026-05-04 — Resume structured detail editing
+
+Added block-level editing for structured Resume Parse output on resume detail.
+
+Included:
+
+- Upgraded the parsed resume detail card so users can edit basics, summary,
+  skills, experience, education, projects, certifications, and languages by
+  section
+- Added a user-scoped server action and service path that validates edited
+  structured resume JSON, saves `Resume.parsedJson`, and regenerates
+  `ResumeBullet` rows in the existing transaction
+- Kept warnings read-only and preserved original source text/PDF metadata
+- Added English and Simplified Chinese copy for editor controls, save states,
+  validation errors, and re-parse overwrite warnings
+- Added unit coverage for edited resume validation and service-level bullet
+  regeneration
+
+Not included:
+
+- Editing original PDF or pasted source text
+- A full rich-text resume editor or PDF export
+- Edit history, snapshots, or additional Prisma migrations
+
+Validation:
+
+- Full validation results are recorded in the task final response
+
+## 2026-05-04 — Resume database fallback states
+
+Hardened resume pages against transient Prisma database initialization failures.
+
+Included:
+
+- Added the same database-unavailable fallback pattern used by Dashboard to the
+- resume list and detail pages
+- Added English and Simplified Chinese resume-specific retry copy
+- Kept unexpected database and application errors rethrowing normally
+
+Not included:
+
+- Database provider configuration changes
+- Automatic retry loops
+- Changes to resume repository authorization filters
+
+Validation:
+
+- `pnpm check` passed
+
+## 2026-05-03 — Unified resume creation source selector
+
+Redesigned `/resumes/new` so resume creation uses one shared title and one
+selected source at a time.
+
+Included:
+
+- Replaced the previous parallel pasted-text/PDF forms with a single client
+  form that preserves drafts while switching between source modes
+- Added a shared `sourceType` validation path that rejects simultaneous
+  pasted text and PDF submissions
+- Kept existing resume service behavior: pasted text creates a ready source
+  text record, and PDF upload creates a private stored PDF record
+- Updated English and Simplified Chinese copy for the new source selector,
+  active-source hints, file selection state, and validation error
+- Added unit coverage for the unified resume creation validator
+
+Not included:
+
+- Prisma schema changes
+- Automatic Resume Parse after creation
+- Resume editor behavior
+
+Validation:
+
+- Full validation results are recorded in the task final response
+
 ## 2026-05-03 — Authenticated workspace bilingual coverage
 
 Extended English / Simplified Chinese support across the visible authenticated

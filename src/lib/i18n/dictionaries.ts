@@ -489,6 +489,11 @@ export const dictionaries = {
         emptyTitle: "No resumes yet",
         emptyDescription:
           "Paste resume text to create your first private resume record, then parse it from the resume detail page.",
+        databaseUnavailableTitle: "Database unavailable",
+        databaseUnavailableDescription:
+          "Your resumes could not be loaded because the database connection is currently unavailable. Check the database connection and retry this page.",
+        databaseStatus: "No private resume content was logged",
+        retryResumes: "Retry resumes",
         updated: "Updated {date}",
         source: "Source",
         privatePdf: "Private PDF",
@@ -513,17 +518,27 @@ export const dictionaries = {
       resumeCreate: {
         title: "New Resume",
         description:
-          "Create a resume from pasted text or upload a PDF. Pasted text remains the most stable parsing fallback.",
+          "Give this resume version one title, then choose either pasted text or a private PDF.",
         backToResumes: "Back to resumes",
         resumeSource: "Resume source",
         resumeSourceDescription:
-          "Store pasted text exactly as provided so Resume Parse can use the most stable source.",
+          "Only the selected source is saved. You can switch modes without losing your draft.",
         resumeTitle: "Resume title",
         resumeTitlePlaceholder: "Frontend resume",
+        chooseSource: "Choose one source",
+        pastedTextOption: "Paste text",
+        pastedTextOptionDescription:
+          "Best for reliable parsing and quick edits before saving.",
+        pdfOption: "Upload PDF",
+        pdfOptionDescription:
+          "Store the original PDF privately and parse it from the detail page.",
+        mutualExclusionHint:
+          "A resume can use pasted text or a PDF, not both. The inactive source is not submitted.",
         pastedResumeText: "Pasted resume text",
         pastedResumePlaceholder: "Paste your resume text here.",
         maxCharacters: "Maximum {count} characters.",
         createResume: "Create Resume",
+        createTextResume: "Create text resume",
         pdfUpload: "PDF upload",
         pdfUploadDescription:
           "Upload a private PDF resume. Parsing happens from the resume detail page, and pasted text remains available if PDF parsing fails.",
@@ -531,16 +546,40 @@ export const dictionaries = {
         pdfFile: "PDF file",
         pdfHint:
           "PDF only. Maximum {size}MB. If parsing fails, create a pasted-text resume version instead.",
+        noPdfSelected: "No PDF selected.",
+        selectedPdf: "Selected PDF: {name}",
         privacyNotice:
           "Uploaded PDFs are stored privately. When you trigger parsing, the PDF content is sent to OpenAI file inputs for structured extraction and may use more tokens than pasted text.",
+        pastedTextPrivacyNotice:
+          "Pasted text is saved on this resume record so Resume Parse can use the stable source text later.",
         uploadPdf: "Upload PDF",
+        uploadPdfResume: "Upload PDF resume",
+        sideTitle: "Creation flow",
+        pastedTextSideDescription:
+          "This creates a private pasted-text resume record and keeps parsing as a deliberate next step.",
+        pdfSideDescription:
+          "This uploads one private PDF resume and keeps parsing as a deliberate next step.",
+        draftPreserved:
+          "Switching source modes keeps your current draft in the browser when possible.",
+        parseLater:
+          "After creation, open the resume detail page and run Resume Parse when you are ready.",
+        validationError:
+          "Choose one resume source, add a title, and check the active input.",
       },
       resumeDetail: {
         description: "Resume Parse workspace · Updated {date}",
         resumes: "Resumes",
+        unavailableTitle: "Resume unavailable",
+        unavailableDescription:
+          "This resume cannot be loaded until the database connection recovers.",
+        databaseUnavailableTitle: "Database unavailable",
+        databaseUnavailableDescription:
+          "This resume could not be loaded because the database connection is currently unavailable. Check the database connection and retry this page.",
+        databaseStatus: "No private resume content was logged",
+        retryResume: "Retry resume",
         invalidParsedTitle: "Parsed resume cannot be displayed",
         invalidParsedDescription:
-          "The saved parsed JSON no longer matches the Resume Parse v1 schema. The original source text is preserved below, and you can re-parse when source text exists.",
+          "The saved parsed JSON no longer matches the Resume Parse v1 schema. Replace the source or re-parse when a source exists.",
         missingParsedTitle: "No parsed resume yet",
         missingParsedDescription:
           "Use Resume Parse to turn the saved source text into structured basics, skills, experience, projects, education, and generated bullet records.",
@@ -573,7 +612,7 @@ export const dictionaries = {
         parsedView: {
           structuredTitle: "Structured parsed resume",
           structuredDescription:
-            "Read-only Resume Parse v1 output saved on this record.",
+            "Resume Parse v1 output saved on this record. Edit structured fields to correct parsing errors.",
           basics: "Basics",
           name: "Name",
           email: "Email",
@@ -598,6 +637,75 @@ export const dictionaries = {
           noProjectsFound: "No projects found.",
           noWarningsReturned: "No warnings returned.",
         },
+        editor: {
+          editSection: "Edit",
+          saveSection: "Save",
+          saving: "Saving...",
+          cancelEdit: "Cancel",
+          addItem: "Add item",
+          addBullet: "Add bullet",
+          addExperience: "Add experience",
+          addEducation: "Add education",
+          addProject: "Add project",
+          removeItem: "Remove",
+          moveUp: "Move up",
+          moveDown: "Move down",
+          emptyList: "No items yet.",
+          emptyBullets: "No bullets yet.",
+          titleLabel: "Title",
+          company: "Company",
+          startDate: "Start date",
+          endDate: "End date",
+          school: "School",
+          degree: "Degree",
+          major: "Major",
+          projectName: "Project name",
+          descriptionLabel: "Description",
+          validationError:
+            "Check the edited resume fields and try saving again.",
+          saveError:
+            "Could not save the edited resume. Check the fields and try again.",
+          success:
+            "Saved edited resume details and refreshed {count} bullet records.",
+        },
+        replaceSource: {
+          title: "Replace source",
+          description: "Upload a new source for this resume.",
+          chooseSource: "Choose replacement source",
+          pastedText: "Paste text",
+          pdf: "Upload PDF",
+          warning:
+            "Replacing the source clears the current parsed JSON and generated bullet records. Run Resume Parse again after saving.",
+          pastedTextLabel: "New pasted resume text",
+          pastedTextPlaceholder: "Paste the replacement resume text here.",
+          pdfLabel: "New PDF file",
+          pdfHint: "PDF only. Maximum {size}MB.",
+          noPdfSelected: "No PDF selected.",
+          selectedPdf: "Selected PDF: {name}",
+          maxCharacters: "Maximum {count} characters.",
+          submit: "Replace source",
+          validationError:
+            "Choose one replacement source and check the active input.",
+          saveError:
+            "Could not replace this resume source. Check the file or text and try again.",
+          success:
+            "Resume source replaced. Run Resume Parse again to refresh structured data.",
+        },
+        actions: {
+          toolbarLabel: "Resume actions",
+          details: "Resume details",
+          parse: "Parse resume",
+          reparse: "Re-parse resume",
+          upload: "Replace source",
+          delete: "Delete resume",
+          editTitle: "Edit title",
+          saveTitle: "Save title",
+          cancelTitle: "Cancel title edit",
+          deleteWarning:
+            "This removes the resume from your workspace and detaches linked applications.",
+          created: "Created",
+          updated: "Updated",
+        },
         bulletGroups: {
           title: "Generated bullet records",
           description:
@@ -613,13 +721,15 @@ export const dictionaries = {
           reparse: "Re-parse",
           parse: "Parse resume",
           failed:
-            "Parsing failed. Retry with the saved source text below.",
+            "Parsing failed. Retry with the saved source, or replace the source and parse again.",
           sourceHint:
             "Parsing uses the saved {source} and stores structured JSON plus generated bullet records.",
+          reparseOverwrite:
+            "Re-parsing will replace edited structured data and refresh bullet records.",
           sourceText: "source text",
           privatePdf: "private PDF",
           missingSource:
-            "Resume Parse needs either pasted source text or a stored PDF. Add source text in a new resume version to parse it.",
+            "Resume Parse needs either pasted source text or a stored PDF. Replace the source on this page to parse it.",
           success:
             "Parsed resume and refreshed {count} bullet records.",
           errorPrefix: "Resume parse failed",
@@ -1112,6 +1222,11 @@ export const dictionaries = {
         emptyTitle: "还没有简历",
         emptyDescription:
           "粘贴简历文本，创建第一条私密简历记录，然后在详情页解析它。",
+        databaseUnavailableTitle: "数据库不可用",
+        databaseUnavailableDescription:
+          "当前数据库连接不可用，无法加载你的简历。请检查数据库连接后重试本页。",
+        databaseStatus: "没有记录任何私密简历内容",
+        retryResumes: "重试简历列表",
         updated: "更新于 {date}",
         source: "来源",
         privatePdf: "私密 PDF",
@@ -1136,17 +1251,27 @@ export const dictionaries = {
       resumeCreate: {
         title: "新建简历",
         description:
-          "通过粘贴文本或上传 PDF 创建简历。粘贴文本仍是最稳定的解析兜底。",
+          "先给这份简历版本一个标题，再选择粘贴文本或上传私密 PDF。",
         backToResumes: "返回简历列表",
         resumeSource: "简历来源",
         resumeSourceDescription:
-          "按原样保存粘贴文本，供 Resume Parse 使用最稳定的来源。",
+          "只会保存当前选中的来源。你可以切换模式，草稿会尽量保留。",
         resumeTitle: "简历标题",
         resumeTitlePlaceholder: "前端简历",
+        chooseSource: "选择一种来源",
+        pastedTextOption: "粘贴文本",
+        pastedTextOptionDescription:
+          "适合稳定解析，也方便保存前快速调整内容。",
+        pdfOption: "上传 PDF",
+        pdfOptionDescription:
+          "私密保存原始 PDF，并在详情页按需触发解析。",
+        mutualExclusionHint:
+          "一份简历只能使用粘贴文本或 PDF，不能同时存在。未选中的来源不会提交。",
         pastedResumeText: "粘贴的简历文本",
         pastedResumePlaceholder: "在这里粘贴你的简历文本。",
         maxCharacters: "最多 {count} 个字符。",
         createResume: "创建简历",
+        createTextResume: "创建文本简历",
         pdfUpload: "PDF 上传",
         pdfUploadDescription:
           "上传私密 PDF 简历。解析从简历详情页触发；如果 PDF 解析失败，仍可使用粘贴文本作为兜底。",
@@ -1154,16 +1279,40 @@ export const dictionaries = {
         pdfFile: "PDF 文件",
         pdfHint:
           "仅支持 PDF，最大 {size}MB。如果解析失败，请改为创建粘贴文本版本。",
+        noPdfSelected: "尚未选择 PDF。",
+        selectedPdf: "已选择 PDF：{name}",
         privacyNotice:
           "上传的 PDF 会私密存储。触发解析时，PDF 内容会发送到 OpenAI file inputs 做结构化提取，并且可能比粘贴文本消耗更多 token。",
+        pastedTextPrivacyNotice:
+          "粘贴文本会保存在这条简历记录上，之后 Resume Parse 可以使用稳定的来源文本。",
         uploadPdf: "上传 PDF",
+        uploadPdfResume: "上传 PDF 简历",
+        sideTitle: "创建流程",
+        pastedTextSideDescription:
+          "这会创建一条私密的粘贴文本简历记录，解析仍由你在下一步手动触发。",
+        pdfSideDescription:
+          "这会上传一份私密 PDF 简历，解析仍由你在下一步手动触发。",
+        draftPreserved:
+          "在两种来源之间切换时，当前草稿会尽量保留在浏览器里。",
+        parseLater:
+          "创建后进入简历详情页；准备好时再运行 Resume Parse。",
+        validationError:
+          "请选择一种简历来源，填写标题，并检查当前来源输入。",
       },
       resumeDetail: {
         description: "Resume Parse 工作区 · 更新于 {date}",
         resumes: "简历",
+        unavailableTitle: "简历暂不可用",
+        unavailableDescription:
+          "数据库连接恢复前，暂时无法加载这份简历。",
+        databaseUnavailableTitle: "数据库不可用",
+        databaseUnavailableDescription:
+          "当前数据库连接不可用，无法加载这份简历。请检查数据库连接后重试本页。",
+        databaseStatus: "没有记录任何私密简历内容",
+        retryResume: "重试简历详情",
         invalidParsedTitle: "无法展示已解析简历",
         invalidParsedDescription:
-          "已保存的 parsed JSON 不再符合 Resume Parse v1 schema。原始来源文本已保留在下方；如存在来源文本，可重新解析。",
+          "已保存的 parsed JSON 不再符合 Resume Parse v1 schema。你可以替换来源，或在存在来源时重新解析。",
         missingParsedTitle: "还没有解析简历",
         missingParsedDescription:
           "使用 Resume Parse 将已保存的来源文本转成基础信息、技能、经历、项目、教育和生成的 bullet 记录。",
@@ -1196,7 +1345,7 @@ export const dictionaries = {
         parsedView: {
           structuredTitle: "结构化解析简历",
           structuredDescription:
-            "这条记录中保存的只读 Resume Parse v1 输出。",
+            "这条记录中保存的 Resume Parse v1 输出。你可以编辑结构化字段来修正解析错误。",
           basics: "基础信息",
           name: "姓名",
           email: "邮箱",
@@ -1221,6 +1370,68 @@ export const dictionaries = {
           noProjectsFound: "未找到项目。",
           noWarningsReturned: "没有返回提醒。",
         },
+        editor: {
+          editSection: "编辑",
+          saveSection: "保存",
+          saving: "保存中...",
+          cancelEdit: "取消",
+          addItem: "新增条目",
+          addBullet: "新增 bullet",
+          addExperience: "新增经历",
+          addEducation: "新增教育",
+          addProject: "新增项目",
+          removeItem: "移除",
+          moveUp: "上移",
+          moveDown: "下移",
+          emptyList: "暂无条目。",
+          emptyBullets: "暂无 bullet。",
+          titleLabel: "职位",
+          company: "公司",
+          startDate: "开始时间",
+          endDate: "结束时间",
+          school: "学校",
+          degree: "学位",
+          major: "专业",
+          projectName: "项目名称",
+          descriptionLabel: "描述",
+          validationError: "请检查已编辑的简历字段后再保存。",
+          saveError: "无法保存已编辑的简历。请检查字段后重试。",
+          success: "已保存简历编辑，并刷新 {count} 条 bullet 记录。",
+        },
+        replaceSource: {
+          title: "替换来源",
+          description: "为这份简历上传新的来源。",
+          chooseSource: "选择替换来源",
+          pastedText: "粘贴文本",
+          pdf: "上传 PDF",
+          warning:
+            "替换来源会清空当前解析 JSON 和已生成的 bullet 记录。保存后请重新运行 Resume Parse。",
+          pastedTextLabel: "新的简历文本",
+          pastedTextPlaceholder: "在这里粘贴替换后的简历文本。",
+          pdfLabel: "新的 PDF 文件",
+          pdfHint: "仅支持 PDF，最大 {size}MB。",
+          noPdfSelected: "尚未选择 PDF。",
+          selectedPdf: "已选择 PDF：{name}",
+          maxCharacters: "最多 {count} 个字符。",
+          submit: "替换来源",
+          validationError: "请选择一种替换来源，并检查当前来源输入。",
+          saveError: "无法替换这份简历来源。请检查文件或文本后重试。",
+          success: "简历来源已替换。请重新运行 Resume Parse 刷新结构化数据。",
+        },
+        actions: {
+          toolbarLabel: "简历操作",
+          details: "简历详情",
+          parse: "解析简历",
+          reparse: "重新解析简历",
+          upload: "替换来源",
+          delete: "删除简历",
+          editTitle: "编辑标题",
+          saveTitle: "保存标题",
+          cancelTitle: "取消标题编辑",
+          deleteWarning: "这会从工作区移除这份简历，并解除关联投递。",
+          created: "创建时间",
+          updated: "更新时间",
+        },
         bulletGroups: {
           title: "生成的 bullet 记录",
           description:
@@ -1235,13 +1446,15 @@ export const dictionaries = {
           retry: "重试解析",
           reparse: "重新解析",
           parse: "解析简历",
-          failed: "解析失败。请使用下方已保存的来源文本重试。",
+          failed: "解析失败。请使用已保存的来源重试，或替换来源后重新解析。",
           sourceHint:
             "解析会使用已保存的{source}，并保存结构化 JSON 和生成的 bullet 记录。",
+          reparseOverwrite:
+            "重新解析会替换已编辑的结构化数据，并刷新 bullet 记录。",
           sourceText: "来源文本",
           privatePdf: "私密 PDF",
           missingSource:
-            "Resume Parse 需要粘贴的来源文本或已保存的 PDF。请新建一个包含来源文本的简历版本后再解析。",
+            "Resume Parse 需要粘贴的来源文本或已保存的 PDF。请在本页替换来源后再解析。",
           success: "已解析简历，并刷新 {count} 条 bullet 记录。",
           errorPrefix: "简历解析失败",
           genericError: "无法解析这份简历。请检查来源文本后重试。",

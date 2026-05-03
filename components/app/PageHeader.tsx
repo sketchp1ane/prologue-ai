@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 type PageHeaderProps = {
-  title: string;
+  title: ReactNode;
   description?: string;
   action?: {
     label: string;
@@ -30,7 +30,7 @@ export function PageHeader({
 }: PageHeaderProps) {
   return (
     <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div>
+      <div className="min-w-0">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
           {title}
         </h1>

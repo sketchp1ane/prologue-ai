@@ -28,21 +28,28 @@ function storagePathSegment(value: string) {
 
 export function buildResumePdfPath(params: {
   fileName: string;
+  pathNonce?: string;
   resumeId: string;
   userId: string;
 }) {
-  const suffix = storagePathSegment(params.fileName || "resume.pdf");
+  const suffix = storagePathSegment(
+    [params.fileName || "resume.pdf", params.pathNonce]
+      .filter(Boolean)
+      .join(":")
+  );
 
   return `resumes/${storagePathSegment(params.userId)}/${params.resumeId}-${suffix}.pdf`;
 }
 
 export async function uploadPrivateResumePdf(params: {
   file: File;
+  pathNonce?: string;
   resumeId: string;
   userId: string;
 }): Promise<StoredResumePdf> {
   const pathname = buildResumePdfPath({
     fileName: params.file.name,
+    pathNonce: params.pathNonce,
     resumeId: params.resumeId,
     userId: params.userId,
   });

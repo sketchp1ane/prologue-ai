@@ -9,6 +9,10 @@ type ResumeParseDb = Pick<
   PrismaClient,
   "$transaction" | "resume" | "resumeBullet"
 >;
+type ResumeSourceReplaceDb = Pick<
+  PrismaClient,
+  "$transaction" | "resume" | "resumeBullet"
+>;
 
 export const resumeListItemSelect = {
   _count: {
@@ -297,6 +301,69 @@ export async function saveParsedResumeForUser(
 
     return {
       bulletCount: params.bullets.length,
+      resumeUpdated: true,
+    };
+  });
+}
+
+export async function replaceResumeSourceForUser(
+  params: {
+    filePath?: string;
+    fileUrl?: string;
+    id: string;
+    sourceText?: string;
+    userId: string;
+  },
+  db: ResumeSourceReplaceDb = prisma
+) {
+  return db.$transaction(async (tx) => {
+    const currentResume = await tx.resume.findFirst({
+      select: {
+        filePath: true,
+      },
+      where: {
+        id: params.id,
+        userId: params.userId,
+      },
+    });
+
+    if (!currentResume) {
+      return {
+        oldFilePath: null,
+        resumeUpdated: false,
+      };
+    }
+
+    const resumeUpdate = await tx.resume.updateMany({
+      data: {
+        filePath: params.filePath ?? null,
+        fileUrl: params.fileUrl ?? null,
+        parsedJson: Prisma.JsonNull,
+        sourceText: params.sourceText ?? null,
+        status: ResumeStatus.READY,
+      },
+      where: {
+        id: params.id,
+        userId: params.userId,
+      },
+    });
+
+    if (resumeUpdate.count === 0) {
+      return {
+        oldFilePath: null,
+        resumeUpdated: false,
+      };
+    }
+
+    await tx.resumeBullet.deleteMany({
+      where: {
+        resumeId: params.id,
+        userId: params.userId,
+      },
+    });
+
+    return {
+      oldFilePath: currentResume.filePath,
       resumeUpdated: true,
     };
   });

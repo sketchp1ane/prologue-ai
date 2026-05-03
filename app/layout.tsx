@@ -5,6 +5,7 @@ import { zhCN } from "@clerk/localizations";
 import { cookies } from "next/headers";
 import "./globals.css";
 
+import { AppToaster } from "@/components/app/AppToaster";
 import {
   LOCALE_COOKIE_NAME,
   getLocaleFromCookieValue,
@@ -52,6 +53,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased`}
       >
         {body}
+        <AppToaster />
       </body>
     </html>
   );
