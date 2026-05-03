@@ -6,8 +6,10 @@ Current implemented private flows:
 
 - Clerk-protected workspace routes
 - pasted-text Resume CRUD
+- private PDF resume upload/storage
 - Application creation from pasted JD
 - JD Extract through OpenAI Responses API
+- Resume Parse through OpenAI Responses API for pasted text and PDF file inputs
 - Prisma/Postgres persistence
 
 Do not commit `.env.local` or any real secret.
@@ -84,11 +86,12 @@ For providers with pooled and direct URLs, use a migration-safe connection strin
 
 ### OpenAI
 
-Required only for JD Extract. Manual Application creation can still work without OpenAI if the user fills fields manually.
+Required for JD Extract and Resume Parse. Manual Application creation and resume creation can still work without OpenAI, but parsing will show a configuration error.
 
 ```env
 OPENAI_API_KEY=sk-proj_...
 OPENAI_MODEL_EXTRACT=gpt-5.4-nano
+OPENAI_MODEL_PARSE=gpt-5.4-mini
 ```
 
 How to configure:
@@ -96,28 +99,30 @@ How to configure:
 1. Create or open an OpenAI platform project.
 2. Create an API key.
 3. Put it in `OPENAI_API_KEY`.
-4. Set `OPENAI_MODEL_EXTRACT` to a model available to your account that supports the Responses API and Structured Outputs.
+4. Set `OPENAI_MODEL_EXTRACT` and `OPENAI_MODEL_PARSE` to models available to your account that support the Responses API and Structured Outputs. PDF Resume Parse also needs file input support.
 
 Reference:
 
 - [OpenAI API keys](https://platform.openai.com/settings/organization/api-keys)
 - [OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 
-The app does not hardcode model IDs in business logic. JD Extract reads the model from `OPENAI_MODEL_EXTRACT`.
-
-## 3. Optional / Future Configuration
-
-These variables exist in `.env.example`, but the current Application + JD Extract slice does not require them.
+The app does not hardcode model IDs in business logic. JD Extract reads the model from `OPENAI_MODEL_EXTRACT`; Resume Parse reads from `OPENAI_MODEL_PARSE`.
 
 ### Vercel Blob
 
+Required for PDF resume upload and PDF Resume Parse.
+
 ```env
-BLOB_READ_WRITE_TOKEN=
+BLOB_READ_WRITE_TOKEN=vercel_blob_rw_...
 ```
 
-Reserved for future PDF resume upload/storage. Not used by the current pasted-text resume or JD Extract flows.
+PDFs are uploaded with private Blob access and stored on the `Resume` record as `fileUrl` and `filePath`. When the user triggers parsing, the server reads the private PDF and sends it to OpenAI as a request-scoped file input. If PDF parsing fails, create a pasted-text resume version as the fallback.
 
-### Future OpenAI Routes
+Privacy note: uploaded resumes are private user data. Do not log PDF contents. OpenAI file inputs may be scanned by OpenAI safety systems, and PDF parsing can use more tokens than pasted text.
+
+## 3. Optional / Future Configuration
+
+These variables exist in `.env.example`, but the current resume/application slices do not require them.
 
 ```env
 OPENAI_MODEL_GENERATE=gpt-5.4-mini

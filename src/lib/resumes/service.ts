@@ -3,12 +3,17 @@ import "server-only";
 import { Prisma, ResumeStatus } from "@prisma/client";
 import { ZodError } from "zod";
 
-import { parseResumeFromText } from "@/src/lib/ai/services/parse-resume";
+import {
+  parseResumeFromFile,
+  parseResumeFromText,
+} from "@/src/lib/ai/services/parse-resume";
 import {
   resumeParseSchema,
   type ResumeParse,
 } from "@/src/lib/ai/schemas/resume-parse";
 import {
+  completePdfResumeUploadForUser,
+  createPendingPdfResume,
   createPastedTextResume,
   deleteResumeForUser,
   getResumeByIdForUser,
@@ -21,11 +26,16 @@ import {
   type ResumeBulletCreateInput,
 } from "@/src/lib/db/resumes";
 import {
+  deletePrivateResumePdf,
+  uploadPrivateResumePdf,
+} from "@/src/lib/storage/resume-pdf";
+import {
   createPastedResumeSchema,
   deleteResumeSchema,
   pastedResumeTextSchema,
   renameResumeSchema,
   resumeIdSchema,
+  validateResumePdfUpload,
   type CreatePastedResumeInput,
   type DeleteResumeInput,
   type RenameResumeInput,
@@ -33,10 +43,12 @@ import {
 
 type ResumeServiceErrorCode =
   | "invalid_resume_id"
+  | "invalid_resume_pdf"
   | "resume_already_parsing"
   | "resume_not_found"
   | "resume_parse_failed"
   | "resume_source_missing"
+  | "resume_upload_failed"
   | "configuration";
 
 export class ResumeServiceError extends Error {
@@ -152,6 +164,76 @@ export async function createUserPastedResume(
   });
 }
 
+export async function createUserPdfResume(
+  userId: string,
+  input: {
+    file: unknown;
+    title: unknown;
+  }
+) {
+  let parsed: ReturnType<typeof validateResumePdfUpload>;
+
+  try {
+    parsed = validateResumePdfUpload(input);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      throw new ResumeServiceError(firstZodMessage(error), "invalid_resume_pdf");
+    }
+
+    throw error;
+  }
+
+  const resume = await createPendingPdfResume({
+    title: parsed.title,
+    userId,
+  });
+
+  try {
+    const storedFile = await uploadPrivateResumePdf({
+      file: parsed.file,
+      resumeId: resume.id,
+      userId,
+    });
+    const completedResume = await completePdfResumeUploadForUser({
+      filePath: storedFile.pathname,
+      fileUrl: storedFile.url,
+      id: resume.id,
+      userId,
+    });
+
+    if (!completedResume) {
+      throw new ResumeServiceError("Resume not found.", "resume_not_found");
+    }
+
+    return completedResume;
+  } catch (error) {
+    await markResumeFailedForUser({
+      id: resume.id,
+      userId,
+    });
+
+    if (error instanceof ResumeServiceError) {
+      throw error;
+    }
+
+    if (
+      error instanceof Error &&
+      (error.message.includes("BLOB_READ_WRITE_TOKEN") ||
+        error.message.includes("No token found"))
+    ) {
+      throw new ResumeServiceError(
+        "PDF storage is not configured.",
+        "configuration"
+      );
+    }
+
+    throw new ResumeServiceError(
+      "PDF resume could not be uploaded.",
+      "resume_upload_failed"
+    );
+  }
+}
+
 export async function renameUserResume(
   userId: string,
   input: RenameResumeInput
@@ -175,6 +257,12 @@ export async function deleteUserResume(
   input: DeleteResumeInput
 ) {
   const parsed = deleteResumeSchema.parse(input);
+  const resume = await getResumeByIdForUser(userId, parsed.id);
+
+  if (!resume) {
+    throw new ResumeServiceError("Resume not found.");
+  }
+
   const result = await deleteResumeForUser({
     id: parsed.id,
     userId,
@@ -182,6 +270,14 @@ export async function deleteUserResume(
 
   if (result.count === 0) {
     throw new ResumeServiceError("Resume not found.");
+  }
+
+  if (resume.filePath) {
+    try {
+      await deletePrivateResumePdf(resume.filePath);
+    } catch {
+      // Keep resume deletion reliable; storage cleanup can be retried manually.
+    }
   }
 
   return result;
@@ -209,8 +305,9 @@ export async function parseUserResume(userId: string, resumeId: string) {
   }
 
   const parsedSourceText = pastedResumeTextSchema.safeParse(resume.sourceText ?? "");
+  const hasPdfSource = Boolean(resume.filePath?.trim());
 
-  if (!parsedSourceText.success) {
+  if (!parsedSourceText.success && !hasPdfSource) {
     throw new ResumeServiceError(
       firstZodMessage(parsedSourceText.error),
       "resume_source_missing"
@@ -231,11 +328,17 @@ export async function parseUserResume(userId: string, resumeId: string) {
 
   try {
     const parsedResume = resumeParseSchema.parse(
-      await parseResumeFromText({
-        resumeId: id,
-        sourceText: parsedSourceText.data,
-        userId,
-      })
+      parsedSourceText.success
+        ? await parseResumeFromText({
+            resumeId: id,
+            sourceText: parsedSourceText.data,
+            userId,
+          })
+        : await parseResumeFromFile({
+            filePath: resume.filePath ?? "",
+            resumeId: id,
+            userId,
+          })
     );
     const bullets = buildResumeBulletsFromParse({
       parsedResume,

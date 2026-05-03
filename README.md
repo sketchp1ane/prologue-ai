@@ -2,23 +2,23 @@
 
 > AI job-search workspace. Turn every application into a repeatable path toward an offer.
 
-This repository is currently at the **workspace data v1 stage**. It contains the engineering scaffold, project documentation, Codex configuration, MCP configuration, skills, CI, environment templates, the public homepage, Clerk-backed workspace routes, Prisma data models, pasted-text Resume CRUD, Application creation/detail flows, JD extraction, resume-to-application attachment, and a real user-scoped dashboard board.
+This repository is currently at the **workspace data v1 stage**. It contains the engineering scaffold, project documentation, Codex configuration, MCP configuration, skills, CI, environment templates, the public homepage, Clerk-backed workspace routes, Prisma data models, pasted-text and PDF Resume creation, Resume Parse v1, Application creation/detail flows, JD extraction, resume-to-application attachment, and a real user-scoped dashboard board.
 
-Resume upload, Resume Parse, Diagnosis, Bullet Rewrite, Outreach, Interview Review, Weekly Report, rate limiting, and deployment hardening are still pending.
+Diagnosis, Bullet Rewrite, Outreach, Interview Review, Weekly Report, rate limiting, and deployment hardening are still pending.
 
 ## Current status
 
 ```txt
 Stage: workspace data v1
 UI implemented: public homepage, auth pages, workspace shell, resumes, applications, dashboard board
-Business logic implemented: pasted-text resumes, applications, stage updates, resume attachment
+Business logic implemented: pasted-text/PDF resumes, Resume Parse, applications, stage updates, resume attachment
 Auth implemented: Clerk foundation routes and protected workspace shell
-OpenAI API implemented: JD Extract only
+OpenAI API implemented: JD Extract, Resume Parse from pasted text and PDF file input
 Database models implemented: initial MVP Prisma schema with migrations
 Ready for Codex task execution: yes
 ```
 
-The next recommended product slice is Resume Parse from `docs/05_CODEX_TASKS.md`. Keep it separate from Diagnosis, Bullet Rewrite, Outreach, Interview Review, and Weekly Report.
+The next recommended product slice is Diagnosis from `docs/05_CODEX_TASKS.md`. Keep it separate from Bullet Rewrite, Outreach, Interview Review, and Weekly Report.
 
 ## Planned product
 
@@ -65,7 +65,9 @@ pnpm dev
 
 The public homepage is available at `/`. Clerk-backed auth pages are available at `/sign-in` and `/sign-up`. Protected workspace routes live under `/dashboard`, `/resumes`, `/applications`, `/jd-extract`, and placeholder settings/product routes.
 
-If Clerk environment variables are missing, public pages still load with a setup notice and protected workspace routes redirect to `/sign-in`. JD Extract also requires `OPENAI_API_KEY` and model configuration from `.env.example`.
+If Clerk environment variables are missing, public pages still load with a setup notice and protected workspace routes redirect to `/sign-in`. JD Extract and Resume Parse require `OPENAI_API_KEY` and model configuration from `.env.example`; PDF upload also requires `BLOB_READ_WRITE_TOKEN`.
+
+PDF privacy note: uploaded PDFs are stored privately in Vercel Blob. When parsing is triggered, the server sends the PDF to OpenAI as a file input; OpenAI may scan file inputs for safety and PDF parsing can use more tokens than pasted text. If PDF parsing fails, create a pasted-text resume version as the fallback.
 
 ## Validation commands
 

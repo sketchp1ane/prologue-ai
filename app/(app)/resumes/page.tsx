@@ -117,11 +117,11 @@ export default async function ResumesPage({ searchParams }: ResumesPageProps) {
       <>
         <PageHeader
           title="Resumes"
-          description="Create and manage resume versions from pasted text."
+          description="Create and manage resume versions from pasted text or private PDFs."
           action={{
             href: "/resumes/new",
             icon: Plus,
-            label: "Paste Resume",
+            label: "Add Resume",
           }}
         />
         {error && (
@@ -141,7 +141,7 @@ export default async function ResumesPage({ searchParams }: ResumesPageProps) {
           action={{
             href: "/resumes/new",
             icon: Plus,
-            label: "Paste Resume",
+            label: "Add Resume",
           }}
         />
       </>
@@ -152,11 +152,11 @@ export default async function ResumesPage({ searchParams }: ResumesPageProps) {
     <>
       <PageHeader
         title="Resumes"
-        description="Create and manage resume versions from pasted text."
+        description="Create and manage resume versions from pasted text or private PDFs."
         action={{
           href: "/resumes/new",
           icon: Plus,
-          label: "Paste Resume",
+          label: "Add Resume",
         }}
       />
       {error && (
@@ -198,6 +198,10 @@ export default async function ResumesPage({ searchParams }: ResumesPageProps) {
                   </p>
 
                   <div className="mt-4 grid gap-2 rounded-xl border border-border bg-secondary/20 p-3 text-sm">
+                    <MetaRow
+                      label="Source"
+                      value={resume.filePath ? "Private PDF" : "Pasted text"}
+                    />
                     <MetaRow
                       label="Parsed JSON"
                       value={parsedJsonExists ? "Present" : "Missing"}

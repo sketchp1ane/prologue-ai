@@ -32,6 +32,10 @@
 - Resume Parse drives `Resume.status` through `PARSING`, `READY`, and `FAILED`.
 - Successful Resume Parse saves `Resume.parsedJson` and regenerates `ResumeBullet` rows from parsed experience/project bullets.
 - Resume Parse records success/failure `AiGeneration` audit rows without storing full resume input.
+- Resume detail includes a UI parse trigger, parsed Resume Parse v1 display, and generated bullet display.
+- `/resumes/new` supports both pasted-text resume creation and private PDF upload.
+- PDF resumes are stored in Vercel Blob through `src/lib/storage/`, enforce PDF-only files up to 10MB, and preserve pasted text as the stable fallback path.
+- PDF Resume Parse uses OpenAI Responses file inputs from the stored private PDF and records success/failure `AiGeneration` audit rows without storing raw PDF contents.
 - Application creation vertical slice is closed: `/applications/new` supports pasted JD text, JD Extract, reviewed/editable extracted fields, and Save Application.
 - Applications persist `companyName`, `roleTitle`, `location`, `stage`, `jdText`, reviewed `jdExtractJson`, and `userId`.
 - `/applications` lists the current user's applications only.
@@ -65,9 +69,6 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 
 ## Not Implemented Yet
 
-- Resume upload
-- Resume parse UI and parsed resume display
-- PDF resume creation
 - Diagnosis report generation
 - Bullet rewrite
 - Outreach generation
@@ -84,8 +85,10 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - If Clerk environment variables are missing, `/`, `/sign-in`, and `/sign-up` remain reachable for local setup; protected workspace routes redirect to `/sign-in`.
 - Prisma schema exists for the initial MVP data model, with an initial committed migration for the current schema.
 - Resume CRUD database access is implemented through user-scoped repository/service functions.
-- The active resume creation flow supports pasted text only and stores it in `Resume.sourceText`.
+- The active resume creation flow supports pasted text and private PDF upload.
 - Pasted-text resume records are created in the non-AI `READY` state and do not create parsed JSON or resume bullets.
+- PDF resume records are created as `UPLOADING`, uploaded to private Blob storage, then marked `READY` with `fileUrl` and `filePath`.
+- PDF files are limited to `application/pdf` inputs up to 10MB. If PDF parsing fails, the product fallback is to create a pasted-text resume version.
 - Application creation supports pasted JD text only and stores reviewed JD Extract JSON in `Application.jdExtractJson`.
 - Application reads and writes are user-scoped through Clerk `userId` and repository/service functions.
 - Application detail loads and stage updates are scoped by both `Application.id` and Clerk `userId`; missing and unauthorized records render the same safe not-found state.
@@ -98,11 +101,11 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - Workspace Data v1 validation passed on 2026-04-28 with `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `pnpm check`.
 - Dashboard draggable board and Applications badge polish landed after the Workspace Data v1 closeout.
 - JD Extract and pasted-text Resume Parse are the implemented OpenAI API integrations.
-- No resume upload, parse trigger UI, or parsed resume display is implemented yet.
+- PDF Resume Parse is implemented through OpenAI Responses file inputs. PDF content is sent to OpenAI only when parsing is triggered and may be scanned by OpenAI safety systems and cost more tokens than pasted text.
 - No diagnosis, bullet rewrite, outreach, interview review, or weekly report generation is implemented yet.
 
 ## Next Recommended Step
 
-Add a small Resume detail parse trigger/parsed-data display slice next, or move to Diagnosis if API-only Resume Parse is sufficient for the current demo path. Keep Diagnosis, Bullet Rewrite, Outreach, Interview Review, and Weekly Report as separate slices.
+Move to Diagnosis if Resume Parse is sufficient for the current demo path. Keep Diagnosis, Bullet Rewrite, Outreach, Interview Review, and Weekly Report as separate slices.
 
 For any future UI work, read `docs/10_DESIGN_SYSTEM.md` first and keep the imported homepage as the visual baseline.

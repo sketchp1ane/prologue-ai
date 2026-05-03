@@ -21,6 +21,7 @@ import {
   pastedResumeTextSchema,
   resumeIdSchema,
 } from "@/src/lib/validations/resume";
+import { readPrivateResumePdf } from "@/src/lib/storage/resume-pdf";
 
 type ResumeParseServiceErrorCode =
   | "configuration"
@@ -51,7 +52,21 @@ const parseResumeInputSchema = z.object({
     .max(128, "User id is invalid."),
 });
 
-function hashInput(input: string) {
+const parseResumeFileInputSchema = z.object({
+  filePath: z
+    .string()
+    .trim()
+    .min(1, "Resume PDF file is missing.")
+    .max(500, "Resume PDF file path is invalid."),
+  resumeId: resumeIdSchema,
+  userId: z
+    .string()
+    .trim()
+    .min(1, "User id is required.")
+    .max(128, "User id is invalid."),
+});
+
+function hashInput(input: string | Buffer) {
   return createHash("sha256").update(input).digest("hex");
 }
 
@@ -91,6 +106,7 @@ function getUsageTokens(usage: unknown) {
 }
 
 async function assertResumeOwnership(params: {
+  filePath?: string;
   resumeId: string;
   userId: string;
 }) {
@@ -99,6 +115,7 @@ async function assertResumeOwnership(params: {
       id: true,
     },
     where: {
+      ...(params.filePath ? { filePath: params.filePath } : {}),
       id: params.resumeId,
       userId: params.userId,
     },
@@ -180,6 +197,119 @@ export async function parseResumeFromText(params: {
     const client = getOpenAIClient();
     const response = await client.responses.parse({
       input: `Resume text to parse:\n\n${sourceText}`,
+      instructions: RESUME_PARSE_INSTRUCTIONS,
+      model,
+      store: false,
+      text: {
+        format: zodTextFormat(resumeParseSchema, "resume_parse"),
+      },
+    });
+
+    if (!response.output_parsed) {
+      throw new ResumeParseServiceError(
+        "The model did not return resume parse data."
+      );
+    }
+
+    const resumeParse = resumeParseSchema.parse(response.output_parsed);
+    const usage = response.usage as Prisma.InputJsonValue | undefined;
+    const { inputTokens, outputTokens } = getUsageTokens(response.usage);
+
+    await recordGeneration({
+      inputHash,
+      inputTokens,
+      metadata,
+      model,
+      outputJson: resumeParse,
+      outputTokens,
+      resumeId,
+      status: GenerationStatus.SUCCESS,
+      usageJson: usage,
+      userId,
+    });
+
+    return resumeParse;
+  } catch (error) {
+    const publicError = toPublicServiceError(error);
+
+    await recordGeneration({
+      errorMessage: safeErrorMessage(error),
+      inputHash,
+      metadata,
+      model,
+      resumeId,
+      status: GenerationStatus.FAILED,
+      userId,
+    });
+
+    throw publicError;
+  }
+}
+
+export async function parseResumeFromFile(params: {
+  filePath: string;
+  resumeId: string;
+  userId: string;
+}): Promise<ResumeParse> {
+  const parsedInput = parseResumeFileInputSchema.safeParse(params);
+
+  if (!parsedInput.success) {
+    throw new ResumeParseServiceError(
+      parsedInput.error.issues[0]?.message ?? "Resume file input is invalid.",
+      "invalid_input"
+    );
+  }
+
+  const { filePath, resumeId, userId } = parsedInput.data;
+
+  await assertResumeOwnership({
+    filePath,
+    resumeId,
+    userId,
+  });
+
+  let model: string;
+
+  try {
+    model = getParseModel();
+  } catch (error) {
+    throw toPublicServiceError(error);
+  }
+
+  let fileData: Awaited<ReturnType<typeof readPrivateResumePdf>>;
+
+  try {
+    fileData = await readPrivateResumePdf(filePath);
+  } catch (error) {
+    throw new ResumeParseServiceError(safeErrorMessage(error), "invalid_input");
+  }
+
+  const inputHash = hashInput(Buffer.from(fileData.base64, "base64"));
+  const metadata = {
+    filePathHash: hashInput(filePath),
+    fileSizeBytes: fileData.byteLength,
+    sourceType: "pdf",
+  } satisfies Prisma.InputJsonObject;
+
+  try {
+    const client = getOpenAIClient();
+    const response = await client.responses.parse({
+      input: [
+        {
+          content: [
+            {
+              text: "Parse this PDF resume into the requested structured schema.",
+              type: "input_text",
+            },
+            {
+              file_data: `data:application/pdf;base64,${fileData.base64}`,
+              filename: "resume.pdf",
+              type: "input_file",
+            },
+          ],
+          role: "user",
+        },
+      ],
       instructions: RESUME_PARSE_INSTRUCTIONS,
       model,
       store: false,

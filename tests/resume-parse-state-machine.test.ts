@@ -6,21 +6,30 @@ vi.mock("server-only", () => ({}));
 
 const mocks = vi.hoisted(() => {
   return {
+    completePdfResumeUploadForUser: vi.fn(),
+    createPendingPdfResume: vi.fn(),
+    deletePrivateResumePdf: vi.fn(),
+    deleteResumeForUser: vi.fn(),
     getResumeByIdForUser: vi.fn(),
     markResumeFailedForUser: vi.fn(),
     markResumeParsingForUser: vi.fn(),
+    parseResumeFromFile: vi.fn(),
     parseResumeFromText: vi.fn(),
     saveParsedResumeForUser: vi.fn(),
+    uploadPrivateResumePdf: vi.fn(),
   };
 });
 
 vi.mock("@/src/lib/ai/services/parse-resume", () => ({
+  parseResumeFromFile: mocks.parseResumeFromFile,
   parseResumeFromText: mocks.parseResumeFromText,
 }));
 
 vi.mock("@/src/lib/db/resumes", () => ({
+  completePdfResumeUploadForUser: mocks.completePdfResumeUploadForUser,
+  createPendingPdfResume: mocks.createPendingPdfResume,
   createPastedTextResume: vi.fn(),
-  deleteResumeForUser: vi.fn(),
+  deleteResumeForUser: mocks.deleteResumeForUser,
   getResumeByIdForUser: mocks.getResumeByIdForUser,
   listResumesByUser: vi.fn(),
   markResumeFailedForUser: mocks.markResumeFailedForUser,
@@ -29,8 +38,15 @@ vi.mock("@/src/lib/db/resumes", () => ({
   saveParsedResumeForUser: mocks.saveParsedResumeForUser,
 }));
 
+vi.mock("@/src/lib/storage/resume-pdf", () => ({
+  deletePrivateResumePdf: mocks.deletePrivateResumePdf,
+  uploadPrivateResumePdf: mocks.uploadPrivateResumePdf,
+}));
+
 import {
   buildResumeBulletsFromParse,
+  createUserPdfResume,
+  deleteUserResume,
   parseUserResume,
   ResumeServiceError,
 } from "../src/lib/resumes/service";
@@ -38,8 +54,13 @@ import {
 const sourceText =
   "Alex Chen\nFrontend Engineer\nBuilt React and TypeScript onboarding workflows for SaaS customers.";
 
-function mockResume(params?: { sourceText?: string | null; status?: string }) {
+function mockResume(params?: {
+  filePath?: string | null;
+  sourceText?: string | null;
+  status?: string;
+}) {
   mocks.getResumeByIdForUser.mockResolvedValue({
+    filePath: params && "filePath" in params ? params.filePath : null,
     id: "resume_1",
     sourceText:
       params && "sourceText" in params ? params.sourceText : sourceText,
@@ -62,12 +83,30 @@ describe("resume parse state machine", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockResume();
+    mocks.completePdfResumeUploadForUser.mockResolvedValue({
+      id: "resume_1",
+      userId: "user_1",
+    });
+    mocks.createPendingPdfResume.mockResolvedValue({
+      id: "resume_1",
+      userId: "user_1",
+    });
+    mocks.deletePrivateResumePdf.mockResolvedValue(undefined);
+    mocks.deleteResumeForUser.mockResolvedValue({ count: 1 });
     mocks.markResumeParsingForUser.mockResolvedValue({ count: 1 });
     mocks.markResumeFailedForUser.mockResolvedValue({ count: 1 });
+    mocks.parseResumeFromFile.mockResolvedValue(validResumeParseFixture);
     mocks.parseResumeFromText.mockResolvedValue(validResumeParseFixture);
     mocks.saveParsedResumeForUser.mockResolvedValue({
       bulletCount: 6,
       resumeUpdated: true,
+    });
+    mocks.uploadPrivateResumePdf.mockResolvedValue({
+      contentLength: 8,
+      contentType: "application/pdf",
+      downloadUrl: "https://blob.example/resume.pdf?download=1",
+      pathname: "resumes/user_hash/resume_1.pdf",
+      url: "https://blob.example/resume.pdf",
     });
   });
 
@@ -105,6 +144,26 @@ describe("resume parse state machine", () => {
 
     expect(mocks.markResumeParsingForUser).not.toHaveBeenCalled();
     expect(mocks.parseResumeFromText).not.toHaveBeenCalled();
+  });
+
+  it("parses PDF resumes from file input when pasted text is absent", async () => {
+    mockResume({
+      filePath: "resumes/user_hash/resume_1.pdf",
+      sourceText: null,
+    });
+
+    await expect(parseUserResume("user_1", "resume_1")).resolves.toEqual({
+      bulletCount: 6,
+      resumeId: "resume_1",
+      status: "READY",
+    });
+
+    expect(mocks.parseResumeFromText).not.toHaveBeenCalled();
+    expect(mocks.parseResumeFromFile).toHaveBeenCalledWith({
+      filePath: "resumes/user_hash/resume_1.pdf",
+      resumeId: "resume_1",
+      userId: "user_1",
+    });
   });
 
   it("rejects resumes that are already parsing", async () => {
@@ -148,6 +207,7 @@ describe("resume parse state machine", () => {
       sourceText,
       userId: "user_1",
     });
+    expect(mocks.parseResumeFromFile).not.toHaveBeenCalled();
     expect(mocks.saveParsedResumeForUser).toHaveBeenCalledWith({
       bullets: expect.arrayContaining([
         expect.objectContaining({
@@ -201,6 +261,78 @@ describe("resume parse state machine", () => {
       id: "resume_1",
       userId: "user_1",
     });
+  });
+
+  it("creates PDF resumes by uploading private storage metadata", async () => {
+    const file = new File(["%PDF-1.7"], "resume.pdf", {
+      type: "application/pdf",
+    });
+
+    await expect(
+      createUserPdfResume("user_1", {
+        file,
+        title: "Frontend PDF",
+      })
+    ).resolves.toEqual({
+      id: "resume_1",
+      userId: "user_1",
+    });
+
+    expect(mocks.createPendingPdfResume).toHaveBeenCalledWith({
+      title: "Frontend PDF",
+      userId: "user_1",
+    });
+    expect(mocks.uploadPrivateResumePdf).toHaveBeenCalledWith({
+      file,
+      resumeId: "resume_1",
+      userId: "user_1",
+    });
+    expect(mocks.completePdfResumeUploadForUser).toHaveBeenCalledWith({
+      filePath: "resumes/user_hash/resume_1.pdf",
+      fileUrl: "https://blob.example/resume.pdf",
+      id: "resume_1",
+      userId: "user_1",
+    });
+    expect(mocks.markResumeFailedForUser).not.toHaveBeenCalled();
+  });
+
+  it("marks PDF resumes failed when storage upload fails", async () => {
+    mocks.uploadPrivateResumePdf.mockRejectedValue(new Error("storage failed"));
+
+    await expectServiceError(
+      createUserPdfResume("user_1", {
+        file: new File(["%PDF-1.7"], "resume.pdf", {
+          type: "application/pdf",
+        }),
+        title: "Frontend PDF",
+      }),
+      "resume_upload_failed"
+    );
+
+    expect(mocks.markResumeFailedForUser).toHaveBeenCalledWith({
+      id: "resume_1",
+      userId: "user_1",
+    });
+  });
+
+  it("deletes a stored PDF after deleting the user-owned resume", async () => {
+    mockResume({
+      filePath: "resumes/user_hash/resume_1.pdf",
+    });
+
+    await expect(
+      deleteUserResume("user_1", {
+        id: "resume_1",
+      })
+    ).resolves.toEqual({ count: 1 });
+
+    expect(mocks.deleteResumeForUser).toHaveBeenCalledWith({
+      id: "resume_1",
+      userId: "user_1",
+    });
+    expect(mocks.deletePrivateResumePdf).toHaveBeenCalledWith(
+      "resumes/user_hash/resume_1.pdf"
+    );
   });
 });
 

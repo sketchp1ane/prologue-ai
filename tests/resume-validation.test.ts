@@ -4,7 +4,9 @@ import {
   createPastedResumeSchema,
   deleteResumeSchema,
   renameResumeSchema,
+  RESUME_PDF_MAX_BYTES,
   RESUME_SOURCE_TEXT_MAX_LENGTH,
+  validateResumePdfUpload,
 } from "../src/lib/validations/resume";
 
 describe("resume validation", () => {
@@ -54,5 +56,48 @@ describe("resume validation", () => {
     expect(deleteResumeSchema.parse({ id: "  resume_1  " })).toEqual({
       id: "resume_1",
     });
+  });
+
+  it("validates PDF uploads", () => {
+    const file = new File(["%PDF-1.7"], "resume.pdf", {
+      type: "application/pdf",
+    });
+
+    expect(
+      validateResumePdfUpload({
+        file,
+        title: "  Frontend resume  ",
+      })
+    ).toEqual({
+      file,
+      title: "Frontend resume",
+    });
+  });
+
+  it("rejects missing, non-PDF, and oversized PDF uploads", () => {
+    expect(() =>
+      validateResumePdfUpload({
+        file: null,
+        title: "Frontend resume",
+      })
+    ).toThrow("Choose a PDF resume file.");
+
+    expect(() =>
+      validateResumePdfUpload({
+        file: new File(["hello"], "resume.txt", {
+          type: "text/plain",
+        }),
+        title: "Frontend resume",
+      })
+    ).toThrow("Upload a PDF file only.");
+
+    expect(() =>
+      validateResumePdfUpload({
+        file: new File(["x".repeat(RESUME_PDF_MAX_BYTES + 1)], "resume.pdf", {
+          type: "application/pdf",
+        }),
+        title: "Frontend resume",
+      })
+    ).toThrow("PDF must be 10MB or smaller.");
   });
 });

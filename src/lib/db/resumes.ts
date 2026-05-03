@@ -17,6 +17,8 @@ export const resumeListItemSelect = {
     },
   },
   createdAt: true,
+  filePath: true,
+  fileUrl: true,
   id: true,
   parsedJson: true,
   status: true,
@@ -43,6 +45,8 @@ export const resumeDetailSelect = {
     },
   },
   createdAt: true,
+  filePath: true,
+  fileUrl: true,
   id: true,
   parsedJson: true,
   sourceText: true,
@@ -113,6 +117,51 @@ export async function createPastedTextResume(
       userId: params.userId,
     },
   });
+}
+
+export async function createPendingPdfResume(
+  params: {
+    title: string;
+    userId: string;
+  },
+  db: ResumeDb = prisma
+) {
+  return db.resume.create({
+    data: {
+      status: ResumeStatus.UPLOADING,
+      title: params.title,
+      userId: params.userId,
+    },
+  });
+}
+
+export async function completePdfResumeUploadForUser(
+  params: {
+    filePath: string;
+    fileUrl: string;
+    id: string;
+    userId: string;
+  },
+  db: ResumeDb = prisma
+) {
+  const result = await db.resume.updateMany({
+    data: {
+      filePath: params.filePath,
+      fileUrl: params.fileUrl,
+      status: ResumeStatus.READY,
+    },
+    where: {
+      id: params.id,
+      status: ResumeStatus.UPLOADING,
+      userId: params.userId,
+    },
+  });
+
+  if (result.count === 0) {
+    return null;
+  }
+
+  return getResumeByIdForUser(params.userId, params.id, db);
 }
 
 export async function renameResumeForUser(

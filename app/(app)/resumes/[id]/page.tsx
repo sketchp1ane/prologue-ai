@@ -75,6 +75,7 @@ export default async function ResumeDetailPage({
   const parsedResume = getParsedResumeDisplay(resume.parsedJson);
   const bulletGroups = groupResumeBullets(resume.bullets);
   const hasSourceText = Boolean(resume.sourceText?.trim());
+  const hasFile = Boolean(resume.filePath?.trim());
   const hasStoredParsedJson = Boolean(resume.parsedJson);
   const error = readMessage(query, "error");
   const success = readMessage(query, "success");
@@ -160,13 +161,17 @@ export default async function ResumeDetailPage({
                   <h2 className="text-base font-medium text-foreground">
                     Original source text / rawText
                   </h2>
-                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
                     Preserved private source text for parsing and auditability.
+                    PDF-only resumes do not store extracted raw text.
                   </p>
                 </div>
               </summary>
               <pre className="mt-6 max-h-[40rem] overflow-auto whitespace-pre-wrap rounded-xl border border-border bg-secondary/20 p-4 font-mono text-sm leading-6 text-foreground">
-                {resume.sourceText || "No source text stored."}
+                {resume.sourceText ||
+                  (hasFile
+                    ? "PDF file stored privately. If PDF parsing fails, create a pasted-text resume version as a fallback."
+                    : "No source text stored.")}
               </pre>
             </details>
           </AppCard>
@@ -184,7 +189,13 @@ export default async function ResumeDetailPage({
               <MetaRow label="Updated" value={formatDate(resume.updatedAt)} />
               <MetaRow
                 label="Source"
-                value={hasSourceText ? "Pasted text" : "No source text"}
+                value={
+                  hasSourceText
+                    ? "Pasted text"
+                    : hasFile
+                      ? "Private PDF"
+                      : "No source text"
+                }
               />
               <MetaRow
                 label="Parsed JSON"
@@ -212,6 +223,7 @@ export default async function ResumeDetailPage({
             />
             <AppCardContent>
               <ResumeParseControl
+                hasFile={hasFile}
                 hasParsedJson={hasStoredParsedJson}
                 hasSourceText={hasSourceText}
                 resumeId={resume.id}

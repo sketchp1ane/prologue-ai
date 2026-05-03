@@ -6,6 +6,7 @@ import { ZodError } from "zod";
 
 import { requireCurrentUserId } from "@/src/lib/auth/current-user";
 import {
+  createUserPdfResume,
   createUserPastedResume,
   deleteUserResume,
   renameUserResume,
@@ -15,6 +16,7 @@ import {
   createPastedResumeSchema,
   deleteResumeSchema,
   renameResumeSchema,
+  validateResumePdfUpload,
 } from "@/src/lib/validations/resume";
 
 function readFormString(formData: FormData, key: string) {
@@ -48,6 +50,47 @@ export async function createResumeAction(formData: FormData) {
 
   revalidatePath("/resumes");
   redirect(`/resumes/${resume.id}`);
+}
+
+export async function createPdfResumeAction(formData: FormData) {
+  const userId = await requireCurrentUserId();
+  const parsed = (() => {
+    try {
+      return {
+        data: validateResumePdfUpload({
+          file: formData.get("pdfFile"),
+          title: readFormString(formData, "title"),
+        }),
+        success: true as const,
+      };
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return {
+          error,
+          success: false as const,
+        };
+      }
+
+      throw error;
+    }
+  })();
+
+  if (!parsed.success) {
+    redirect(withMessage("/resumes/new", "error", firstError(parsed.error)));
+  }
+
+  try {
+    const resume = await createUserPdfResume(userId, parsed.data);
+
+    revalidatePath("/resumes");
+    redirect(`/resumes/${resume.id}`);
+  } catch (error) {
+    if (error instanceof ResumeServiceError) {
+      redirect(withMessage("/resumes/new", "error", error.message));
+    }
+
+    throw error;
+  }
 }
 
 export async function renameResumeAction(formData: FormData) {

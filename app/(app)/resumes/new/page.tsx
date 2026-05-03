@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft, FileUp, FileText } from "lucide-react";
 
 import { AppCard } from "@/components/app/AppCard";
 import { PageHeader } from "@/components/app/PageHeader";
@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import {
   RESUME_SOURCE_TEXT_MAX_LENGTH,
   RESUME_TITLE_MAX_LENGTH,
+  RESUME_PDF_MAX_BYTES,
 } from "@/src/lib/validations/resume";
 
-import { createResumeAction } from "../actions";
+import { createPdfResumeAction, createResumeAction } from "../actions";
 
 type NewResumePageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -30,8 +31,8 @@ export default async function NewResumePage({
   return (
     <>
       <PageHeader
-        title="Paste Resume"
-        description="Create a resume record from text only. PDF upload and parsing are intentionally not part of this slice."
+        title="New Resume"
+        description="Create a resume from pasted text or upload a PDF. Pasted text remains the most stable parsing fallback."
         secondaryAction={{
           href: "/resumes",
           label: "Back to resumes",
@@ -42,6 +43,7 @@ export default async function NewResumePage({
           {error}
         </div>
       )}
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_26rem]">
       <AppCard padding="lg">
         <form action={createResumeAction} className="space-y-6">
           <div className="flex items-start gap-4 border-b border-border pb-6">
@@ -53,8 +55,8 @@ export default async function NewResumePage({
                 Resume source
               </h2>
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                Store the pasted text exactly as provided so it can be parsed in
-                a later AI slice.
+                Store pasted text exactly as provided so Resume Parse can use
+                the most stable source.
               </p>
             </div>
           </div>
@@ -111,6 +113,87 @@ export default async function NewResumePage({
           </div>
         </form>
       </AppCard>
+
+      <AppCard padding="lg">
+        <form action={createPdfResumeAction} className="space-y-6">
+          <div className="flex items-start gap-4 border-b border-border pb-6">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-primary/5 text-primary">
+              <FileUp className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div>
+              <h2 className="text-base font-medium text-foreground">
+                PDF upload
+              </h2>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                Upload a private PDF resume. Parsing happens from the resume
+                detail page, and pasted text remains available if PDF parsing
+                fails.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="pdf-title"
+              className="text-sm font-medium text-foreground"
+            >
+              Resume title
+            </label>
+            <input
+              id="pdf-title"
+              name="title"
+              type="text"
+              required
+              maxLength={RESUME_TITLE_MAX_LENGTH}
+              placeholder="Frontend resume PDF"
+              className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="pdfFile"
+              className="text-sm font-medium text-foreground"
+            >
+              PDF file
+            </label>
+            <input
+              id="pdfFile"
+              name="pdfFile"
+              type="file"
+              required
+              accept="application/pdf,.pdf"
+              className="block w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            />
+            <p className="text-xs leading-5 text-muted-foreground">
+              PDF only. Maximum {Math.floor(
+                RESUME_PDF_MAX_BYTES / 1024 / 1024
+              )}MB. If parsing fails, create a pasted-text resume version
+              instead.
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border bg-secondary/20 p-4 text-xs leading-5 text-muted-foreground">
+            Uploaded PDFs are stored privately. When you trigger parsing, the PDF
+            content is sent to OpenAI file inputs for structured extraction and
+            may use more tokens than pasted text.
+          </div>
+
+          <div className="flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
+            <Button variant="outline" asChild className="rounded-xl">
+              <Link href="/resumes">
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                Cancel
+              </Link>
+            </Button>
+            <Button type="submit" className="rounded-xl">
+              <FileUp className="h-4 w-4" aria-hidden="true" />
+              Upload PDF
+            </Button>
+          </div>
+        </form>
+      </AppCard>
+      </div>
     </>
   );
 }

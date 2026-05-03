@@ -7,6 +7,7 @@ import { AlertCircle, Loader2, RefreshCw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type ResumeParseControlProps = {
+  hasFile: boolean;
   hasParsedJson: boolean;
   hasSourceText: boolean;
   resumeId: string;
@@ -25,6 +26,7 @@ type ParseResponse = {
 };
 
 export function ResumeParseControl({
+  hasFile,
   hasParsedJson,
   hasSourceText,
   resumeId,
@@ -69,11 +71,11 @@ export function ResumeParseControl({
     });
   }
 
-  if (!hasSourceText) {
+  if (!hasSourceText && !hasFile) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-secondary/20 p-4 text-sm leading-6 text-muted-foreground">
-        Resume Parse is available for pasted-text resumes. Add source text in a
-        new resume version to parse it.
+        Resume Parse needs either pasted source text or a stored PDF. Add source
+        text in a new resume version to parse it.
       </div>
     );
   }
@@ -110,8 +112,9 @@ export function ResumeParseControl({
         {label}
       </Button>
       <p className="text-xs leading-5 text-muted-foreground">
-        Parsing uses the saved source text and regenerates structured resume
-        bullets.
+        Parsing uses the saved {hasSourceText ? "source text" : "private PDF"}{" "}
+        and regenerates structured resume bullets. If PDF parsing fails, paste
+        resume text as a fallback.
       </p>
       {message && (
         <p className="text-xs leading-5 text-muted-foreground" aria-live="polite">

@@ -1,5 +1,37 @@
 # DEVLOG
 
+## 2026-05-03 — Stretch Task F PDF resume upload
+
+Added PDF upload support for Resume Parse v1 while keeping pasted-text resume
+creation and parsing unchanged.
+
+Included:
+
+- `/resumes/new` now offers pasted-text creation and private PDF upload side by
+  side
+- PDF uploads enforce `application/pdf`, `.pdf` filename, and a 10MB limit
+- PDF resumes create user-owned `Resume` records as `UPLOADING`, store the file
+  in private Vercel Blob, then mark the record `READY`
+- Resume deletion attempts to remove the stored PDF when a `filePath` exists
+- Resume Parse now uses pasted text first, then falls back to OpenAI Responses
+  file input for PDF-only resumes
+- PDF parse success/failure records `AiGeneration` rows without storing raw PDF
+  content
+- Documentation now calls out private Blob storage, OpenAI file-input scanning,
+  token-cost implications, and pasted-text fallback
+
+Not included:
+
+- Diagnosis Report
+- Bullet Rewrite
+- Queues
+- New storage providers
+- Homepage changes
+
+Validation:
+
+- Full validation results are recorded in the task final response
+
 ## 2026-05-03 — Resume list parse state cards
 
 Updated `/resumes` so the list reflects Resume Parse v1 state instead of only

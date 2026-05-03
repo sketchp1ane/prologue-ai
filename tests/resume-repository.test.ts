@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 import {
+  completePdfResumeUploadForUser,
+  createPendingPdfResume,
   createPastedTextResume,
   deleteResumeForUser,
   getResumeByIdForUser,
@@ -107,6 +109,8 @@ describe("resume repository", () => {
         },
       },
       parsedJson: true,
+      filePath: true,
+      fileUrl: true,
     });
   });
 
@@ -168,6 +172,77 @@ describe("resume repository", () => {
         userId: "user_1",
       },
     });
+  });
+
+  it("creates pending PDF resumes as uploading user-owned records", async () => {
+    const { db, resume } = createResumeDb();
+
+    await createPendingPdfResume(
+      {
+        title: "Frontend PDF",
+        userId: "user_1",
+      },
+      db
+    );
+
+    expect(resume.create).toHaveBeenCalledWith({
+      data: {
+        status: "UPLOADING",
+        title: "Frontend PDF",
+        userId: "user_1",
+      },
+    });
+  });
+
+  it("completes PDF uploads only for uploading current-user resumes", async () => {
+    const existingResume = { id: "resume_1", userId: "user_1" };
+    const { db, resume } = createResumeDb({
+      findFirstResult: existingResume,
+      updateCount: 1,
+    });
+
+    await expect(
+      completePdfResumeUploadForUser(
+        {
+          filePath: "resumes/hash/resume_1.pdf",
+          fileUrl: "https://blob.example/resume_1.pdf",
+          id: "resume_1",
+          userId: "user_1",
+        },
+        db
+      )
+    ).resolves.toBe(existingResume);
+
+    expect(resume.updateMany).toHaveBeenCalledWith({
+      data: {
+        filePath: "resumes/hash/resume_1.pdf",
+        fileUrl: "https://blob.example/resume_1.pdf",
+        status: "READY",
+      },
+      where: {
+        id: "resume_1",
+        status: "UPLOADING",
+        userId: "user_1",
+      },
+    });
+  });
+
+  it("returns null when PDF upload completion is not user-owned", async () => {
+    const { db } = createResumeDb({
+      updateCount: 0,
+    });
+
+    await expect(
+      completePdfResumeUploadForUser(
+        {
+          filePath: "resumes/hash/resume_2.pdf",
+          fileUrl: "https://blob.example/resume_2.pdf",
+          id: "resume_2",
+          userId: "user_1",
+        },
+        db
+      )
+    ).resolves.toBeNull();
   });
 
   it("renames resumes only when id and userId both match", async () => {
