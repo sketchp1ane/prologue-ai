@@ -42,6 +42,7 @@
 - `app/(app)/resumes/page.tsx`
 - `app/(app)/settings/page.tsx`
 - `app/api/applications/extract-jd/route.ts`
+- `app/api/resumes/[id]/parse/route.ts`
 - `app/globals.css`
 - `app/layout.tsx`
 - `app/page.tsx`
@@ -143,6 +144,8 @@
 - `tests/initialization.test.ts`
 - `tests/jd-extract-schema.test.ts`
 - `tests/resume-repository.test.ts`
+- `tests/resume-parse-route.test.ts`
+- `tests/resume-parse-state-machine.test.ts`
 - `tests/resume-validation.test.ts`
 - `tsconfig.json`
 - `vitest.config.ts`

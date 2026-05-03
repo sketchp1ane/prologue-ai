@@ -58,12 +58,12 @@ Vercel
 
 ```txt
 POST /api/applications/extract-jd
+POST /api/resumes/[id]/parse
 ```
 
 ## Planned API routes
 
 ```txt
-POST /api/resumes/parse
 POST /api/applications/[id]/diagnose
 POST /api/resume/rewrite-bullet
 POST /api/applications/[id]/outreach

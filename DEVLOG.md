@@ -1,5 +1,38 @@
 # DEVLOG
 
+## 2026-05-03 — Resume parse route state machine
+
+Connected the existing Resume Parse service to persisted Resume state and
+ResumeBullet regeneration.
+
+Included:
+
+- Added `POST /api/resumes/[id]/parse` as the authenticated parse entrypoint
+- Added user-scoped Resume status transitions for `PARSING`, `READY`, and
+  `FAILED`
+- Rejected missing/unauthorized resumes, invalid ids, missing source text, and
+  already-running parses with stable API error codes
+- Saved validated parsed JSON to `Resume.parsedJson`
+- Regenerated `ResumeBullet` rows from parsed experience and project bullets
+  after deleting old current-user bullets for the same resume
+- Kept parse failure details in existing `AiGeneration.errorMessage`; no
+  Resume schema change was added
+- Added route, service/state-machine, and repository tests for user scoping,
+  status transitions, duplicate-bullet prevention, and failure handling
+
+Not included:
+
+- PDF upload
+- Resume Parse UI button or parsed resume display
+- Diagnosis
+- Bullet Rewrite
+- Homepage changes
+
+Validation:
+
+- Targeted typecheck and tests passed during implementation
+- Full validation results are recorded in the task final response
+
 ## 2026-05-03 — OpenAI resume parse service
 
 Implemented the server-only Resume Parse service without adding UI, routes, PDF

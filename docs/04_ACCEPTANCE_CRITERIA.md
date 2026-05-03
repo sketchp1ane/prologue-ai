@@ -22,6 +22,7 @@
 - Missing or unauthorized application detail routes render the same safe not-found state.
 - Resume deletion detaches related applications through `ON DELETE SET NULL`.
 - JD Extract persists success/failure `AiGeneration` audit rows without storing full JD input.
+- Pasted-text Resume Parse API updates user-owned Resume status, persists parsed JSON, regenerates ResumeBullet rows, and persists success/failure `AiGeneration` audit rows without storing full resume input.
 
 ## Future global acceptance
 
@@ -33,7 +34,7 @@
 ## Remaining resume flow
 
 - User can upload PDF or paste resume text.
-- User can see parsed resume details.
+- User can trigger parsing from the resume UI and see parsed resume details.
 - If parsing fails, user sees a clear retry/fallback path.
 
 ## Remaining application flow

@@ -2,7 +2,9 @@
 
 ## Current stage
 
-JD Extract is implemented through `src/lib/ai/services/extract-jd.ts` and exposed by `POST /api/applications/extract-jd`. All other AI feature contracts in this document remain planned.
+JD Extract is implemented through `src/lib/ai/services/extract-jd.ts` and exposed by `POST /api/applications/extract-jd`.
+
+Resume Parse is implemented for existing pasted-text resume records through `src/lib/ai/services/parse-resume.ts` and exposed by `POST /api/resumes/[id]/parse`. PDF file input remains planned.
 
 ## Model routing
 
@@ -29,7 +31,7 @@ Codex may adjust model names only after checking current OpenAI docs.
 
 ### Resume parse
 
-Status: planned.
+Status: implemented for pasted text API parsing; PDF input and UI display are planned.
 
 Input:
 

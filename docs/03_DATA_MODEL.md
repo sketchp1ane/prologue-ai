@@ -25,7 +25,7 @@ createdAt
 updatedAt
 ```
 
-Current implementation supports pasted-text resumes only. Pasted resumes store content in `sourceText`, use `READY`, and do not create parsed JSON or bullets yet.
+Current implementation supports pasted-text resumes only. Pasted resumes store content in `sourceText`, start in `READY`, and can be parsed through `POST /api/resumes/[id]/parse` to populate `parsedJson`.
 
 ### Application
 
@@ -64,7 +64,7 @@ createdAt
 updatedAt
 ```
 
-This table exists for future parsing/rewrite flows but is not populated by the current pasted-text resume flow.
+This table is populated by pasted-text Resume Parse from parsed experience and project bullets. Re-parsing deletes old current-user bullets for the same resume before inserting regenerated rows.
 
 ### BulletRewrite
 

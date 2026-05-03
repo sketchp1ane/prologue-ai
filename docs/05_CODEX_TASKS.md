@@ -92,7 +92,7 @@ Implement resume upload/paste UI shell, list, detail, rename, and delete flow pl
 
 ### T06 — Resume parse with OpenAI
 
-Status: next recommended product slice.
+Status: completed for pasted-text API parsing.
 
 Implement resume parse service and route with schema validation and fallback.
 
