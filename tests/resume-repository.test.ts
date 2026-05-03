@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
@@ -14,12 +15,16 @@ import {
   markResumeParsingForUser,
   resumeDetailSelect,
   renameResumeForUser,
+  replaceResumeSourceForUser,
   resumeListItemSelect,
   saveParsedResumeForUser,
 } from "../src/lib/db/resumes";
 
 type ResumeDb = NonNullable<Parameters<typeof listResumesByUser>[1]>;
 type ResumeParseDb = NonNullable<Parameters<typeof saveParsedResumeForUser>[1]>;
+type ResumeSourceReplaceDb = NonNullable<
+  Parameters<typeof replaceResumeSourceForUser>[1]
+>;
 
 function createResumeDb(params?: {
   findFirstResult?: unknown;
@@ -37,6 +42,7 @@ function createResumeDb(params?: {
   const $transaction = vi.fn(async (callback) =>
     callback({
       resume: {
+        findFirst,
         updateMany,
       },
       resumeBullet: {
@@ -64,6 +70,7 @@ function createResumeDb(params?: {
     parseDb: {
       $transaction,
       resume: {
+        findFirst,
         updateMany,
       },
       resumeBullet: {
@@ -71,6 +78,16 @@ function createResumeDb(params?: {
         deleteMany: resumeBulletDeleteMany,
       },
     } as unknown as ResumeParseDb,
+    sourceReplaceDb: {
+      $transaction,
+      resume: {
+        findFirst,
+        updateMany,
+      },
+      resumeBullet: {
+        deleteMany: resumeBulletDeleteMany,
+      },
+    } as unknown as ResumeSourceReplaceDb,
     resume: {
       create,
       deleteMany,
@@ -443,5 +460,80 @@ describe("resume repository", () => {
 
     expect(resumeBullet.deleteMany).not.toHaveBeenCalled();
     expect(resumeBullet.createMany).not.toHaveBeenCalled();
+  });
+
+  it("replaces a resume source and clears parsed data and bullets in one transaction", async () => {
+    const { resume, resumeBullet, sourceReplaceDb, transaction } =
+      createResumeDb({
+        findFirstResult: {
+          filePath: "resumes/user_hash/old.pdf",
+        },
+      });
+
+    await expect(
+      replaceResumeSourceForUser(
+        {
+          id: "resume_1",
+          sourceText: "Replacement resume text with enough detail.",
+          userId: "user_1",
+        },
+        sourceReplaceDb
+      )
+    ).resolves.toEqual({
+      oldFilePath: "resumes/user_hash/old.pdf",
+      resumeUpdated: true,
+    });
+
+    expect(transaction).toHaveBeenCalled();
+    expect(resume.findFirst).toHaveBeenCalledWith({
+      select: {
+        filePath: true,
+      },
+      where: {
+        id: "resume_1",
+        userId: "user_1",
+      },
+    });
+    expect(resume.updateMany).toHaveBeenCalledWith({
+      data: {
+        filePath: null,
+        fileUrl: null,
+        parsedJson: Prisma.JsonNull,
+        sourceText: "Replacement resume text with enough detail.",
+        status: "READY",
+      },
+      where: {
+        id: "resume_1",
+        userId: "user_1",
+      },
+    });
+    expect(resumeBullet.deleteMany).toHaveBeenCalledWith({
+      where: {
+        resumeId: "resume_1",
+        userId: "user_1",
+      },
+    });
+  });
+
+  it("does not replace source or delete bullets when the resume is not user-owned", async () => {
+    const { resume, resumeBullet, sourceReplaceDb } = createResumeDb();
+
+    await expect(
+      replaceResumeSourceForUser(
+        {
+          filePath: "resumes/user_hash/new.pdf",
+          fileUrl: "https://blob.example/new.pdf",
+          id: "resume_2",
+          userId: "user_1",
+        },
+        sourceReplaceDb
+      )
+    ).resolves.toEqual({
+      oldFilePath: null,
+      resumeUpdated: false,
+    });
+
+    expect(resume.updateMany).not.toHaveBeenCalled();
+    expect(resumeBullet.deleteMany).not.toHaveBeenCalled();
   });
 });

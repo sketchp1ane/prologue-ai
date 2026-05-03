@@ -3,6 +3,7 @@ import {
   AlertCircle,
   CheckCircle2,
   CircleDashed,
+  Database,
   Eye,
   FileText,
   Loader2,
@@ -15,8 +16,11 @@ import type { LucideIcon } from "lucide-react";
 import { AppCard } from "@/components/app/AppCard";
 import { EmptyState } from "@/components/app/EmptyState";
 import { PageHeader } from "@/components/app/PageHeader";
+import { RouteToast } from "@/components/app/RouteToast";
+import { ResumeListDeleteButton } from "@/components/resumes/ResumeListDeleteButton";
 import { Button } from "@/components/ui/button";
 import { requireCurrentUserId } from "@/src/lib/auth/current-user";
+import { isPrismaClientInitializationError } from "@/src/lib/db/errors";
 import type { AppDictionary } from "@/src/lib/i18n/dictionaries";
 import { getCurrentLocale, getDictionary } from "@/src/lib/i18n/server";
 import {
@@ -26,6 +30,8 @@ import {
 } from "@/src/lib/resumes/list-view";
 import { listUserResumes } from "@/src/lib/resumes/service";
 import { cn } from "@/src/lib/utils";
+
+import { deleteResumeAction } from "./actions";
 
 type ResumesPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -106,6 +112,24 @@ function formatCount(
   return `${count} ${label}`;
 }
 
+async function loadResumes(userId: string) {
+  try {
+    return {
+      resumes: await listUserResumes(userId),
+      status: "ready" as const,
+    };
+  } catch (error) {
+    if (isPrismaClientInitializationError(error)) {
+      return {
+        resumes: [],
+        status: "database-unavailable" as const,
+      };
+    }
+
+    throw error;
+  }
+}
+
 function ResumeParseStateBadge({
   dictionary,
   state,
@@ -138,9 +162,36 @@ export default async function ResumesPage({ searchParams }: ResumesPageProps) {
   ]);
   const locale = await getCurrentLocale(userId);
   const dictionary = getDictionary(locale);
-  const resumes = await listUserResumes(userId);
+  const resumeData = await loadResumes(userId);
+  const resumes = resumeData.resumes;
   const error = readMessage(params, "error");
   const success = readMessage(params, "success");
+
+  if (resumeData.status === "database-unavailable") {
+    return (
+      <>
+        <PageHeader
+          title={dictionary.workspace.resumes.title}
+          description={dictionary.workspace.resumes.description}
+          action={{
+            href: "/resumes/new",
+            icon: Plus,
+            label: dictionary.workspace.resumes.addResume,
+          }}
+        />
+        <EmptyState
+          icon={Database}
+          title={dictionary.workspace.resumes.databaseUnavailableTitle}
+          description={dictionary.workspace.resumes.databaseUnavailableDescription}
+          secondaryAction={{
+            href: "/resumes",
+            label: dictionary.workspace.resumes.retryResumes,
+          }}
+          statusLabel={dictionary.workspace.resumes.databaseStatus}
+        />
+      </>
+    );
+  }
 
   if (resumes.length === 0) {
     return (
@@ -154,16 +205,7 @@ export default async function ResumesPage({ searchParams }: ResumesPageProps) {
             label: dictionary.workspace.resumes.addResume,
           }}
         />
-        {error && (
-          <div className="mb-5 rounded-xl border border-destructive/30 bg-card px-4 py-3 text-sm text-destructive shadow-sm">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="mb-5 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground shadow-sm">
-            {success}
-          </div>
-        )}
+        <RouteToast error={error} success={success} />
         <EmptyState
           icon={FileText}
           title={dictionary.workspace.resumes.emptyTitle}
@@ -189,16 +231,7 @@ export default async function ResumesPage({ searchParams }: ResumesPageProps) {
           label: dictionary.workspace.resumes.addResume,
         }}
       />
-      {error && (
-        <div className="mb-5 rounded-xl border border-destructive/30 bg-card px-4 py-3 text-sm text-destructive shadow-sm">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="mb-5 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground shadow-sm">
-          {success}
-        </div>
-      )}
+      <RouteToast error={error} success={success} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {resumes.map((resume) => {
           const parseState = getResumeListParseState({
@@ -289,6 +322,24 @@ export default async function ResumesPage({ searchParams }: ResumesPageProps) {
                       {dictionary.workspace.resumes.parseInProgress}
                     </span>
                   )}
+                  <ResumeListDeleteButton
+                    action={deleteResumeAction}
+                    actionsCopy={{
+                      delete:
+                        dictionary.workspace.resumeDetail.actions.delete,
+                      deleteWarning:
+                        dictionary.workspace.resumeDetail.actions.deleteWarning,
+                    }}
+                    copy={{
+                      deleteDescription:
+                        dictionary.workspace.resumeDetail.deleteDescription,
+                      deleteResume:
+                        dictionary.workspace.resumeDetail.deleteResume,
+                      deleteTitle:
+                        dictionary.workspace.resumeDetail.deleteTitle,
+                    }}
+                    resumeId={resume.id}
+                  />
                 </div>
               </div>
             </AppCard>

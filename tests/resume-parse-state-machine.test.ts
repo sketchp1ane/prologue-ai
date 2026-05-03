@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => {
     markResumeParsingForUser: vi.fn(),
     parseResumeFromFile: vi.fn(),
     parseResumeFromText: vi.fn(),
+    replaceResumeSourceForUser: vi.fn(),
     saveParsedResumeForUser: vi.fn(),
     uploadPrivateResumePdf: vi.fn(),
   };
@@ -35,6 +36,7 @@ vi.mock("@/src/lib/db/resumes", () => ({
   markResumeFailedForUser: mocks.markResumeFailedForUser,
   markResumeParsingForUser: mocks.markResumeParsingForUser,
   renameResumeForUser: vi.fn(),
+  replaceResumeSourceForUser: mocks.replaceResumeSourceForUser,
   saveParsedResumeForUser: mocks.saveParsedResumeForUser,
 }));
 
@@ -48,7 +50,10 @@ import {
   createUserPdfResume,
   deleteUserResume,
   parseUserResume,
+  replaceUserResumePdfSource,
+  replaceUserResumeTextSource,
   ResumeServiceError,
+  updateUserParsedResume,
 } from "../src/lib/resumes/service";
 
 const sourceText =
@@ -99,6 +104,10 @@ describe("resume parse state machine", () => {
     mocks.parseResumeFromText.mockResolvedValue(validResumeParseFixture);
     mocks.saveParsedResumeForUser.mockResolvedValue({
       bulletCount: 6,
+      resumeUpdated: true,
+    });
+    mocks.replaceResumeSourceForUser.mockResolvedValue({
+      oldFilePath: "resumes/user_hash/old.pdf",
       resumeUpdated: true,
     });
     mocks.uploadPrivateResumePdf.mockResolvedValue({
@@ -232,6 +241,132 @@ describe("resume parse state machine", () => {
       userId: "user_1",
     });
     expect(mocks.markResumeFailedForUser).not.toHaveBeenCalled();
+  });
+
+  it("updates edited parsed JSON and regenerates bullets without parsing", async () => {
+    await expect(
+      updateUserParsedResume("user_1", {
+        id: "resume_1",
+        parsedResume: validResumeParseFixture,
+      })
+    ).resolves.toEqual({
+      bulletCount: 6,
+      resumeId: "resume_1",
+      status: "READY",
+    });
+
+    expect(mocks.parseResumeFromText).not.toHaveBeenCalled();
+    expect(mocks.parseResumeFromFile).not.toHaveBeenCalled();
+    expect(mocks.saveParsedResumeForUser).toHaveBeenCalledWith({
+      bullets: expect.arrayContaining([
+        expect.objectContaining({
+          orderIndex: 0,
+          resumeId: "resume_1",
+          sectionType: "experience",
+          userId: "user_1",
+        }),
+      ]),
+      id: "resume_1",
+      parsedJson: validResumeParseFixture,
+      userId: "user_1",
+    });
+  });
+
+  it("rejects edited parsed JSON when the resume is not user-owned", async () => {
+    mocks.saveParsedResumeForUser.mockResolvedValue({
+      bulletCount: 0,
+      resumeUpdated: false,
+    });
+
+    await expectServiceError(
+      updateUserParsedResume("user_1", {
+        id: "resume_2",
+        parsedResume: validResumeParseFixture,
+      }),
+      "resume_not_found"
+    );
+  });
+
+  it("replaces pasted text source and deletes the old PDF after update", async () => {
+    await expect(
+      replaceUserResumeTextSource("user_1", {
+        id: "resume_1",
+        sourceText:
+          "Replacement resume text with React and TypeScript experience.",
+        sourceType: "pasted_text",
+      })
+    ).resolves.toEqual({
+      resumeId: "resume_1",
+      sourceType: "pasted_text",
+      status: "READY",
+    });
+
+    expect(mocks.replaceResumeSourceForUser).toHaveBeenCalledWith({
+      id: "resume_1",
+      sourceText:
+        "Replacement resume text with React and TypeScript experience.",
+      userId: "user_1",
+    });
+    expect(mocks.deletePrivateResumePdf).toHaveBeenCalledWith(
+      "resumes/user_hash/old.pdf"
+    );
+  });
+
+  it("replaces PDF source, attaches the new file, and deletes the old PDF", async () => {
+    const file = new File(["%PDF-1.7"], "replacement.pdf", {
+      type: "application/pdf",
+    });
+
+    await expect(
+      replaceUserResumePdfSource("user_1", {
+        file,
+        id: "resume_1",
+        sourceType: "pdf",
+      })
+    ).resolves.toEqual({
+      resumeId: "resume_1",
+      sourceType: "pdf",
+      status: "READY",
+    });
+
+    expect(mocks.uploadPrivateResumePdf).toHaveBeenCalledWith({
+      file,
+      pathNonce: expect.any(String),
+      resumeId: "resume_1",
+      userId: "user_1",
+    });
+    expect(mocks.replaceResumeSourceForUser).toHaveBeenCalledWith({
+      filePath: "resumes/user_hash/resume_1.pdf",
+      fileUrl: "https://blob.example/resume.pdf",
+      id: "resume_1",
+      userId: "user_1",
+    });
+    expect(mocks.deletePrivateResumePdf).toHaveBeenCalledWith(
+      "resumes/user_hash/old.pdf"
+    );
+  });
+
+  it("deletes a newly uploaded replacement PDF when the resume is not user-owned", async () => {
+    const file = new File(["%PDF-1.7"], "replacement.pdf", {
+      type: "application/pdf",
+    });
+    mocks.replaceResumeSourceForUser.mockResolvedValue({
+      oldFilePath: null,
+      resumeUpdated: false,
+    });
+
+    await expectServiceError(
+      replaceUserResumePdfSource("user_1", {
+        file,
+        id: "resume_2",
+        sourceType: "pdf",
+      }),
+      "resume_not_found"
+    );
+
+    expect(mocks.deletePrivateResumePdf).toHaveBeenCalledWith(
+      "resumes/user_hash/resume_1.pdf"
+    );
   });
 
   it("marks the resume failed when OpenAI parsing fails", async () => {

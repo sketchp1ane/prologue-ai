@@ -1,5 +1,7 @@
 import "server-only";
 
+import { randomUUID } from "node:crypto";
+
 import { Prisma, ResumeStatus } from "@prisma/client";
 import { ZodError } from "zod";
 
@@ -22,6 +24,7 @@ import {
   markResumeFailedForUser,
   markResumeParsingForUser,
   renameResumeForUser,
+  replaceResumeSourceForUser,
   saveParsedResumeForUser,
   type ResumeBulletCreateInput,
 } from "@/src/lib/db/resumes";
@@ -35,15 +38,21 @@ import {
   pastedResumeTextSchema,
   renameResumeSchema,
   resumeIdSchema,
+  updateParsedResumeSchema,
   validateResumePdfUpload,
+  validateReplaceResumeSource,
   type CreatePastedResumeInput,
   type DeleteResumeInput,
   type RenameResumeInput,
+  type ReplaceResumeSourceInput,
+  type UpdateParsedResumeInput,
 } from "@/src/lib/validations/resume";
 
 type ResumeServiceErrorCode =
   | "invalid_resume_id"
   | "invalid_resume_pdf"
+  | "invalid_resume_parse"
+  | "invalid_resume_source"
   | "resume_already_parsing"
   | "resume_not_found"
   | "resume_parse_failed"
@@ -281,6 +290,188 @@ export async function deleteUserResume(
   }
 
   return result;
+}
+
+export async function updateUserParsedResume(
+  userId: string,
+  input: UpdateParsedResumeInput
+) {
+  const parsed = updateParsedResumeSchema.safeParse(input);
+
+  if (!parsed.success) {
+    throw new ResumeServiceError(
+      firstZodMessage(parsed.error),
+      "invalid_resume_parse"
+    );
+  }
+
+  const bullets = buildResumeBulletsFromParse({
+    parsedResume: parsed.data.parsedResume,
+    resumeId: parsed.data.id,
+    userId,
+  });
+  const saved = await saveParsedResumeForUser({
+    bullets,
+    id: parsed.data.id,
+    parsedJson: parsed.data.parsedResume as Prisma.InputJsonValue,
+    userId,
+  });
+
+  if (!saved.resumeUpdated) {
+    throw new ResumeServiceError("Resume not found.", "resume_not_found");
+  }
+
+  return {
+    bulletCount: saved.bulletCount,
+    resumeId: parsed.data.id,
+    status: ResumeStatus.READY,
+  };
+}
+
+export async function replaceUserResumeTextSource(
+  userId: string,
+  input: Extract<ReplaceResumeSourceInput, { sourceType: "pasted_text" }>
+) {
+  const parsed = (() => {
+    try {
+      return validateReplaceResumeSource({
+        file: null,
+        id: input.id,
+        sourceText: input.sourceText,
+        sourceType: "pasted_text",
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        throw new ResumeServiceError(
+          firstZodMessage(error),
+          "invalid_resume_source"
+        );
+      }
+
+      throw error;
+    }
+  })();
+
+  if (parsed.sourceType !== "pasted_text") {
+    throw new ResumeServiceError(
+      "Resume source type is invalid.",
+      "invalid_resume_source"
+    );
+  }
+
+  const replaced = await replaceResumeSourceForUser({
+    id: parsed.id,
+    sourceText: parsed.sourceText,
+    userId,
+  });
+
+  if (!replaced.resumeUpdated) {
+    throw new ResumeServiceError("Resume not found.", "resume_not_found");
+  }
+
+  if (replaced.oldFilePath) {
+    try {
+      await deletePrivateResumePdf(replaced.oldFilePath);
+    } catch {
+      // Source replacement should stay reliable; storage cleanup can be retried.
+    }
+  }
+
+  return {
+    resumeId: parsed.id,
+    sourceType: parsed.sourceType,
+    status: ResumeStatus.READY,
+  };
+}
+
+export async function replaceUserResumePdfSource(
+  userId: string,
+  input: Extract<ReplaceResumeSourceInput, { sourceType: "pdf" }>
+) {
+  const parsed = (() => {
+    try {
+      return validateReplaceResumeSource({
+        file: input.file,
+        id: input.id,
+        sourceText: "",
+        sourceType: "pdf",
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        throw new ResumeServiceError(
+          firstZodMessage(error),
+          "invalid_resume_pdf"
+        );
+      }
+
+      throw error;
+    }
+  })();
+
+  if (parsed.sourceType !== "pdf") {
+    throw new ResumeServiceError(
+      "Resume source type is invalid.",
+      "invalid_resume_source"
+    );
+  }
+
+  let storedFile: Awaited<ReturnType<typeof uploadPrivateResumePdf>>;
+
+  try {
+    storedFile = await uploadPrivateResumePdf({
+      file: parsed.file,
+      pathNonce: randomUUID(),
+      resumeId: parsed.id,
+      userId,
+    });
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      (error.message.includes("BLOB_READ_WRITE_TOKEN") ||
+        error.message.includes("No token found"))
+    ) {
+      throw new ResumeServiceError(
+        "PDF storage is not configured.",
+        "configuration"
+      );
+    }
+
+    throw new ResumeServiceError(
+      "PDF resume could not be uploaded.",
+      "resume_upload_failed"
+    );
+  }
+
+  const replaced = await replaceResumeSourceForUser({
+    filePath: storedFile.pathname,
+    fileUrl: storedFile.url,
+    id: parsed.id,
+    userId,
+  });
+
+  if (!replaced.resumeUpdated) {
+    try {
+      await deletePrivateResumePdf(storedFile.pathname);
+    } catch {
+      // Best-effort cleanup for an upload that could not be attached.
+    }
+
+    throw new ResumeServiceError("Resume not found.", "resume_not_found");
+  }
+
+  if (replaced.oldFilePath && replaced.oldFilePath !== storedFile.pathname) {
+    try {
+      await deletePrivateResumePdf(replaced.oldFilePath);
+    } catch {
+      // Source replacement already succeeded; stale blobs can be cleaned later.
+    }
+  }
+
+  return {
+    resumeId: parsed.id,
+    sourceType: parsed.sourceType,
+    status: ResumeStatus.READY,
+  };
 }
 
 export async function parseUserResume(userId: string, resumeId: string) {

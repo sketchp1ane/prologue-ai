@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { AlertCircle, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import type { AppDictionary } from "@/src/lib/i18n/dictionaries";
@@ -38,15 +39,10 @@ export function ResumeParseControl({
   const copy = dictionary.workspace.resumeDetail.parseControl;
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const isParsing = isPending || status === "PARSING";
   const isFailed = status === "FAILED";
 
   function handleParse() {
-    setError(null);
-    setMessage(null);
-
     startTransition(async () => {
       try {
         const response = await fetch(`/api/resumes/${resumeId}/parse`, {
@@ -55,19 +51,17 @@ export function ResumeParseControl({
         const body = (await response.json()) as ParseResponse;
 
         if (!response.ok || !body.data) {
-          setError(copy.genericError);
+          toast.error(copy.genericError);
           router.refresh();
           return;
         }
 
-        setMessage(
+        toast.success(
           copy.success.replace("{count}", String(body.data.bulletCount))
         );
         router.refresh();
       } catch {
-        setError(
-          copy.connectionFailed
-        );
+        toast.error(copy.connectionFailed);
       }
     });
   }
@@ -117,14 +111,9 @@ export function ResumeParseControl({
           hasSourceText ? copy.sourceText : copy.privatePdf
         )}
       </p>
-      {message && (
-        <p className="text-xs leading-5 text-muted-foreground" aria-live="polite">
-          {message}
-        </p>
-      )}
-      {error && (
-        <p className="text-xs leading-5 text-destructive" role="alert">
-          {error}
+      {hasParsedJson && (
+        <p className="text-xs leading-5 text-muted-foreground">
+          {copy.reparseOverwrite}
         </p>
       )}
     </div>
