@@ -1,0 +1,78 @@
+{
+  "basics": {
+    "name": "Alex Chen",
+    "email": "alex.chen@example.com",
+    "phone": "+1 415 555 0198",
+    "location": "San Francisco, CA",
+    "links": [
+      "https://www.linkedin.com/in/alexchen",
+      "https://github.com/alexchen"
+    ]
+  },
+  "summary": "Product-minded frontend engineer with experience building accessible SaaS workflows.",
+  "skills": [
+    "TypeScript",
+    "React",
+    "Next.js",
+    "Accessibility",
+    "PostgreSQL"
+  ],
+  "experience": [
+    {
+      "company": "Northstar Labs",
+      "title": "Frontend Engineer",
+      "startDate": "2022-06",
+      "endDate": "Present",
+      "location": "Remote",
+      "bullets": [
+        "Built React and TypeScript interfaces for customer onboarding workflows.",
+        "Partnered with design and support teams to improve form accessibility."
+      ]
+    },
+    {
+      "company": "Harbor Tools",
+      "title": "Software Engineering Intern",
+      "startDate": "2021-05",
+      "endDate": "2021-08",
+      "location": null,
+      "bullets": [
+        "Created internal dashboard components using React.",
+        "Documented API integration examples for the engineering team."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "school": "University of California, Davis",
+      "degree": "Bachelor of Science",
+      "major": "Computer Science",
+      "startDate": "2018",
+      "endDate": "2022"
+    }
+  ],
+  "projects": [
+    {
+      "name": "Interview Tracker",
+      "description": "A personal tool for tracking interview stages and notes.",
+      "technologies": [
+        "Next.js",
+        "Prisma",
+        "PostgreSQL"
+      ],
+      "bullets": [
+        "Designed a stage-based board for organizing active job applications.",
+        "Added typed validation for notes and company metadata."
+      ]
+    }
+  ],
+  "certifications": [
+    "AWS Certified Cloud Practitioner"
+  ],
+  "languages": [
+    "English",
+    "Mandarin"
+  ],
+  "warnings": [
+    "One internship location was not present in the resume."
+  ]
+}
