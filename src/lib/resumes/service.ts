@@ -12,6 +12,7 @@ import {
   createPastedTextResume,
   deleteResumeForUser,
   getResumeByIdForUser,
+  getResumeDetailByIdForUser,
   listResumesByUser,
   markResumeFailedForUser,
   markResumeParsingForUser,
@@ -132,6 +133,10 @@ export async function listUserResumes(userId: string) {
 
 export async function getUserResume(userId: string, resumeId: string) {
   return getResumeByIdForUser(userId, resumeId);
+}
+
+export async function getUserResumeDetail(userId: string, resumeId: string) {
+  return getResumeDetailByIdForUser(userId, resumeId);
 }
 
 export async function createUserPastedResume(
