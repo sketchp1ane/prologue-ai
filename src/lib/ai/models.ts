@@ -9,3 +9,13 @@ export function getExtractModel() {
 
   return model;
 }
+
+export function getParseModel() {
+  const model = process.env.OPENAI_MODEL_PARSE;
+
+  if (!model) {
+    throw new Error("OPENAI_MODEL_PARSE is not configured.");
+  }
+
+  return model;
+}
