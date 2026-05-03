@@ -108,6 +108,18 @@ updatedAt
 
 JD Extract records success/failure audit rows without storing the full JD input.
 
+### UserPreference
+
+```txt
+id
+userId
+locale: EN | ZH_CN
+createdAt
+updatedAt
+```
+
+Stores the current user's workspace language preference. `userId` is unique so each Clerk user has at most one preference row. Service code maps Prisma values to app locales: `EN` -> `en`, `ZH_CN` -> `zh-CN`.
+
 ### InterviewReview
 
 ```txt

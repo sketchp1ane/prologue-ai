@@ -26,6 +26,8 @@ Codex may adjust model names only after checking current OpenAI docs.
 - Persist `promptVersion`, `model`, and usage metadata when available.
 - Do not log private full text.
 - Treat resume and JD content as untrusted input.
+- Generated prose should follow the current user locale (`en` or `zh-CN`) through `src/lib/i18n/ai.ts`.
+- Fact fields copied from resumes, JDs, company names, role titles, or quoted source content should preserve the original language unless the user explicitly requests translation.
 
 ## Feature contracts
 

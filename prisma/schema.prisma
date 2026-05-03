@@ -141,6 +141,16 @@ model AiGeneration {
   @@index([userId, resumeId])
 }
 
+model UserPreference {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  locale    UserLocale @default(EN)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([userId])
+}
+
 enum ResumeStatus {
   UPLOADING
   PARSING
@@ -170,4 +180,9 @@ enum AiFeature {
 enum GenerationStatus {
   SUCCESS
   FAILED
+}
+
+enum UserLocale {
+  EN
+  ZH_CN
 }

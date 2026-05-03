@@ -14,18 +14,25 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 
+import type { AppDictionary } from "@/src/lib/i18n/dictionaries";
+
 import { appBottomNavItems, appNavigationItems } from "./navigation";
+
+type AppShellDictionary = AppDictionary["appShell"];
 
 function isActiveRoute(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function getPageTitle(pathname: string): { title: string; breadcrumb?: string } {
+function getPageTitle(
+  pathname: string,
+  dictionary: AppShellDictionary
+): { title: string; breadcrumb?: string } {
   const allItems = [...appNavigationItems, ...appBottomNavItems];
   const navItem = allItems.find((item) => isActiveRoute(pathname, item.href));
 
   if (navItem) {
-    return { title: navItem.label };
+    return { title: dictionary.navigation[navItem.labelKey] };
   }
 
   const segments = pathname.split("/").filter(Boolean);
@@ -39,12 +46,12 @@ function getPageTitle(pathname: string): { title: string; breadcrumb?: string } 
           .split("-")
           .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
           .join(" "),
-        breadcrumb: parentItem.label,
+        breadcrumb: dictionary.navigation[parentItem.labelKey],
       };
     }
   }
 
-  return { title: "Dashboard" };
+  return { title: dictionary.fallbackTitle };
 }
 
 function getInitials(name: string) {
@@ -56,11 +63,15 @@ function getInitials(name: string) {
     .join("");
 }
 
-export function AppTopbar() {
+export function AppTopbar({
+  dictionary,
+}: {
+  dictionary: AppShellDictionary;
+}) {
   const pathname = usePathname();
   const { signOut } = useClerk();
   const { user } = useUser();
-  const { title, breadcrumb } = getPageTitle(pathname);
+  const { title, breadcrumb } = getPageTitle(pathname, dictionary);
   const [searchOpen, setSearchOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const searchTitleId = useId();
@@ -68,8 +79,9 @@ export function AppTopbar() {
     user?.fullName ??
     user?.primaryEmailAddress?.emailAddress ??
     user?.username ??
-    "Account";
-  const email = user?.primaryEmailAddress?.emailAddress ?? "Signed in";
+    dictionary.accountFallback;
+  const email =
+    user?.primaryEmailAddress?.emailAddress ?? dictionary.signedInFallback;
   const initials = getInitials(displayName) || "A";
 
   useEffect(() => {
@@ -130,7 +142,9 @@ export function AppTopbar() {
             className="flex w-full items-center gap-3 rounded-xl border border-border bg-secondary/30 px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary/50"
           >
             <Search className="h-4 w-4" aria-hidden="true" />
-            <span className="flex-1 text-left">Search applications...</span>
+            <span className="flex-1 text-left">
+              {dictionary.search.placeholder}
+            </span>
             <kbd className="hidden rounded-md border border-border bg-background px-2 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline-block">
               ⌘K
             </kbd>
@@ -144,7 +158,7 @@ export function AppTopbar() {
             type="button"
             onClick={() => setSearchOpen(true)}
             className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground lg:hidden"
-            aria-label="Search"
+            aria-label={dictionary.aria.search}
           >
             <Search className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -153,7 +167,7 @@ export function AppTopbar() {
           <button
             type="button"
             className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            aria-label="Notifications"
+            aria-label={dictionary.aria.notifications}
           >
             <Bell className="h-5 w-5" aria-hidden="true" />
             <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
@@ -163,7 +177,7 @@ export function AppTopbar() {
           <button
             type="button"
             className="hidden h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:flex"
-            aria-label="Help"
+            aria-label={dictionary.aria.help}
           >
             <HelpCircle className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -217,7 +231,7 @@ export function AppTopbar() {
                       role="menuitem"
                     >
                       <User className="h-4 w-4" aria-hidden="true" />
-                      Profile
+                      {dictionary.menu.profile}
                     </Link>
                     <Link
                       href="/settings"
@@ -226,7 +240,7 @@ export function AppTopbar() {
                       role="menuitem"
                     >
                       <Settings className="h-4 w-4" aria-hidden="true" />
-                      Settings
+                      {dictionary.menu.settings}
                     </Link>
                   </div>
                   <div className="border-t border-border pt-1.5">
@@ -237,7 +251,7 @@ export function AppTopbar() {
                       role="menuitem"
                     >
                       <LogOut className="h-4 w-4" aria-hidden="true" />
-                      Sign out
+                      {dictionary.menu.signOut}
                     </button>
                   </div>
                 </div>
@@ -269,7 +283,7 @@ export function AppTopbar() {
                 />
                 <input
                   type="text"
-                  placeholder="Search applications, resumes, jobs..."
+                  placeholder={dictionary.search.modalPlaceholder}
                   className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
                   autoFocus
                 />
@@ -282,13 +296,13 @@ export function AppTopbar() {
                   id={searchTitleId}
                   className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground"
                 >
-                  Quick Actions
+                  {dictionary.quickActions}
                 </p>
                 <div className="space-y-1">
                   {[
-                    "Create new application",
-                    "Upload resume",
-                    "Extract from job description",
+                    dictionary.actions.createApplication,
+                    dictionary.actions.uploadResume,
+                    dictionary.actions.extractJd,
                   ].map((action) => (
                     <button
                       key={action}

@@ -3,6 +3,7 @@
 import { useActionState, useId } from "react";
 
 import { updateApplicationResumeAction } from "@/app/(app)/applications/actions";
+import type { AppDictionary } from "@/src/lib/i18n/dictionaries";
 
 type ResumeOption = {
   id: string;
@@ -12,6 +13,7 @@ type ResumeOption = {
 type ApplicationResumeSelectProps = {
   applicationId: string;
   currentResumeId: string | null;
+  dictionary: Pick<AppDictionary, "common" | "workspace">;
   label: string;
   resumes: ResumeOption[];
 };
@@ -24,6 +26,7 @@ const initialState = {
 export function ApplicationResumeSelect({
   applicationId,
   currentResumeId,
+  dictionary,
   label,
   resumes,
 }: ApplicationResumeSelectProps) {
@@ -47,7 +50,9 @@ export function ApplicationResumeSelect({
         onChange={(event) => event.currentTarget.form?.requestSubmit()}
         className="h-9 w-full rounded-lg border border-input bg-background px-2.5 text-xs font-medium text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <option value="">No resume attached</option>
+        <option value="">
+          {dictionary.workspace.applicationControls.noResumeAttached}
+        </option>
         {resumes.map((resume) => (
           <option key={resume.id} value={resume.id}>
             {resume.title}
@@ -55,10 +60,12 @@ export function ApplicationResumeSelect({
         ))}
       </select>
       <button type="submit" className="sr-only">
-        Update attached resume
+        {dictionary.workspace.applicationControls.updateAttachedResume}
       </button>
       {isPending && (
-        <p className="text-[11px] text-muted-foreground">Saving...</p>
+        <p className="text-[11px] text-muted-foreground">
+          {dictionary.common.saving}
+        </p>
       )}
       {state.error && (
         <p className="text-[11px] text-muted-foreground">{state.error}</p>

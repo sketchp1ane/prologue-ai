@@ -3,6 +3,7 @@
 import { useActionState, useId } from "react";
 
 import { updateApplicationStageAction } from "@/app/(app)/applications/actions";
+import type { AppDictionary } from "@/src/lib/i18n/dictionaries";
 
 type StageOption = {
   label: string;
@@ -12,6 +13,7 @@ type StageOption = {
 type ApplicationStageSelectProps = {
   applicationId: string;
   currentStage: string;
+  dictionary: Pick<AppDictionary, "common" | "workspace">;
   label: string;
   options: StageOption[];
 };
@@ -24,6 +26,7 @@ const initialState = {
 export function ApplicationStageSelect({
   applicationId,
   currentStage,
+  dictionary,
   label,
   options,
 }: ApplicationStageSelectProps) {
@@ -54,10 +57,12 @@ export function ApplicationStageSelect({
         ))}
       </select>
       <button type="submit" className="sr-only">
-        Update stage
+        {dictionary.workspace.applicationControls.updateStage}
       </button>
       {isPending && (
-        <p className="text-[11px] text-muted-foreground">Saving...</p>
+        <p className="text-[11px] text-muted-foreground">
+          {dictionary.common.saving}
+        </p>
       )}
       {state.error && (
         <p className="text-[11px] text-muted-foreground">{state.error}</p>

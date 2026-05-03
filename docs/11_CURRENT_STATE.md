@@ -100,6 +100,14 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - Resume deletion detaches related applications through `ON DELETE SET NULL` rather than deleting application records.
 - Workspace Data v1 validation passed on 2026-04-28 with `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `pnpm check`.
 - Dashboard draggable board and Applications badge polish landed after the Workspace Data v1 closeout.
+- Workspace language preference landed for English and Simplified Chinese without locale-prefixed routes.
+- `/settings` can save the current user's language in `UserPreference` and mirror it to the `prologue-locale` cookie.
+- App shell navigation, settings copy, application stage labels, and dashboard relative dates can resolve from the shared i18n dictionaries.
+- The public homepage reads `prologue-locale`, includes a navbar language selector, and resolves landing-page copy from the shared i18n dictionaries.
+- `/sign-in` and `/sign-up` read `prologue-locale`; their page chrome, fallback Clerk configuration notice, and Clerk prebuilt components can display in English or Simplified Chinese.
+- Visible authenticated workspace routes now resolve dashboard, applications, resumes, JD Extract, billing, placeholder page, shared control, and user-facing form/action copy from the shared i18n dictionaries.
+- Workspace dictionary values are serializable data only; client components receive dictionary slices or final strings rather than server helpers.
+- Future AI generation slices should use the shared AI locale instruction so generated prose follows the user's language preference.
 - JD Extract and pasted-text Resume Parse are the implemented OpenAI API integrations.
 - PDF Resume Parse is implemented through OpenAI Responses file inputs. PDF content is sent to OpenAI only when parsing is triggered and may be scanned by OpenAI safety systems and cost more tokens than pasted text.
 - No diagnosis, bullet rewrite, outreach, interview review, or weekly report generation is implemented yet.

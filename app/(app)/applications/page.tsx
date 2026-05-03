@@ -7,9 +7,11 @@ import { PageHeader } from "@/components/app/PageHeader";
 import { ApplicationStageBadge } from "@/components/applications/ApplicationStageBadge";
 import { requireCurrentUserId } from "@/src/lib/auth/current-user";
 import { listUserApplications } from "@/src/lib/applications/service";
+import type { AppLocale } from "@/src/lib/i18n/config";
+import { getCurrentLocale, getDictionary } from "@/src/lib/i18n/server";
 
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat("en", {
+function formatDate(date: Date, locale: AppLocale) {
+  return new Intl.DateTimeFormat(locale, {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -18,28 +20,30 @@ function formatDate(date: Date) {
 
 export default async function ApplicationsPage() {
   const userId = await requireCurrentUserId();
+  const locale = await getCurrentLocale(userId);
+  const dictionary = getDictionary(locale);
   const applications = await listUserApplications(userId);
 
   if (applications.length === 0) {
     return (
       <>
         <PageHeader
-          title="Applications"
-          description="Create applications from pasted job descriptions."
+          title={dictionary.workspace.applications.title}
+          description={dictionary.workspace.applications.description}
           action={{
             href: "/applications/new",
             icon: Plus,
-            label: "New Application",
+            label: dictionary.appShell.actions.newApplication,
           }}
         />
         <EmptyState
           icon={Briefcase}
-          title="No applications yet"
-          description="Paste a job description to create your first tracked application."
+          title={dictionary.workspace.applications.emptyTitle}
+          description={dictionary.workspace.applications.emptyDescription}
           action={{
             href: "/applications/new",
             icon: Plus,
-            label: "New Application",
+            label: dictionary.appShell.actions.newApplication,
           }}
         />
       </>
@@ -49,12 +53,12 @@ export default async function ApplicationsPage() {
   return (
     <>
       <PageHeader
-        title="Applications"
-        description="Create applications from pasted job descriptions."
+        title={dictionary.workspace.applications.title}
+        description={dictionary.workspace.applications.description}
         action={{
           href: "/applications/new",
           icon: Plus,
-          label: "New Application",
+          label: dictionary.appShell.actions.newApplication,
         }}
       />
 
@@ -84,7 +88,10 @@ export default async function ApplicationsPage() {
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2 self-start">
-                      <ApplicationStageBadge stage={application.stage} />
+                      <ApplicationStageBadge
+                        label={dictionary.applicationStages[application.stage]}
+                        stage={application.stage}
+                      />
                       <ArrowRight
                         className="h-4 w-4 text-muted-foreground/70 transition group-hover:text-foreground"
                         aria-hidden="true"
@@ -94,7 +101,8 @@ export default async function ApplicationsPage() {
                   <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1.5">
                       <Calendar className="h-3 w-3" aria-hidden="true" />
-                      Updated {formatDate(application.updatedAt)}
+                      {dictionary.common.updated}{" "}
+                      {formatDate(application.updatedAt, locale)}
                     </span>
                     {application.location && (
                       <span className="flex items-center gap-1.5">

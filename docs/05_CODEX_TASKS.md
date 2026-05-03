@@ -102,6 +102,23 @@ Status: completed before T06.
 
 Implement application creation from JD, JD extraction, stage board, and stage update.
 
+### T07.5 — Workspace language preference
+
+Status: completed.
+
+Implemented English / Simplified Chinese workspace language infrastructure without locale-prefixed routes.
+
+Follow-up completed: visible authenticated workspace pages and shared controls now
+resolve English / Simplified Chinese copy from the shared dictionary.
+
+Future tasks must:
+
+- add user-facing UI strings to `src/lib/i18n/dictionaries.ts`
+- pass serializable dictionary slices or final strings into client components
+- localize user-visible form/action errors
+- pass the current locale to AI generation services
+- keep original resume/JD facts in their source language unless translation is explicitly requested
+
 ### T08 — Diagnosis report
 
 Implement diagnosis generation, persistence, report UI, and regenerate action.

@@ -1,5 +1,72 @@
 # DEVLOG
 
+## 2026-05-03 — Authenticated workspace bilingual coverage
+
+Extended English / Simplified Chinese support across the visible authenticated
+workspace.
+
+Included:
+
+- Added workspace dictionary groups for dashboard, applications, resumes, JD
+  Extract, billing, placeholder pages, shared controls, and user-facing errors
+- Localized the visible authenticated routes: dashboard, application list/create/detail,
+  resume list/create/detail, JD Extract, analytics, billing, candidates, and
+  interviews
+- Updated shared application and resume client components to receive serializable
+  dictionary slices instead of hardcoded copy
+- Mapped user-visible server action failures and success messages to the current
+  locale while leaving internal service/API contracts stable
+- Added regression coverage for serializable workspace dictionaries and bilingual
+  workspace copy
+
+Not included:
+
+- Locale-prefixed routes
+- Translating user-provided resume/JD content or extracted facts
+- Localizing internal logs, service error class messages, or API error codes
+
+Validation:
+
+- Full validation results are recorded in the task final response
+
+## 2026-05-03 — Workspace language preference
+
+Added English / Simplified Chinese language infrastructure for the authenticated
+workspace without changing existing URLs.
+
+Included:
+
+- Added `UserPreference` with a Prisma `UserLocale` enum and non-destructive
+  migration
+- Added shared i18n config, dictionaries, server locale helpers, relative-date
+  formatting, and AI output-language instructions
+- Added user preference repository/service functions with user-scoped upsert and
+  `prologue-locale` cookie persistence
+- Added a language section to `/settings`
+- Localized app shell navigation, settings copy, application stage labels, and
+  dashboard board relative date text
+- Added tests for locale validation, dictionary-backed navigation/stages, AI
+  language instructions, and user preference persistence
+
+Not included:
+
+- Locale-prefixed routes such as `/zh-CN/dashboard`
+- Full public homepage localization
+- Clerk prebuilt auth UI localization
+
+Validation:
+
+- Full validation results are recorded in the task final response
+
+Follow-up:
+
+- Extended the same locale cookie support to the public homepage
+- Added a homepage language selector in the navbar
+- Localized the homepage nav, hero, feature cards, workflow strip, footer, and
+  product mockup chrome
+- Extended locale-aware copy to `/sign-in` and `/sign-up`
+- Added Clerk component localization through `@clerk/localizations`
+
 ## 2026-05-03 — Stretch Task F PDF resume upload
 
 Added PDF upload support for Resume Parse v1 while keeping pasted-text resume

@@ -12,6 +12,8 @@ import {
 } from "@/src/lib/applications/service";
 import { requireCurrentUserId } from "@/src/lib/auth/current-user";
 import { jdExtractSchema } from "@/src/lib/ai/schemas/jd-extract";
+import type { AppDictionary } from "@/src/lib/i18n/dictionaries";
+import { getCurrentLocale, getDictionary } from "@/src/lib/i18n/server";
 import {
   createApplicationSchema,
   updateApplicationResumeSchema,
@@ -41,8 +43,11 @@ function readFormString(formData: FormData, key: string) {
   return typeof value === "string" ? value : "";
 }
 
-function firstError(error: ZodError) {
-  return error.issues[0]?.message ?? "Check the form and try again.";
+function firstError(
+  _error: ZodError,
+  dictionary: Pick<AppDictionary, "errors">
+) {
+  return dictionary.errors.checkForm;
 }
 
 function withMessage(path: string, message: string) {
@@ -51,7 +56,10 @@ function withMessage(path: string, message: string) {
   return `${path}?${params.toString()}`;
 }
 
-function parseExtractJson(value: string) {
+function parseExtractJson(
+  value: string,
+  dictionary: Pick<AppDictionary, "workspace">
+) {
   if (!value) {
     return {
       data: undefined,
@@ -65,7 +73,7 @@ function parseExtractJson(value: string) {
     if (!parsed.success) {
       return {
         data: undefined,
-        error: "The reviewed JD extract is invalid. Run extraction again or reload the page.",
+        error: dictionary.workspace.applicationErrors.invalidExtract,
       };
     }
 
@@ -76,14 +84,19 @@ function parseExtractJson(value: string) {
   } catch {
     return {
       data: undefined,
-      error: "The reviewed JD extract could not be read. Run extraction again or reload the page.",
+      error: dictionary.workspace.applicationErrors.unreadableExtract,
     };
   }
 }
 
 export async function createApplicationAction(formData: FormData) {
   const userId = await requireCurrentUserId();
-  const extractJson = parseExtractJson(readFormString(formData, "jdExtractJson"));
+  const locale = await getCurrentLocale(userId);
+  const dictionary = getDictionary(locale);
+  const extractJson = parseExtractJson(
+    readFormString(formData, "jdExtractJson"),
+    dictionary
+  );
 
   if (extractJson.error) {
     redirect(withMessage("/applications/new", extractJson.error));
@@ -100,7 +113,7 @@ export async function createApplicationAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect(withMessage("/applications/new", firstError(parsed.error)));
+    redirect(withMessage("/applications/new", firstError(parsed.error, dictionary)));
   }
 
   let application: Awaited<ReturnType<typeof createUserApplication>>;
@@ -112,7 +125,7 @@ export async function createApplicationAction(formData: FormData) {
       redirect(
         withMessage(
           "/applications/new",
-          "Choose one of your resumes or leave it unattached."
+          dictionary.workspace.applicationErrors.resumeNotOwned
         )
       );
     }
@@ -128,6 +141,9 @@ export async function updateApplicationStageAction(
   _previousState: UpdateApplicationStageState,
   formData: FormData
 ): Promise<UpdateApplicationStageState> {
+  const userId = await requireCurrentUserId();
+  const locale = await getCurrentLocale(userId);
+  const dictionary = getDictionary(locale);
   const parsed = updateApplicationStageSchema.safeParse({
     applicationId: readFormString(formData, "applicationId"),
     stage: readFormString(formData, "stage"),
@@ -135,19 +151,17 @@ export async function updateApplicationStageAction(
 
   if (!parsed.success) {
     return {
-      error: "Choose a valid stage and try again.",
+      error: dictionary.workspace.applicationErrors.invalidStage,
       status: "idle",
     };
   }
-
-  const userId = await requireCurrentUserId();
 
   try {
     await updateUserApplicationStage(userId, parsed.data);
   } catch (error) {
     if (error instanceof ApplicationServiceError) {
       return {
-        error: "We could not update this application stage.",
+        error: dictionary.workspace.applicationErrors.stageUpdateFailed,
         status: "idle",
       };
     }
@@ -168,16 +182,17 @@ export async function updateApplicationStageAction(
 export async function moveApplicationStageAction(
   input: unknown
 ): Promise<MoveApplicationStageState> {
+  const userId = await requireCurrentUserId();
+  const locale = await getCurrentLocale(userId);
+  const dictionary = getDictionary(locale);
   const parsed = updateApplicationStageSchema.safeParse(input);
 
   if (!parsed.success) {
     return {
-      error: "Choose a valid stage and try again.",
+      error: dictionary.workspace.applicationErrors.invalidStage,
       status: "idle",
     };
   }
-
-  const userId = await requireCurrentUserId();
 
   try {
     await updateUserApplicationStage(userId, parsed.data);
@@ -185,7 +200,7 @@ export async function moveApplicationStageAction(
     if (error instanceof ApplicationServiceError) {
       return {
         applicationId: parsed.data.applicationId,
-        error: "We could not update this application stage.",
+        error: dictionary.workspace.applicationErrors.stageUpdateFailed,
         stage: parsed.data.stage,
         status: "idle",
       };
@@ -210,6 +225,9 @@ export async function updateApplicationResumeAction(
   _previousState: UpdateApplicationResumeState,
   formData: FormData
 ): Promise<UpdateApplicationResumeState> {
+  const userId = await requireCurrentUserId();
+  const locale = await getCurrentLocale(userId);
+  const dictionary = getDictionary(locale);
   const parsed = updateApplicationResumeSchema.safeParse({
     applicationId: readFormString(formData, "applicationId"),
     resumeId: readFormString(formData, "resumeId"),
@@ -217,19 +235,17 @@ export async function updateApplicationResumeAction(
 
   if (!parsed.success) {
     return {
-      error: "Choose a valid resume and try again.",
+      error: dictionary.workspace.applicationErrors.invalidResume,
       status: "idle",
     };
   }
-
-  const userId = await requireCurrentUserId();
 
   try {
     await updateUserApplicationResume(userId, parsed.data);
   } catch (error) {
     if (error instanceof ApplicationServiceError) {
       return {
-        error: "We could not update this application resume.",
+        error: dictionary.workspace.applicationErrors.resumeUpdateFailed,
         status: "idle",
       };
     }

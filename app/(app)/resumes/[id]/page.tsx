@@ -18,6 +18,8 @@ import { ResumeParseControl } from "@/components/resumes/ResumeParseControl";
 import { ParsedResumeView } from "@/components/resumes/ResumeParsedView";
 import { Button } from "@/components/ui/button";
 import { requireCurrentUserId } from "@/src/lib/auth/current-user";
+import type { AppLocale } from "@/src/lib/i18n/config";
+import { getCurrentLocale, getDictionary } from "@/src/lib/i18n/server";
 import {
   getParsedResumeDisplay,
   groupResumeBullets,
@@ -34,8 +36,8 @@ type ResumeDetailPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat("en", {
+function formatDate(date: Date, locale: AppLocale) {
+  return new Intl.DateTimeFormat(locale, {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
@@ -57,6 +59,13 @@ function statusLabel(status: string) {
   return status.toLowerCase().replaceAll("_", " ");
 }
 
+function fill(template: string, values: Record<string, string>) {
+  return Object.entries(values).reduce(
+    (result, [key, value]) => result.replace(`{${key}}`, value),
+    template
+  );
+}
+
 export default async function ResumeDetailPage({
   params,
   searchParams,
@@ -67,6 +76,9 @@ export default async function ResumeDetailPage({
     searchParams,
   ]);
   const resume = await getUserResumeDetail(userId, id);
+  const locale = await getCurrentLocale(userId);
+  const dictionary = getDictionary(locale);
+  const copy = dictionary.workspace.resumeDetail;
 
   if (!resume) {
     notFound();
@@ -84,14 +96,14 @@ export default async function ResumeDetailPage({
     <>
       <PageHeader
         title={resume.title}
-        description={`Resume Parse workspace · Updated ${formatDate(
-          resume.updatedAt
-        )}`}
+        description={fill(copy.description, {
+          date: formatDate(resume.updatedAt, locale),
+        })}
       >
         <Button variant="outline" asChild className="rounded-xl">
           <Link href="/resumes">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Resumes
+            {copy.resumes}
           </Link>
         </Button>
       </PageHeader>
@@ -110,7 +122,7 @@ export default async function ResumeDetailPage({
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="space-y-5">
           {parsedResume.status === "valid" ? (
-            <ParsedResumeView resume={parsedResume.data} />
+            <ParsedResumeView dictionary={dictionary} resume={parsedResume.data} />
           ) : parsedResume.status === "invalid" ? (
             <AppCard padding="lg">
               <div className="flex items-start gap-4">
@@ -119,12 +131,10 @@ export default async function ResumeDetailPage({
                 </div>
                 <div>
                   <h2 className="text-base font-medium text-foreground">
-                    Parsed resume cannot be displayed
+                    {copy.invalidParsedTitle}
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    The saved parsed JSON no longer matches the Resume Parse v1
-                    schema. The original source text is preserved below, and you
-                    can re-parse when source text exists.
+                    {copy.invalidParsedDescription}
                   </p>
                 </div>
               </div>
@@ -137,19 +147,17 @@ export default async function ResumeDetailPage({
                 </div>
                 <div>
                   <h2 className="text-base font-medium text-foreground">
-                    No parsed resume yet
+                    {copy.missingParsedTitle}
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    Use Resume Parse to turn the saved source text into
-                    structured basics, skills, experience, projects, education,
-                    and generated bullet records.
+                    {copy.missingParsedDescription}
                   </p>
                 </div>
               </div>
             </AppCard>
           )}
 
-          <ResumeBulletGroupsView groups={bulletGroups} />
+          <ResumeBulletGroupsView dictionary={dictionary} groups={bulletGroups} />
 
           <AppCard padding="lg">
             <details open>
@@ -159,19 +167,18 @@ export default async function ResumeDetailPage({
                 </div>
                 <div>
                   <h2 className="text-base font-medium text-foreground">
-                    Original source text / rawText
+                    {copy.sourceTitle}
                   </h2>
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    Preserved private source text for parsing and auditability.
-                    PDF-only resumes do not store extracted raw text.
+                    {copy.sourceDescription}
                   </p>
                 </div>
               </summary>
               <pre className="mt-6 max-h-[40rem] overflow-auto whitespace-pre-wrap rounded-xl border border-border bg-secondary/20 p-4 font-mono text-sm leading-6 text-foreground">
                 {resume.sourceText ||
                   (hasFile
-                    ? "PDF file stored privately. If PDF parsing fails, create a pasted-text resume version as a fallback."
-                    : "No source text stored.")}
+                    ? copy.pdfStored
+                    : copy.noSourceTextStored)}
               </pre>
             </details>
           </AppCard>
@@ -180,35 +187,48 @@ export default async function ResumeDetailPage({
         <div className="space-y-5">
           <AppCard>
             <AppCardHeader
-              title="Resume Details"
-              description="Current parse and record state."
+              title={copy.detailsTitle}
+              description={copy.detailsDescription}
             />
             <AppCardContent className="space-y-3 text-sm">
-              <MetaRow label="Status" value={statusLabel(resume.status)} />
-              <MetaRow label="Created" value={formatDate(resume.createdAt)} />
-              <MetaRow label="Updated" value={formatDate(resume.updatedAt)} />
               <MetaRow
-                label="Source"
+                label={copy.status}
+                value={
+                  copy.statusLabels[
+                    resume.status as keyof typeof copy.statusLabels
+                  ] ?? statusLabel(resume.status)
+                }
+              />
+              <MetaRow
+                label={dictionary.common.created}
+                value={formatDate(resume.createdAt, locale)}
+              />
+              <MetaRow
+                label={dictionary.common.updated}
+                value={formatDate(resume.updatedAt, locale)}
+              />
+              <MetaRow
+                label={copy.source}
                 value={
                   hasSourceText
-                    ? "Pasted text"
+                    ? copy.pastedText
                     : hasFile
-                      ? "Private PDF"
-                      : "No source text"
+                      ? copy.privatePdf
+                      : copy.noSourceText
                 }
               />
               <MetaRow
-                label="Parsed JSON"
+                label={copy.parsedJson}
                 value={
                   parsedResume.status === "valid"
-                    ? "Valid"
+                    ? dictionary.common.valid
                     : parsedResume.status === "invalid"
-                      ? "Invalid"
-                      : "Missing"
+                      ? dictionary.common.invalid
+                      : dictionary.common.missing
                 }
               />
               <MetaRow
-                label="Bullet records"
+                label={copy.bulletRecords}
                 value={resume.bullets.length.toString()}
               />
             </AppCardContent>
@@ -217,15 +237,16 @@ export default async function ResumeDetailPage({
           <AppCard>
             <AppCardHeader
               title={
-                resume.status === "FAILED" ? "Parse failed" : "Resume Parse"
+                resume.status === "FAILED" ? copy.parseFailed : copy.parseTitle
               }
-              description="Generate structured resume data."
+              description={copy.parseDescription}
             />
             <AppCardContent>
               <ResumeParseControl
                 hasFile={hasFile}
                 hasParsedJson={hasStoredParsedJson}
                 hasSourceText={hasSourceText}
+                dictionary={dictionary}
                 resumeId={resume.id}
                 status={resume.status}
               />
@@ -234,8 +255,8 @@ export default async function ResumeDetailPage({
 
           <AppCard>
             <AppCardHeader
-              title="Rename"
-              description="Keep resume versions easy to scan."
+              title={copy.renameTitle}
+              description={copy.renameDescription}
             />
             <AppCardContent>
               <form action={renameResumeAction} className="space-y-3">
@@ -244,7 +265,7 @@ export default async function ResumeDetailPage({
                   htmlFor="title"
                   className="text-sm font-medium text-foreground"
                 >
-                  Title
+                  {copy.titleLabel}
                 </label>
                 <input
                   id="title"
@@ -256,7 +277,7 @@ export default async function ResumeDetailPage({
                   className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 />
                 <Button type="submit" className="w-full rounded-xl">
-                  Save Name
+                  {copy.saveName}
                 </Button>
               </form>
             </AppCardContent>
@@ -264,8 +285,8 @@ export default async function ResumeDetailPage({
 
           <AppCard>
             <AppCardHeader
-              title="Delete"
-              description="Remove this resume from your workspace."
+              title={copy.deleteTitle}
+              description={copy.deleteDescription}
             />
             <AppCardContent>
               <form action={deleteResumeAction} className="space-y-3">
@@ -276,7 +297,7 @@ export default async function ResumeDetailPage({
                   className="w-full rounded-xl border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  Delete Resume
+                  {copy.deleteResume}
                 </Button>
               </form>
             </AppCardContent>
@@ -285,7 +306,7 @@ export default async function ResumeDetailPage({
           <Button variant="outline" asChild className="w-full rounded-xl">
             <Link href="/resumes">
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              Back to resumes
+              {copy.backToResumes}
             </Link>
           </Button>
         </div>

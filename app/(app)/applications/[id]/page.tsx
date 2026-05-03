@@ -25,6 +25,9 @@ import {
 } from "@/src/lib/applications/stages";
 import { getUserApplication } from "@/src/lib/applications/service";
 import { requireCurrentUserId } from "@/src/lib/auth/current-user";
+import type { AppLocale } from "@/src/lib/i18n/config";
+import type { AppDictionary } from "@/src/lib/i18n/dictionaries";
+import { getCurrentLocale, getDictionary } from "@/src/lib/i18n/server";
 import { listUserResumes } from "@/src/lib/resumes/service";
 
 type ApplicationDetailPageProps = {
@@ -33,8 +36,8 @@ type ApplicationDetailPageProps = {
   }>;
 };
 
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat("en", {
+function formatDate(date: Date, locale: AppLocale) {
+  return new Intl.DateTimeFormat(locale, {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
@@ -69,6 +72,13 @@ function parseExtract(value: unknown):
   };
 }
 
+function fill(template: string, values: Record<string, string>) {
+  return Object.entries(values).reduce(
+    (result, [key, value]) => result.replace(`{${key}}`, value),
+    template
+  );
+}
+
 export default async function ApplicationDetailPage({
   params,
 }: ApplicationDetailPageProps) {
@@ -80,32 +90,36 @@ export default async function ApplicationDetailPage({
     getUserApplication(userId, id),
     listUserResumes(userId),
   ]);
+  const locale = await getCurrentLocale(userId);
+  const dictionary = getDictionary(locale);
+  const copy = dictionary.workspace.applicationDetail;
 
   if (!application) {
     notFound();
   }
 
   const extract = parseExtract(application.jdExtractJson);
-  const stageOptions = getApplicationStageOptions();
+  const stageOptions = getApplicationStageOptions(dictionary.applicationStages);
 
   return (
     <>
       <PageHeader
         title={application.roleTitle}
-        description={`${application.companyName} · Updated ${formatDate(
-          application.updatedAt
-        )}`}
+        description={fill(copy.updatedDescription, {
+          company: application.companyName,
+          date: formatDate(application.updatedAt, locale),
+        })}
       >
         <Button variant="outline" asChild className="rounded-xl">
           <Link href="/applications">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Applications
+            {copy.applications}
           </Link>
         </Button>
         <Button variant="outline" asChild className="rounded-xl">
           <Link href="/dashboard">
             <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
-            Dashboard
+            {copy.dashboard}
           </Link>
         </Button>
       </PageHeader>
@@ -114,17 +128,24 @@ export default async function ApplicationDetailPage({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-medium text-foreground">
-              Current stage
+              {copy.currentStage}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              {getApplicationStageLabel(application.stage)}
+              {getApplicationStageLabel(
+                application.stage,
+                dictionary.applicationStages
+              )}
             </p>
           </div>
           <div className="w-full sm:w-64">
             <ApplicationStageSelect
               applicationId={application.id}
               currentStage={application.stage}
-              label={`Update stage for ${application.companyName} ${application.roleTitle}`}
+              dictionary={dictionary}
+              label={fill(copy.updateStageFor, {
+                company: application.companyName,
+                role: application.roleTitle,
+              })}
               options={stageOptions}
             />
           </div>
@@ -140,10 +161,10 @@ export default async function ApplicationDetailPage({
               </div>
               <div>
                 <h2 className="text-base font-medium text-foreground">
-                  Original JD
+                  {copy.originalJd}
                 </h2>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  Stored privately with this application.
+                  {copy.originalJdDescription}
                 </p>
               </div>
             </div>
@@ -154,36 +175,46 @@ export default async function ApplicationDetailPage({
 
           <AppCard padding="lg">
             <AppCardHeader
-              title="Extracted structured fields"
-              description="Saved from the reviewed JD extract."
+              title={copy.extractedFields}
+              description={copy.extractedFieldsDescription}
             />
             <AppCardContent>
               {extract.status === "valid" ? (
                 <div className="space-y-5">
-                  <DetailGrid extract={extract.data} />
+                  <DetailGrid dictionary={dictionary} extract={extract.data} />
                   <ListSection
-                    title="Required skills"
+                    dictionary={dictionary}
+                    title={copy.requiredSkills}
                     items={extract.data.requiredSkills}
                   />
                   <ListSection
-                    title="Preferred skills"
+                    dictionary={dictionary}
+                    title={copy.preferredSkills}
                     items={extract.data.preferredSkills}
                   />
                   <ListSection
-                    title="Responsibilities"
+                    dictionary={dictionary}
+                    title={copy.responsibilities}
                     items={extract.data.responsibilities}
                   />
-                  <ListSection title="Keywords" items={extract.data.keywords} />
-                  <ListSection title="Warnings" items={extract.data.warnings} />
+                  <ListSection
+                    dictionary={dictionary}
+                    title={copy.keywords}
+                    items={extract.data.keywords}
+                  />
+                  <ListSection
+                    dictionary={dictionary}
+                    title={copy.warnings}
+                    items={extract.data.warnings}
+                  />
                 </div>
               ) : extract.status === "invalid" ? (
                 <div className="rounded-xl border border-dashed border-border bg-secondary/20 p-6 text-sm text-muted-foreground">
-                  The saved JD extract could not be displayed safely. The
-                  original JD text is still available above.
+                  {copy.invalidExtract}
                 </div>
               ) : (
                 <div className="rounded-xl border border-dashed border-border bg-secondary/20 p-6 text-sm text-muted-foreground">
-                  No structured JD extract was saved for this application.
+                  {copy.missingExtract}
                 </div>
               )}
             </AppCardContent>
@@ -193,36 +224,39 @@ export default async function ApplicationDetailPage({
         <div className="space-y-5">
           <AppCard>
             <AppCardHeader
-              title="Application Details"
-              description="Current saved metadata."
+              title={copy.detailsTitle}
+              description={copy.detailsDescription}
             />
             <AppCardContent className="space-y-3 text-sm">
-              <MetaRow label="Company" value={application.companyName} />
-              <MetaRow label="Role" value={application.roleTitle} />
+              <MetaRow label={copy.company} value={application.companyName} />
+              <MetaRow label={copy.role} value={application.roleTitle} />
               <MetaRow
-                label="Location"
-                value={application.location || "Not specified"}
+                label={copy.location}
+                value={application.location || dictionary.common.notSpecified}
                 icon={application.location ? MapPin : undefined}
               />
               <MetaRow
-                label="Stage"
-                value={getApplicationStageLabel(application.stage)}
+                label={copy.stage}
+                value={getApplicationStageLabel(
+                  application.stage,
+                  dictionary.applicationStages
+                )}
               />
               <MetaRow
-                label="Created"
-                value={formatDate(application.createdAt)}
+                label={dictionary.common.created}
+                value={formatDate(application.createdAt, locale)}
               />
               <MetaRow
-                label="Updated"
-                value={formatDate(application.updatedAt)}
+                label={dictionary.common.updated}
+                value={formatDate(application.updatedAt, locale)}
               />
             </AppCardContent>
           </AppCard>
 
           <AppCard>
             <AppCardHeader
-              title="Attached resume"
-              description="Optional resume for future diagnosis."
+              title={copy.attachedResume}
+              description={copy.attachedResumeDescription}
             />
             <AppCardContent className="space-y-4">
               {application.resume ? (
@@ -238,14 +272,15 @@ export default async function ApplicationDetailPage({
                       {application.resume.title}
                     </span>
                     <span className="mt-0.5 block text-xs text-muted-foreground">
-                      {application.resume.status.toLowerCase()} · Updated{" "}
-                      {formatDate(application.resume.updatedAt)}
+                      {application.resume.status.toLowerCase()} ·{" "}
+                      {dictionary.common.updated}{" "}
+                      {formatDate(application.resume.updatedAt, locale)}
                     </span>
                   </span>
                 </Link>
               ) : (
                 <div className="rounded-xl border border-dashed border-border bg-secondary/20 p-4 text-sm text-muted-foreground">
-                  No resume attached
+                  {copy.noResumeAttached}
                 </div>
               )}
 
@@ -253,7 +288,11 @@ export default async function ApplicationDetailPage({
                 <ApplicationResumeSelect
                   applicationId={application.id}
                   currentResumeId={application.resume?.id ?? null}
-                  label={`Update attached resume for ${application.companyName} ${application.roleTitle}`}
+                  dictionary={dictionary}
+                  label={fill(copy.updateAttachedResumeFor, {
+                    company: application.companyName,
+                    role: application.roleTitle,
+                  })}
                   resumes={resumes.map((resume) => ({
                     id: resume.id,
                     title: resume.title,
@@ -261,11 +300,11 @@ export default async function ApplicationDetailPage({
                 />
               ) : (
                 <p className="text-sm leading-6 text-muted-foreground">
-                  No resumes yet.{" "}
+                  {copy.noResumesYet}{" "}
                   <Link href="/resumes/new" className="text-foreground underline">
-                    Paste a resume
+                    {copy.pasteResume}
                   </Link>{" "}
-                  to attach one here.
+                  {copy.attachOneHere}
                 </p>
               )}
             </AppCardContent>
@@ -274,7 +313,7 @@ export default async function ApplicationDetailPage({
           <Button variant="outline" asChild className="w-full rounded-xl">
             <Link href="/applications">
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              Back to applications
+              {copy.backToApplications}
             </Link>
           </Button>
         </div>
@@ -303,11 +342,18 @@ function MetaRow({
   );
 }
 
-function DetailGrid({ extract }: { extract: JdExtract }) {
+function DetailGrid({
+  dictionary,
+  extract,
+}: {
+  dictionary: Pick<AppDictionary, "common" | "workspace">;
+  extract: JdExtract;
+}) {
+  const copy = dictionary.workspace.applicationDetail;
   const rows = [
-    ["Seniority", extract.seniority],
-    ["Employment type", extract.employmentType],
-    ["Confidence", `${Math.round(extract.confidence * 100)}%`],
+    [copy.seniority, extract.seniority],
+    [copy.employmentType, extract.employmentType],
+    [copy.confidence, `${Math.round(extract.confidence * 100)}%`],
   ];
 
   return (
@@ -318,14 +364,24 @@ function DetailGrid({ extract }: { extract: JdExtract }) {
           className="rounded-xl border border-border bg-secondary/20 p-3"
         >
           <p className="text-xs font-medium text-muted-foreground">{label}</p>
-          <p className="mt-1 text-sm text-foreground">{value || "Not found"}</p>
+          <p className="mt-1 text-sm text-foreground">
+            {value || dictionary.common.notFound}
+          </p>
         </div>
       ))}
     </div>
   );
 }
 
-function ListSection({ items, title }: { items: string[]; title: string }) {
+function ListSection({
+  dictionary,
+  items,
+  title,
+}: {
+  dictionary: Pick<AppDictionary, "workspace">;
+  items: string[];
+  title: string;
+}) {
   return (
     <section>
       <h3 className="text-sm font-medium text-foreground">{title}</h3>
@@ -341,7 +397,9 @@ function ListSection({ items, title }: { items: string[]; title: string }) {
           ))}
         </div>
       ) : (
-        <p className="mt-2 text-sm text-muted-foreground">No items saved.</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {dictionary.workspace.applicationDetail.noItemsSaved}
+        </p>
       )}
     </section>
   );

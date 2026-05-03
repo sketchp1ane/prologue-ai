@@ -1,18 +1,17 @@
 import type { ApplicationStage } from "@prisma/client";
 
-import {
-  APPLICATION_STAGE_LABELS,
-  APPLICATION_STAGE_THEME,
-} from "@/src/lib/applications/stage-metadata";
+import { APPLICATION_STAGE_THEME } from "@/src/lib/applications/stage-metadata";
 import { cn } from "@/src/lib/utils";
 
 type ApplicationStageBadgeProps = {
   className?: string;
+  label: string;
   stage: ApplicationStage;
 };
 
 export function ApplicationStageBadge({
   className,
+  label,
   stage,
 }: ApplicationStageBadgeProps) {
   const theme = APPLICATION_STAGE_THEME[stage];
@@ -28,7 +27,7 @@ export function ApplicationStageBadge({
         className={cn("h-1.5 w-1.5 shrink-0 rounded-full", theme.dot)}
         aria-hidden="true"
       />
-      {APPLICATION_STAGE_LABELS[stage]}
+      {label}
     </span>
   );
 }

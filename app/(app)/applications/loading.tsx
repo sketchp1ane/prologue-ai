@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components/app/PageHeader";
+import { getCurrentLocale, getDictionary } from "@/src/lib/i18n/server";
 
 function SkeletonBlock({ className = "" }: { className?: string }) {
   return (
@@ -9,15 +10,21 @@ function SkeletonBlock({ className = "" }: { className?: string }) {
   );
 }
 
-export default function ApplicationsLoading() {
+export default async function ApplicationsLoading() {
+  const locale = await getCurrentLocale();
+  const dictionary = getDictionary(locale);
+
   return (
     <>
       <PageHeader
-        title="Applications"
-        description="Loading your tracked applications."
+        title={dictionary.workspace.applications.title}
+        description={dictionary.workspace.applications.loadingDescription}
       />
 
-      <div className="space-y-3" aria-label="Loading applications">
+      <div
+        className="space-y-3"
+        aria-label={dictionary.workspace.applications.loadingLabel}
+      >
         {Array.from({ length: 3 }).map((_, index) => (
           <div
             key={index}
