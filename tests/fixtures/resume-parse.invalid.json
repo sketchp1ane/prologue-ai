@@ -1,0 +1,39 @@
+{
+  "basics": {
+    "name": "Alex Chen",
+    "email": "alex.chen@example.com",
+    "phone": null,
+    "location": "San Francisco, CA",
+    "links": "https://github.com/alexchen"
+  },
+  "summary": null,
+  "skills": [
+    "TypeScript",
+    "React"
+  ],
+  "experience": [
+    {
+      "company": "Northstar Labs",
+      "title": "Frontend Engineer",
+      "startDate": "2022-06",
+      "endDate": "Present",
+      "location": null,
+      "bullets": [
+        "Built React and TypeScript interfaces for customer onboarding workflows."
+      ],
+      "extraField": "unexpected"
+    }
+  ],
+  "education": [
+    {
+      "school": "University of California, Davis",
+      "degree": "Bachelor of Science",
+      "major": "Computer Science",
+      "startDate": "2018",
+      "endDate": "2022"
+    }
+  ],
+  "projects": [],
+  "certifications": [],
+  "languages": []
+}
