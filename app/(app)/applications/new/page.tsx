@@ -1,5 +1,6 @@
 import { PageHeader } from "@/components/app/PageHeader";
 import { requireCurrentUserId } from "@/src/lib/auth/current-user";
+import { getCurrentLocale, getDictionary } from "@/src/lib/i18n/server";
 import { listUserResumes } from "@/src/lib/resumes/service";
 
 import { ApplicationCreateForm } from "./ApplicationCreateForm";
@@ -21,19 +22,24 @@ export default async function NewApplicationPage({
     searchParams,
     requireCurrentUserId(),
   ]);
-  const resumes = await listUserResumes(userId);
+  const [locale, resumes] = await Promise.all([
+    getCurrentLocale(userId),
+    listUserResumes(userId),
+  ]);
+  const dictionary = getDictionary(locale);
 
   return (
     <>
       <PageHeader
-        title="New Application"
-        description="Paste a JD, run extraction, review the fields, and save."
+        title={dictionary.workspace.applicationCreate.title}
+        description={dictionary.workspace.applicationCreate.description}
         secondaryAction={{
           href: "/applications",
-          label: "Back to applications",
+          label: dictionary.workspace.applicationCreate.backToApplications,
         }}
       />
       <ApplicationCreateForm
+        dictionary={dictionary}
         initialError={readError(params)}
         resumes={resumes.map((resume) => ({
           id: resume.id,

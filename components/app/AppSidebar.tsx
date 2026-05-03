@@ -13,6 +13,7 @@ import {
   useState,
 } from "react";
 
+import type { AppDictionary } from "@/src/lib/i18n/dictionaries";
 import { cn } from "@/src/lib/utils";
 
 import {
@@ -20,6 +21,8 @@ import {
   appNavigationItems,
   type AppNavigationItem,
 } from "./navigation";
+
+type AppShellDictionary = AppDictionary["appShell"];
 
 // Sidebar context for collapse state
 type SidebarContextType = {
@@ -38,7 +41,11 @@ function isActiveRoute(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AppSidebar() {
+export function AppSidebar({
+  dictionary,
+}: {
+  dictionary: AppShellDictionary;
+}) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -69,7 +76,7 @@ export function AppSidebar() {
         type="button"
         onClick={() => setMobileOpen(true)}
         className="fixed left-4 top-3.5 z-40 flex h-9 w-9 items-center justify-center rounded-lg bg-card text-foreground ring-1 ring-border transition-colors hover:bg-secondary lg:hidden"
-        aria-label="Open menu"
+        aria-label={dictionary.aria.openMenu}
       >
         <Menu className="h-[18px] w-[18px]" />
       </button>
@@ -93,6 +100,7 @@ export function AppSidebar() {
         inert={!mobileOpen ? true : undefined}
       >
         <MobileSidebarContent
+          dictionary={dictionary}
           pathname={pathname}
           onClose={() => setMobileOpen(false)}
           closeButtonRef={mobileCloseButtonRef}
@@ -107,6 +115,7 @@ export function AppSidebar() {
         )}
       >
         <DesktopSidebarContent
+          dictionary={dictionary}
           pathname={pathname}
           collapsed={collapsed}
           onToggle={() => setCollapsed(!collapsed)}
@@ -119,10 +128,12 @@ export function AppSidebar() {
 /* ---------------- Mobile Sidebar ---------------- */
 
 function MobileSidebarContent({
+  dictionary,
   pathname,
   onClose,
   closeButtonRef,
 }: {
+  dictionary: AppShellDictionary;
   pathname: string;
   onClose: () => void;
   closeButtonRef: RefObject<HTMLButtonElement | null>;
@@ -142,7 +153,7 @@ function MobileSidebarContent({
           type="button"
           onClick={onClose}
           className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          aria-label="Close menu"
+          aria-label={dictionary.aria.closeMenu}
         >
           <X className="h-[18px] w-[18px]" />
         </button>
@@ -155,7 +166,7 @@ function MobileSidebarContent({
           className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-foreground text-sm font-medium text-background transition-colors hover:bg-foreground/90"
         >
           <Plus className="h-4 w-4" />
-          New Application
+          {dictionary.actions.newApplication}
         </button>
       </div>
 
@@ -165,6 +176,7 @@ function MobileSidebarContent({
           {appNavigationItems.map((item) => (
             <li key={item.href}>
               <NavItemExpanded
+                dictionary={dictionary}
                 item={item}
                 isActive={isActiveRoute(pathname, item.href)}
                 onClick={onClose}
@@ -180,6 +192,7 @@ function MobileSidebarContent({
           {appBottomNavItems.map((item) => (
             <li key={item.href}>
               <NavItemExpanded
+                dictionary={dictionary}
                 item={item}
                 isActive={isActiveRoute(pathname, item.href)}
                 onClick={onClose}
@@ -195,10 +208,12 @@ function MobileSidebarContent({
 /* ---------------- Desktop Sidebar ---------------- */
 
 function DesktopSidebarContent({
+  dictionary,
   pathname,
   collapsed,
   onToggle,
 }: {
+  dictionary: AppShellDictionary;
   pathname: string;
   collapsed: boolean;
   onToggle: () => void;
@@ -216,7 +231,7 @@ function DesktopSidebarContent({
           <Link
             href="/"
             className="flex h-8 w-8 items-center justify-center rounded-md bg-foreground text-background transition-colors hover:bg-foreground/90"
-            aria-label="Prologue home"
+            aria-label={dictionary.aria.prologueHome}
           >
             <span className="text-[13px] font-semibold leading-none">P</span>
           </Link>
@@ -232,7 +247,7 @@ function DesktopSidebarContent({
               type="button"
               onClick={onToggle}
             className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-secondary hover:text-foreground"
-            aria-label="Collapse sidebar"
+            aria-label={dictionary.aria.collapseSidebar}
           >
               <PanelLeft className="h-[15px] w-[15px]" aria-hidden="true" />
             </button>
@@ -243,11 +258,11 @@ function DesktopSidebarContent({
       {/* New Action */}
       <div className={cn("pb-2", collapsed ? "px-3" : "px-3")}>
         {collapsed ? (
-          <NavTooltip label="New Application">
+          <NavTooltip label={dictionary.actions.newApplication}>
             <button
               type="button"
               className="flex h-9 w-9 items-center justify-center rounded-lg bg-foreground text-background transition-colors hover:bg-foreground/90"
-              aria-label="New Application"
+              aria-label={dictionary.actions.newApplication}
             >
               <Plus className="h-[15px] w-[15px]" aria-hidden="true" />
             </button>
@@ -258,7 +273,7 @@ function DesktopSidebarContent({
             className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-foreground text-sm font-medium text-background transition-colors hover:bg-foreground/90"
           >
             <Plus className="h-4 w-4" />
-            New Application
+            {dictionary.actions.newApplication}
           </button>
         )}
       </div>
@@ -277,9 +292,17 @@ function DesktopSidebarContent({
             return (
               <li key={item.href}>
                 {collapsed ? (
-                  <NavItemCollapsed item={item} isActive={isActive} />
+                  <NavItemCollapsed
+                    dictionary={dictionary}
+                    item={item}
+                    isActive={isActive}
+                  />
                 ) : (
-                  <NavItemExpanded item={item} isActive={isActive} />
+                  <NavItemExpanded
+                    dictionary={dictionary}
+                    item={item}
+                    isActive={isActive}
+                  />
                 )}
               </li>
             );
@@ -295,9 +318,17 @@ function DesktopSidebarContent({
             return (
               <li key={item.href}>
                 {collapsed ? (
-                  <NavItemCollapsed item={item} isActive={isActive} />
+                  <NavItemCollapsed
+                    dictionary={dictionary}
+                    item={item}
+                    isActive={isActive}
+                  />
                 ) : (
-                  <NavItemExpanded item={item} isActive={isActive} />
+                  <NavItemExpanded
+                    dictionary={dictionary}
+                    item={item}
+                    isActive={isActive}
+                  />
                 )}
               </li>
             );
@@ -306,12 +337,12 @@ function DesktopSidebarContent({
           {/* Collapse toggle - aligned with settings in collapsed mode */}
           {collapsed && (
             <li>
-              <NavTooltip label="Expand sidebar">
+              <NavTooltip label={dictionary.aria.expandSidebar}>
                 <button
                   type="button"
                   onClick={onToggle}
                   className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground/70 transition-colors hover:bg-secondary hover:text-foreground"
-                  aria-label="Expand sidebar"
+                  aria-label={dictionary.aria.expandSidebar}
                 >
                   <PanelLeft
                     className="h-[15px] w-[15px] rotate-180"
@@ -330,14 +361,19 @@ function DesktopSidebarContent({
 /* ---------------- Nav Item: Expanded ---------------- */
 
 function NavItemExpanded({
+  dictionary,
   item,
   isActive,
   onClick,
 }: {
+  dictionary: AppShellDictionary;
   item: AppNavigationItem;
   isActive: boolean;
   onClick?: () => void;
 }) {
+  const label = dictionary.navigation[item.labelKey];
+  const badge = item.badgeKey ? dictionary.badge[item.badgeKey] : undefined;
+
   return (
     <Link
       href={item.href}
@@ -358,8 +394,8 @@ function NavItemExpanded({
         strokeWidth={isActive ? 2.25 : 2}
         aria-hidden="true"
       />
-      <span className="flex-1 truncate">{item.label}</span>
-      {item.badge && (
+      <span className="flex-1 truncate">{label}</span>
+      {badge && (
         <span
           className={cn(
             "rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
@@ -368,7 +404,7 @@ function NavItemExpanded({
               : "bg-foreground/5 text-foreground/70"
           )}
         >
-          {item.badge}
+          {badge}
         </span>
       )}
     </Link>
@@ -378,19 +414,23 @@ function NavItemExpanded({
 /* ---------------- Nav Item: Collapsed (compact icon) ---------------- */
 
 function NavItemCollapsed({
+  dictionary,
   item,
   isActive,
 }: {
+  dictionary: AppShellDictionary;
   item: AppNavigationItem;
   isActive: boolean;
 }) {
   const tooltipId = useId();
+  const label = dictionary.navigation[item.labelKey];
+  const badge = item.badgeKey ? dictionary.badge[item.badgeKey] : undefined;
 
   return (
-    <NavTooltip id={tooltipId} label={item.label} badge={item.badge}>
+    <NavTooltip id={tooltipId} label={label} badge={badge}>
       <Link
         href={item.href}
-        aria-label={item.label}
+        aria-label={label}
         aria-current={isActive ? "page" : undefined}
         aria-describedby={tooltipId}
         className={cn(
@@ -405,7 +445,7 @@ function NavItemCollapsed({
           strokeWidth={2}
           aria-hidden="true"
         />
-        {item.badge && !isActive && (
+        {badge && !isActive && (
           <span
             aria-hidden="true"
             className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-foreground"

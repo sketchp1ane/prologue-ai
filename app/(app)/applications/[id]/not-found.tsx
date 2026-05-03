@@ -3,25 +3,29 @@ import { AlertCircle, ArrowLeft, LayoutDashboard } from "lucide-react";
 
 import { EmptyState } from "@/components/app/EmptyState";
 import { Button } from "@/components/ui/button";
+import { getCurrentLocale, getDictionary } from "@/src/lib/i18n/server";
 
-export default function ApplicationNotFound() {
+export default async function ApplicationNotFound() {
+  const locale = await getCurrentLocale();
+  const dictionary = getDictionary(locale);
+
   return (
     <EmptyState
       icon={AlertCircle}
-      title="Application not found"
-      description="This application may have been removed, or it may not belong to the current workspace."
+      title={dictionary.workspace.applications.notFoundTitle}
+      description={dictionary.workspace.applications.notFoundDescription}
     >
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <Button variant="outline" asChild className="rounded-xl">
           <Link href="/applications">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Applications
+            {dictionary.workspace.applicationDetail.applications}
           </Link>
         </Button>
         <Button variant="outline" asChild className="rounded-xl">
           <Link href="/dashboard">
             <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
-            Dashboard
+            {dictionary.workspace.applicationDetail.dashboard}
           </Link>
         </Button>
       </div>

@@ -3,59 +3,18 @@ import { Check, CreditCard, Sparkles } from "lucide-react";
 import { AppCard } from "@/components/app/AppCard";
 import { PageHeader } from "@/components/app/PageHeader";
 import { Button } from "@/components/ui/button";
+import { requireCurrentUserId } from "@/src/lib/auth/current-user";
+import { getCurrentLocale, getDictionary } from "@/src/lib/i18n/server";
 
-const plans = [
-  {
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    description: "Perfect for getting started",
-    features: [
-      "5 resume uploads",
-      "10 AI rewrites per month",
-      "Basic job tracking",
-      "Email support",
-    ],
-    current: true,
-  },
-  {
-    name: "Pro",
-    price: "$19",
-    period: "per month",
-    description: "For serious job seekers",
-    features: [
-      "Unlimited resume uploads",
-      "Unlimited AI rewrites",
-      "Advanced analytics",
-      "Priority support",
-      "Interview prep tools",
-      "Custom templates",
-    ],
-    highlighted: true,
-  },
-  {
-    name: "Team",
-    price: "$49",
-    period: "per month",
-    description: "For career coaches & teams",
-    features: [
-      "Everything in Pro",
-      "5 team members",
-      "Client management",
-      "White-label reports",
-      "API access",
-      "Dedicated support",
-    ],
-  },
-];
+export default async function BillingPage() {
+  const userId = await requireCurrentUserId();
+  const locale = await getCurrentLocale(userId);
+  const dictionary = getDictionary(locale);
+  const copy = dictionary.workspace.billing;
 
-export default function BillingPage() {
   return (
     <>
-      <PageHeader
-        title="Billing"
-        description="Manage your subscription and billing details."
-      />
+      <PageHeader title={copy.title} description={copy.description} />
 
       {/* Current Plan */}
       <AppCard className="mb-8">
@@ -63,26 +22,24 @@ export default function BillingPage() {
           <div>
             <div className="mb-1 flex items-center gap-2">
               <h3 className="text-lg font-medium text-foreground">
-                Current Plan
+                {copy.currentPlan}
               </h3>
               <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-foreground">
-                Free
+                {copy.free}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              You&apos;re using 3 of 5 resume uploads this month.
-            </p>
+            <p className="text-sm text-muted-foreground">{copy.usage}</p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" className="rounded-xl">
               <CreditCard className="mr-2 h-4 w-4" />
-              Manage Billing
+              {copy.manageBilling}
             </Button>
           </div>
         </div>
         <div className="mt-4">
           <div className="mb-1.5 flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Resume uploads used</span>
+            <span className="text-muted-foreground">{copy.uploadsUsed}</span>
             <span className="font-medium text-foreground">3/5</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-secondary">
@@ -94,23 +51,27 @@ export default function BillingPage() {
       {/* Plans Grid */}
       <div className="mb-6">
         <h3 className="mb-4 text-lg font-medium text-foreground">
-          Available Plans
+          {copy.availablePlans}
         </h3>
         <div className="grid gap-6 lg:grid-cols-3">
-          {plans.map((plan) => (
-            <AppCard
-              key={plan.name}
-              className={
-                plan.highlighted
-                  ? "relative border-primary/50 bg-primary/5"
-                  : ""
-              }
-            >
-              {plan.highlighted && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
-                  Most Popular
-                </div>
-              )}
+          {copy.plans.map((plan) => {
+            const isCurrent = "current" in plan && plan.current;
+            const isHighlighted = "highlighted" in plan && plan.highlighted;
+
+            return (
+              <AppCard
+                key={plan.name}
+                className={
+                  isHighlighted
+                    ? "relative border-primary/50 bg-primary/5"
+                    : ""
+                }
+              >
+                {isHighlighted && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
+                    {copy.mostPopular}
+                  </div>
+                )}
               <div className="mb-4">
                 <h4 className="text-lg font-semibold text-foreground">
                   {plan.name}
@@ -137,21 +98,22 @@ export default function BillingPage() {
                 ))}
               </ul>
               <Button
-                variant={plan.current ? "outline" : "default"}
+                variant={isCurrent ? "outline" : "default"}
                 className="w-full rounded-xl"
-                disabled={plan.current}
+                disabled={isCurrent}
               >
-                {plan.current ? (
-                  "Current Plan"
+                {isCurrent ? (
+                  copy.currentPlanButton
                 ) : (
                   <>
                     <Sparkles className="mr-2 h-4 w-4" />
-                    Upgrade to {plan.name}
+                    {copy.upgradeTo.replace("{plan}", plan.name)}
                   </>
                 )}
               </Button>
-            </AppCard>
-          ))}
+              </AppCard>
+            );
+          })}
         </div>
       </div>
     </>

@@ -17,6 +17,8 @@ import { EmptyState } from "@/components/app/EmptyState";
 import { PageHeader } from "@/components/app/PageHeader";
 import { Button } from "@/components/ui/button";
 import { requireCurrentUserId } from "@/src/lib/auth/current-user";
+import type { AppDictionary } from "@/src/lib/i18n/dictionaries";
+import { getCurrentLocale, getDictionary } from "@/src/lib/i18n/server";
 import {
   getResumeListParseState,
   hasResumeParsedJson,
@@ -29,8 +31,8 @@ type ResumesPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat("en", {
+function formatDate(date: Date, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -47,44 +49,70 @@ function readMessage(
 }
 
 type ResumeParseStateUi = {
-  actionLabel: string | null;
   dotClassName: string;
   icon: LucideIcon;
-  label: string;
 };
 
 const RESUME_PARSE_STATE_UI = {
   failed: {
-    actionLabel: "Retry parse",
     dotClassName: "bg-rose-500",
     icon: AlertCircle,
-    label: "Failed",
   },
   not_parsed: {
-    actionLabel: "Parse",
     dotClassName: "bg-zinc-300",
     icon: CircleDashed,
-    label: "Not parsed",
   },
   parsing: {
-    actionLabel: null,
     dotClassName: "bg-amber-500",
     icon: Loader2,
-    label: "Parsing",
   },
   ready: {
-    actionLabel: "Re-parse",
     dotClassName: "bg-emerald-500",
     icon: CheckCircle2,
-    label: "Ready",
   },
 } satisfies Record<ResumeListParseState, ResumeParseStateUi>;
 
-function formatCount(count: number, singular: string) {
-  return `${count} ${count === 1 ? singular : `${singular}s`}`;
+function getParseStateLabel(
+  state: ResumeListParseState,
+  dictionary: Pick<AppDictionary, "workspace">
+) {
+  const labels = dictionary.workspace.resumes.parseStates;
+
+  if (state === "not_parsed") return labels.notParsed;
+  return labels[state];
 }
 
-function ResumeParseStateBadge({ state }: { state: ResumeListParseState }) {
+function getParseActionLabel(
+  state: ResumeListParseState,
+  dictionary: Pick<AppDictionary, "workspace">
+) {
+  const labels = dictionary.workspace.resumes.parseActions;
+
+  if (state === "failed") return labels.retry;
+  if (state === "not_parsed") return labels.parse;
+  if (state === "ready") return labels.reparse;
+  return null;
+}
+
+function formatCount(
+  count: number,
+  dictionary: Pick<AppDictionary, "workspace">
+) {
+  const label =
+    count === 1
+      ? dictionary.workspace.resumes.record
+      : dictionary.workspace.resumes.records;
+
+  return `${count} ${label}`;
+}
+
+function ResumeParseStateBadge({
+  dictionary,
+  state,
+}: {
+  dictionary: Pick<AppDictionary, "workspace">;
+  state: ResumeListParseState;
+}) {
   const stateUi = RESUME_PARSE_STATE_UI[state];
   const Icon = stateUi.icon;
 
@@ -98,7 +126,7 @@ function ResumeParseStateBadge({ state }: { state: ResumeListParseState }) {
         className={cn("h-3.5 w-3.5", state === "parsing" && "animate-spin")}
         aria-hidden="true"
       />
-      {stateUi.label}
+      {getParseStateLabel(state, dictionary)}
     </span>
   );
 }
@@ -108,6 +136,8 @@ export default async function ResumesPage({ searchParams }: ResumesPageProps) {
     requireCurrentUserId(),
     searchParams,
   ]);
+  const locale = await getCurrentLocale(userId);
+  const dictionary = getDictionary(locale);
   const resumes = await listUserResumes(userId);
   const error = readMessage(params, "error");
   const success = readMessage(params, "success");
@@ -116,12 +146,12 @@ export default async function ResumesPage({ searchParams }: ResumesPageProps) {
     return (
       <>
         <PageHeader
-          title="Resumes"
-          description="Create and manage resume versions from pasted text or private PDFs."
+          title={dictionary.workspace.resumes.title}
+          description={dictionary.workspace.resumes.description}
           action={{
             href: "/resumes/new",
             icon: Plus,
-            label: "Add Resume",
+            label: dictionary.workspace.resumes.addResume,
           }}
         />
         {error && (
@@ -136,12 +166,12 @@ export default async function ResumesPage({ searchParams }: ResumesPageProps) {
         )}
         <EmptyState
           icon={FileText}
-          title="No resumes yet"
-          description="Paste resume text to create your first private resume record, then parse it from the resume detail page."
+          title={dictionary.workspace.resumes.emptyTitle}
+          description={dictionary.workspace.resumes.emptyDescription}
           action={{
             href: "/resumes/new",
             icon: Plus,
-            label: "Add Resume",
+            label: dictionary.workspace.resumes.addResume,
           }}
         />
       </>
@@ -151,12 +181,12 @@ export default async function ResumesPage({ searchParams }: ResumesPageProps) {
   return (
     <>
       <PageHeader
-        title="Resumes"
-        description="Create and manage resume versions from pasted text or private PDFs."
+        title={dictionary.workspace.resumes.title}
+        description={dictionary.workspace.resumes.description}
         action={{
           href: "/resumes/new",
           icon: Plus,
-          label: "Add Resume",
+          label: dictionary.workspace.resumes.addResume,
         }}
       />
       {error && (
@@ -175,7 +205,7 @@ export default async function ResumesPage({ searchParams }: ResumesPageProps) {
             parsedJson: resume.parsedJson,
             status: resume.status,
           });
-          const stateUi = RESUME_PARSE_STATE_UI[parseState];
+          const actionLabel = getParseActionLabel(parseState, dictionary);
           const detailHref = `/resumes/${resume.id}`;
           const parsedJsonExists = hasResumeParsedJson(resume.parsedJson);
 
@@ -186,7 +216,10 @@ export default async function ResumesPage({ searchParams }: ResumesPageProps) {
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-primary/5 text-primary">
                     <FileText className="h-5 w-5" aria-hidden="true" />
                   </div>
-                  <ResumeParseStateBadge state={parseState} />
+                  <ResumeParseStateBadge
+                    dictionary={dictionary}
+                    state={parseState}
+                  />
                 </div>
 
                 <div className="min-w-0 flex-1">
@@ -194,21 +227,32 @@ export default async function ResumesPage({ searchParams }: ResumesPageProps) {
                     {resume.title}
                   </h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Updated {formatDate(resume.updatedAt)}
+                    {dictionary.workspace.resumes.updated.replace(
+                      "{date}",
+                      formatDate(resume.updatedAt, locale)
+                    )}
                   </p>
 
                   <div className="mt-4 grid gap-2 rounded-xl border border-border bg-secondary/20 p-3 text-sm">
                     <MetaRow
-                      label="Source"
-                      value={resume.filePath ? "Private PDF" : "Pasted text"}
+                      label={dictionary.workspace.resumes.source}
+                      value={
+                        resume.filePath
+                          ? dictionary.workspace.resumes.privatePdf
+                          : dictionary.workspace.resumes.pastedText
+                      }
                     />
                     <MetaRow
-                      label="Parsed JSON"
-                      value={parsedJsonExists ? "Present" : "Missing"}
+                      label={dictionary.workspace.resumes.parsedJson}
+                      value={
+                        parsedJsonExists
+                          ? dictionary.common.present
+                          : dictionary.common.missing
+                      }
                     />
                     <MetaRow
-                      label="Bullets"
-                      value={formatCount(resume._count.bullets, "record")}
+                      label={dictionary.workspace.resumes.bullets}
+                      value={formatCount(resume._count.bullets, dictionary)}
                     />
                   </div>
                 </div>
@@ -222,10 +266,10 @@ export default async function ResumesPage({ searchParams }: ResumesPageProps) {
                   >
                     <Link href={detailHref}>
                       <Eye className="h-4 w-4" aria-hidden="true" />
-                      View
+                      {dictionary.common.view}
                     </Link>
                   </Button>
-                  {stateUi.actionLabel ? (
+                  {actionLabel ? (
                     <Button size="sm" asChild className="rounded-lg">
                       <Link href={detailHref}>
                         {parseState === "ready" || parseState === "failed" ? (
@@ -233,7 +277,7 @@ export default async function ResumesPage({ searchParams }: ResumesPageProps) {
                         ) : (
                           <Sparkles className="h-4 w-4" aria-hidden="true" />
                         )}
-                        {stateUi.actionLabel}
+                        {actionLabel}
                       </Link>
                     </Button>
                   ) : (
@@ -242,7 +286,7 @@ export default async function ResumesPage({ searchParams }: ResumesPageProps) {
                         className="h-3.5 w-3.5 animate-spin"
                         aria-hidden="true"
                       />
-                      Parsing in progress
+                      {dictionary.workspace.resumes.parseInProgress}
                     </span>
                   )}
                 </div>

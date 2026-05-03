@@ -15,6 +15,7 @@ import {
   APPLICATION_ROLE_MAX_LENGTH,
 } from "@/src/lib/validations/application";
 import type { JdExtract } from "@/src/lib/ai/schemas/jd-extract";
+import type { AppDictionary } from "@/src/lib/i18n/dictionaries";
 
 function splitLines(value: string) {
   return value
@@ -27,7 +28,11 @@ function joinLines(value: string[]) {
   return value.join("\n");
 }
 
-function SaveApplicationButton() {
+function SaveApplicationButton({
+  dictionary,
+}: {
+  dictionary: Pick<AppDictionary, "common" | "workspace">;
+}) {
   const { pending } = useFormStatus();
 
   return (
@@ -37,12 +42,15 @@ function SaveApplicationButton() {
       ) : (
         <Save className="h-4 w-4" aria-hidden="true" />
       )}
-      {pending ? "Saving..." : "Save Application"}
+      {pending
+        ? dictionary.common.saving
+        : dictionary.workspace.applicationCreate.saveApplication}
     </Button>
   );
 }
 
 type ApplicationCreateFormProps = {
+  dictionary: Pick<AppDictionary, "applicationStages" | "common" | "workspace">;
   initialError?: string | null;
   resumes: {
     id: string;
@@ -51,9 +59,11 @@ type ApplicationCreateFormProps = {
 };
 
 export function ApplicationCreateForm({
+  dictionary,
   initialError,
   resumes,
 }: ApplicationCreateFormProps) {
+  const copy = dictionary.workspace.applicationCreate;
   const [jdText, setJdText] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [roleTitle, setRoleTitle] = useState("");
@@ -120,13 +130,16 @@ export function ApplicationCreateForm({
     const trimmedJdText = jdText.trim();
 
     if (trimmedJdText.length === 0) {
-      setExtractError("Paste a job description before extracting.");
+      setExtractError(copy.extractEmpty);
       return;
     }
 
     if (trimmedJdText.length < APPLICATION_JD_MIN_LENGTH) {
       setExtractError(
-        `Paste at least ${APPLICATION_JD_MIN_LENGTH} characters of job description text.`
+        copy.extractTooShort.replace(
+          "{count}",
+          String(APPLICATION_JD_MIN_LENGTH)
+        )
       );
       return;
     }
@@ -146,18 +159,13 @@ export function ApplicationCreateForm({
         };
 
         if (!response.ok || !body.data) {
-          setExtractError(
-            body.error?.message ??
-              "Could not extract this job description. Enter fields manually."
-          );
+          setExtractError(copy.extractFailed);
           return;
         }
 
         applyExtract(body.data);
       } catch {
-        setExtractError(
-          "Could not reach JD extraction. Check your connection and enter fields manually."
-        );
+        setExtractError(copy.extractConnectionFailed);
       }
     });
   }
@@ -177,16 +185,16 @@ export function ApplicationCreateForm({
           </div>
           <div>
             <h2 className="text-base font-medium text-foreground">
-              Job description
+              {copy.jobDescriptionTitle}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Paste the JD, extract fields, then review before saving.
+              {copy.jobDescriptionDescription}
             </p>
           </div>
         </div>
 
         <label htmlFor="jdText" className="text-sm font-medium text-foreground">
-          Pasted JD
+          {copy.pastedJd}
         </label>
         <textarea
           id="jdText"
@@ -196,12 +204,15 @@ export function ApplicationCreateForm({
           value={jdText}
           onChange={(event) => setJdText(event.target.value)}
           rows={22}
-          placeholder="Paste the full job description here."
+          placeholder={copy.pastedJdPlaceholder}
           className="mt-2 min-h-[34rem] w-full resize-y rounded-xl border border-input bg-background px-3 py-3 text-sm leading-6 text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
         />
         <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-muted-foreground">
-            Maximum {APPLICATION_JD_MAX_LENGTH.toLocaleString()} characters.
+            {copy.maxCharacters.replace(
+              "{count}",
+              APPLICATION_JD_MAX_LENGTH.toLocaleString()
+            )}
           </p>
           <Button
             type="button"
@@ -214,7 +225,7 @@ export function ApplicationCreateForm({
             ) : (
               <Sparkles className="h-4 w-4" aria-hidden="true" />
             )}
-            Extract JD
+            {copy.extractJd}
           </Button>
         </div>
         {extractError && (
@@ -231,10 +242,10 @@ export function ApplicationCreateForm({
       <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
         <div className="mb-5">
           <h2 className="text-base font-medium text-foreground">
-            Review extracted fields
+            {copy.reviewTitle}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Edit anything the model missed before creating the application.
+            {copy.reviewDescription}
           </p>
         </div>
 
@@ -245,7 +256,7 @@ export function ApplicationCreateForm({
                 htmlFor="companyName"
                 className="text-sm font-medium text-foreground"
               >
-                Company name
+                {copy.companyName}
               </label>
               <input
                 id="companyName"
@@ -262,7 +273,7 @@ export function ApplicationCreateForm({
                 htmlFor="roleTitle"
                 className="text-sm font-medium text-foreground"
               >
-                Role title
+                {copy.roleTitle}
               </label>
               <input
                 id="roleTitle"
@@ -281,7 +292,7 @@ export function ApplicationCreateForm({
               htmlFor="resumeId"
               className="text-sm font-medium text-foreground"
             >
-              Attached resume
+              {copy.attachedResume}
             </label>
             {resumes.length > 0 ? (
               <>
@@ -291,7 +302,7 @@ export function ApplicationCreateForm({
                   defaultValue=""
                   className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
-                  <option value="">No resume attached</option>
+                  <option value="">{copy.noResumeAttached}</option>
                   {resumes.map((resume) => (
                     <option key={resume.id} value={resume.id}>
                       {resume.title}
@@ -299,17 +310,16 @@ export function ApplicationCreateForm({
                   ))}
                 </select>
                 <p className="text-xs text-muted-foreground">
-                  Optional. You can change this later from the application
-                  detail page.
+                  {copy.resumeOptional}
                 </p>
               </>
             ) : (
               <p className="text-sm leading-6 text-muted-foreground">
-                No resumes yet.{" "}
+                {copy.noResumesYet}{" "}
                 <Link href="/resumes/new" className="text-foreground underline">
-                  Paste a resume
+                  {copy.pasteResume}
                 </Link>{" "}
-                to attach one to this application.
+                {copy.attachResumeHint}
               </p>
             )}
           </div>
@@ -320,7 +330,7 @@ export function ApplicationCreateForm({
                 htmlFor="location"
                 className="text-sm font-medium text-foreground"
               >
-                Location
+                {copy.location}
               </label>
               <input
                 id="location"
@@ -336,7 +346,7 @@ export function ApplicationCreateForm({
                 htmlFor="stage"
                 className="text-sm font-medium text-foreground"
               >
-                Stage
+                {copy.stage}
               </label>
               <select
                 id="stage"
@@ -344,64 +354,81 @@ export function ApplicationCreateForm({
                 defaultValue="PREPARING"
                 className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
-                <option value="PREPARING">Preparing</option>
-                <option value="APPLIED">Applied</option>
-                <option value="COMMUNICATING">Communicating</option>
-                <option value="INTERVIEWING">Interviewing</option>
-                <option value="OFFER">Offer</option>
-                <option value="ARCHIVED">Archived</option>
+                <option value="PREPARING">
+                  {dictionary.applicationStages.PREPARING}
+                </option>
+                <option value="APPLIED">
+                  {dictionary.applicationStages.APPLIED}
+                </option>
+                <option value="COMMUNICATING">
+                  {dictionary.applicationStages.COMMUNICATING}
+                </option>
+                <option value="INTERVIEWING">
+                  {dictionary.applicationStages.INTERVIEWING}
+                </option>
+                <option value="OFFER">{dictionary.applicationStages.OFFER}</option>
+                <option value="ARCHIVED">
+                  {dictionary.applicationStages.ARCHIVED}
+                </option>
               </select>
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField
-              label="Seniority"
+              label={copy.seniority}
               value={seniority}
               onChange={setSeniority}
             />
             <TextField
-              label="Employment type"
+              label={copy.employmentType}
               value={employmentType}
               onChange={setEmploymentType}
             />
           </div>
 
           <LineListField
-            label="Required skills"
+            label={copy.requiredSkills}
+            placeholder={copy.oneItemPerLine}
             value={requiredSkills}
             onChange={setRequiredSkills}
           />
           <LineListField
-            label="Preferred skills"
+            label={copy.preferredSkills}
+            placeholder={copy.oneItemPerLine}
             value={preferredSkills}
             onChange={setPreferredSkills}
           />
           <LineListField
-            label="Responsibilities"
+            label={copy.responsibilities}
+            placeholder={copy.oneItemPerLine}
             value={responsibilities}
             onChange={setResponsibilities}
           />
           <LineListField
-            label="Keywords"
+            label={copy.keywords}
+            placeholder={copy.oneItemPerLine}
             value={keywords}
             onChange={setKeywords}
           />
           <LineListField
-            label="Warnings"
+            label={copy.warnings}
+            placeholder={copy.oneItemPerLine}
             value={warnings}
             onChange={setWarnings}
           />
 
           <div className="rounded-xl border border-border bg-secondary/20 p-4">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-foreground">Confidence</span>
+              <span className="font-medium text-foreground">
+                {copy.confidence}
+              </span>
               <span className="text-muted-foreground">
                 {Math.round(confidence * 100)}%
               </span>
             </div>
             <input
-              aria-label="Confidence"
+              aria-label={copy.confidence}
               type="range"
               min="0"
               max="1"
@@ -414,7 +441,7 @@ export function ApplicationCreateForm({
         </div>
 
         <div className="mt-6 flex justify-end border-t border-border pt-5">
-          <SaveApplicationButton />
+          <SaveApplicationButton dictionary={dictionary} />
         </div>
       </section>
     </form>
@@ -450,10 +477,12 @@ function TextField({
 function LineListField({
   label,
   onChange,
+  placeholder,
   value,
 }: {
   label: string;
   onChange: (value: string) => void;
+  placeholder: string;
   value: string;
 }) {
   const id = label.toLowerCase().replace(/\s+/g, "-");
@@ -468,7 +497,7 @@ function LineListField({
         value={value}
         rows={3}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="One item per line."
+        placeholder={placeholder}
         className="w-full resize-y rounded-xl border border-input bg-background px-3 py-3 text-sm leading-6 text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
       />
     </div>

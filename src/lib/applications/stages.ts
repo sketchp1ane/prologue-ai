@@ -4,7 +4,6 @@ import { ApplicationStage } from "@prisma/client";
 
 import type { ApplicationListItem } from "@/src/lib/db/applications";
 import {
-  APPLICATION_STAGE_LABELS,
   APPLICATION_STAGE_ORDER as SHARED_APPLICATION_STAGE_ORDER,
 } from "./stage-metadata";
 
@@ -24,13 +23,18 @@ export type ApplicationDashboardStats = {
 export const APPLICATION_STAGE_ORDER =
   SHARED_APPLICATION_STAGE_ORDER as readonly ApplicationStage[];
 
-export function getApplicationStageLabel(stage: ApplicationStage) {
-  return APPLICATION_STAGE_LABELS[stage];
+export function getApplicationStageLabel(
+  stage: ApplicationStage,
+  labels: Record<ApplicationStage, string>
+) {
+  return labels[stage];
 }
 
-export function getApplicationStageOptions(): ApplicationStageOption[] {
+export function getApplicationStageOptions(
+  labels: Record<ApplicationStage, string>
+): ApplicationStageOption[] {
   return APPLICATION_STAGE_ORDER.map((stage) => ({
-    label: getApplicationStageLabel(stage),
+    label: getApplicationStageLabel(stage, labels),
     value: stage,
   }));
 }

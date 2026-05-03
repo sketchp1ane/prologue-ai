@@ -23,6 +23,14 @@
 - Resume deletion detaches related applications through `ON DELETE SET NULL`.
 - JD Extract persists success/failure `AiGeneration` audit rows without storing full JD input.
 - Pasted-text Resume Parse API updates user-owned Resume status, persists parsed JSON, regenerates ResumeBullet rows, and persists success/failure `AiGeneration` audit rows without storing full resume input.
+- User can choose English or Simplified Chinese from `/settings`.
+- Language preference is stored in a user-scoped `UserPreference` row and mirrored to a locale cookie.
+- App shell navigation, settings, application stage labels, and date-relative board text resolve through the i18n dictionary.
+- Public homepage users can switch English / Simplified Chinese through the navbar before signing in.
+- Sign-in and sign-up pages follow the current locale for page copy, Clerk fallback copy, and Clerk prebuilt component localization.
+- Authenticated dashboard, applications, resumes, JD Extract, billing, and placeholder workspace pages resolve visible UI copy from the i18n dictionary.
+- User-visible application and resume form/action errors follow the current locale.
+- Workspace dictionaries are serializable data only so they can be safely passed to client components.
 
 ## Future global acceptance
 
@@ -30,6 +38,9 @@
 - Empty states exist for resume list, dashboard, and application detail.
 - AI endpoints handle rate limit, timeout, invalid input, and schema failure.
 - `pnpm check` passes before release.
+- New UI slices add user-facing strings to the dictionary before wiring components.
+- New authenticated client components should receive dictionary slices or final strings rather than hardcoded copy.
+- New AI generation slices pass the current locale into prompts and use the shared AI language instruction.
 
 ## Remaining resume flow
 

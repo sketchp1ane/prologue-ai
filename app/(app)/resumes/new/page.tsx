@@ -4,6 +4,8 @@ import { ArrowLeft, FileUp, FileText } from "lucide-react";
 import { AppCard } from "@/components/app/AppCard";
 import { PageHeader } from "@/components/app/PageHeader";
 import { Button } from "@/components/ui/button";
+import { requireCurrentUserId } from "@/src/lib/auth/current-user";
+import { getCurrentLocale, getDictionary } from "@/src/lib/i18n/server";
 import {
   RESUME_SOURCE_TEXT_MAX_LENGTH,
   RESUME_TITLE_MAX_LENGTH,
@@ -25,17 +27,23 @@ function readError(params: Record<string, string | string[] | undefined> | undef
 export default async function NewResumePage({
   searchParams,
 }: NewResumePageProps) {
-  const params = await searchParams;
+  const [params, userId] = await Promise.all([
+    searchParams,
+    requireCurrentUserId(),
+  ]);
+  const locale = await getCurrentLocale(userId);
+  const dictionary = getDictionary(locale);
+  const copy = dictionary.workspace.resumeCreate;
   const error = readError(params);
 
   return (
     <>
       <PageHeader
-        title="New Resume"
-        description="Create a resume from pasted text or upload a PDF. Pasted text remains the most stable parsing fallback."
+        title={copy.title}
+        description={copy.description}
         secondaryAction={{
           href: "/resumes",
-          label: "Back to resumes",
+          label: copy.backToResumes,
         }}
       />
       {error && (
@@ -52,11 +60,10 @@ export default async function NewResumePage({
             </div>
             <div>
               <h2 className="text-base font-medium text-foreground">
-                Resume source
+                {copy.resumeSource}
               </h2>
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                Store pasted text exactly as provided so Resume Parse can use
-                the most stable source.
+                {copy.resumeSourceDescription}
               </p>
             </div>
           </div>
@@ -66,7 +73,7 @@ export default async function NewResumePage({
               htmlFor="title"
               className="text-sm font-medium text-foreground"
             >
-              Resume title
+              {copy.resumeTitle}
             </label>
             <input
               id="title"
@@ -74,7 +81,7 @@ export default async function NewResumePage({
               type="text"
               required
               maxLength={RESUME_TITLE_MAX_LENGTH}
-              placeholder="Frontend resume"
+              placeholder={copy.resumeTitlePlaceholder}
               className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
             />
           </div>
@@ -84,19 +91,22 @@ export default async function NewResumePage({
               htmlFor="sourceText"
               className="text-sm font-medium text-foreground"
             >
-              Pasted resume text
+              {copy.pastedResumeText}
             </label>
             <textarea
               id="sourceText"
               name="sourceText"
               required
               maxLength={RESUME_SOURCE_TEXT_MAX_LENGTH}
-              placeholder="Paste your resume text here."
+              placeholder={copy.pastedResumePlaceholder}
               rows={18}
               className="min-h-[28rem] w-full resize-y rounded-xl border border-input bg-background px-3 py-3 font-mono text-sm leading-6 text-foreground outline-none transition placeholder:font-sans focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
             />
             <p className="text-xs text-muted-foreground">
-              Maximum {RESUME_SOURCE_TEXT_MAX_LENGTH.toLocaleString()} characters.
+              {copy.maxCharacters.replace(
+                "{count}",
+                RESUME_SOURCE_TEXT_MAX_LENGTH.toLocaleString()
+              )}
             </p>
           </div>
 
@@ -104,11 +114,11 @@ export default async function NewResumePage({
             <Button variant="outline" asChild className="rounded-xl">
               <Link href="/resumes">
                 <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-                Cancel
+                {dictionary.common.cancel}
               </Link>
             </Button>
             <Button type="submit" className="rounded-xl">
-              Create Resume
+              {copy.createResume}
             </Button>
           </div>
         </form>
@@ -122,12 +132,10 @@ export default async function NewResumePage({
             </div>
             <div>
               <h2 className="text-base font-medium text-foreground">
-                PDF upload
+                {copy.pdfUpload}
               </h2>
               <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                Upload a private PDF resume. Parsing happens from the resume
-                detail page, and pasted text remains available if PDF parsing
-                fails.
+                {copy.pdfUploadDescription}
               </p>
             </div>
           </div>
@@ -137,7 +145,7 @@ export default async function NewResumePage({
               htmlFor="pdf-title"
               className="text-sm font-medium text-foreground"
             >
-              Resume title
+              {copy.resumeTitle}
             </label>
             <input
               id="pdf-title"
@@ -145,7 +153,7 @@ export default async function NewResumePage({
               type="text"
               required
               maxLength={RESUME_TITLE_MAX_LENGTH}
-              placeholder="Frontend resume PDF"
+              placeholder={copy.pdfTitlePlaceholder}
               className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
             />
           </div>
@@ -155,7 +163,7 @@ export default async function NewResumePage({
               htmlFor="pdfFile"
               className="text-sm font-medium text-foreground"
             >
-              PDF file
+              {copy.pdfFile}
             </label>
             <input
               id="pdfFile"
@@ -166,29 +174,27 @@ export default async function NewResumePage({
               className="block w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
             />
             <p className="text-xs leading-5 text-muted-foreground">
-              PDF only. Maximum {Math.floor(
-                RESUME_PDF_MAX_BYTES / 1024 / 1024
-              )}MB. If parsing fails, create a pasted-text resume version
-              instead.
+              {copy.pdfHint.replace(
+                "{size}",
+                String(Math.floor(RESUME_PDF_MAX_BYTES / 1024 / 1024))
+              )}
             </p>
           </div>
 
           <div className="rounded-xl border border-border bg-secondary/20 p-4 text-xs leading-5 text-muted-foreground">
-            Uploaded PDFs are stored privately. When you trigger parsing, the PDF
-            content is sent to OpenAI file inputs for structured extraction and
-            may use more tokens than pasted text.
+            {copy.privacyNotice}
           </div>
 
           <div className="flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
             <Button variant="outline" asChild className="rounded-xl">
               <Link href="/resumes">
                 <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-                Cancel
+                {dictionary.common.cancel}
               </Link>
             </Button>
             <Button type="submit" className="rounded-xl">
               <FileUp className="h-4 w-4" aria-hidden="true" />
-              Upload PDF
+              {copy.uploadPdf}
             </Button>
           </div>
         </form>

@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 
 import { requireCurrentUserId } from "@/src/lib/auth/current-user";
+import type { AppDictionary } from "@/src/lib/i18n/dictionaries";
+import { getCurrentLocale, getDictionary } from "@/src/lib/i18n/server";
 import {
   createUserPdfResume,
   createUserPastedResume,
@@ -25,8 +27,11 @@ function readFormString(formData: FormData, key: string) {
   return typeof value === "string" ? value : "";
 }
 
-function firstError(error: ZodError) {
-  return error.issues[0]?.message ?? "Check the form and try again.";
+function firstError(
+  _error: ZodError,
+  dictionary: Pick<AppDictionary, "errors">
+) {
+  return dictionary.errors.checkForm;
 }
 
 function withMessage(path: string, key: "error" | "success", message: string) {
@@ -37,13 +42,17 @@ function withMessage(path: string, key: "error" | "success", message: string) {
 
 export async function createResumeAction(formData: FormData) {
   const userId = await requireCurrentUserId();
+  const locale = await getCurrentLocale(userId);
+  const dictionary = getDictionary(locale);
   const parsed = createPastedResumeSchema.safeParse({
     sourceText: readFormString(formData, "sourceText"),
     title: readFormString(formData, "title"),
   });
 
   if (!parsed.success) {
-    redirect(withMessage("/resumes/new", "error", firstError(parsed.error)));
+    redirect(
+      withMessage("/resumes/new", "error", firstError(parsed.error, dictionary))
+    );
   }
 
   const resume = await createUserPastedResume(userId, parsed.data);
@@ -54,6 +63,8 @@ export async function createResumeAction(formData: FormData) {
 
 export async function createPdfResumeAction(formData: FormData) {
   const userId = await requireCurrentUserId();
+  const locale = await getCurrentLocale(userId);
+  const dictionary = getDictionary(locale);
   const parsed = (() => {
     try {
       return {
@@ -76,7 +87,9 @@ export async function createPdfResumeAction(formData: FormData) {
   })();
 
   if (!parsed.success) {
-    redirect(withMessage("/resumes/new", "error", firstError(parsed.error)));
+    redirect(
+      withMessage("/resumes/new", "error", firstError(parsed.error, dictionary))
+    );
   }
 
   try {
@@ -86,7 +99,13 @@ export async function createPdfResumeAction(formData: FormData) {
     redirect(`/resumes/${resume.id}`);
   } catch (error) {
     if (error instanceof ResumeServiceError) {
-      redirect(withMessage("/resumes/new", "error", error.message));
+      redirect(
+        withMessage(
+          "/resumes/new",
+          "error",
+          dictionary.workspace.resumeErrors.uploadFailed
+        )
+      );
     }
 
     throw error;
@@ -95,6 +114,8 @@ export async function createPdfResumeAction(formData: FormData) {
 
 export async function renameResumeAction(formData: FormData) {
   const userId = await requireCurrentUserId();
+  const locale = await getCurrentLocale(userId);
+  const dictionary = getDictionary(locale);
   const parsed = renameResumeSchema.safeParse({
     id: readFormString(formData, "id"),
     title: readFormString(formData, "title"),
@@ -102,14 +123,20 @@ export async function renameResumeAction(formData: FormData) {
   const resumePath = parsed.success ? `/resumes/${parsed.data.id}` : "/resumes";
 
   if (!parsed.success) {
-    redirect(withMessage(resumePath, "error", firstError(parsed.error)));
+    redirect(withMessage(resumePath, "error", firstError(parsed.error, dictionary)));
   }
 
   try {
     await renameUserResume(userId, parsed.data);
   } catch (error) {
     if (error instanceof ResumeServiceError) {
-      redirect(withMessage("/resumes", "error", "Resume not found."));
+      redirect(
+        withMessage(
+          "/resumes",
+          "error",
+          dictionary.workspace.resumeErrors.notFound
+        )
+      );
     }
 
     throw error;
@@ -117,36 +144,56 @@ export async function renameResumeAction(formData: FormData) {
 
   revalidatePath("/resumes");
   revalidatePath(resumePath);
-  redirect(withMessage(resumePath, "success", "Resume renamed."));
+  redirect(
+    withMessage(
+      resumePath,
+      "success",
+      dictionary.workspace.resumeErrors.renamed
+    )
+  );
 }
 
 export async function deleteResumeAction(formData: FormData) {
   const userId = await requireCurrentUserId();
+  const locale = await getCurrentLocale(userId);
+  const dictionary = getDictionary(locale);
   const parsed = deleteResumeSchema.safeParse({
     id: readFormString(formData, "id"),
   });
   const resumePath = parsed.success ? `/resumes/${parsed.data.id}` : "/resumes";
 
   if (!parsed.success) {
-    redirect(withMessage(resumePath, "error", firstError(parsed.error)));
+    redirect(withMessage(resumePath, "error", firstError(parsed.error, dictionary)));
   }
 
   try {
     await deleteUserResume(userId, parsed.data);
   } catch (error) {
     if (error instanceof ResumeServiceError) {
-      redirect(withMessage("/resumes", "error", "Resume not found."));
+      redirect(
+        withMessage(
+          "/resumes",
+          "error",
+          dictionary.workspace.resumeErrors.notFound
+        )
+      );
     }
 
     redirect(
       withMessage(
         resumePath,
         "error",
-        "Resume could not be deleted. Remove linked records first."
+        dictionary.workspace.resumeErrors.couldNotDelete
       )
     );
   }
 
   revalidatePath("/resumes");
-  redirect(withMessage("/resumes", "success", "Resume deleted."));
+  redirect(
+    withMessage(
+      "/resumes",
+      "success",
+      dictionary.workspace.resumeErrors.deleted
+    )
+  );
 }

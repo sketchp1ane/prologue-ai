@@ -10,19 +10,26 @@ import {
   Settings,
 } from "lucide-react";
 
-const sidebarItems = [
-  { icon: Briefcase, label: "Applications", active: true },
-  { icon: FileText, label: "Resumes", active: false },
-  { icon: ListChecks, label: "Job Descriptions", active: false },
-  { icon: Library, label: "Bullet Library", active: false },
-  { icon: MessageSquare, label: "Interviews", active: false },
-  { icon: BarChart3, label: "Analytics", active: false },
-  { icon: Settings, label: "Settings", active: false },
-];
+import type { AppDictionary } from "@/src/lib/i18n/dictionaries";
 
-const applicationColumns = [
-  {
-    title: "Wishlist",
+type LandingDictionary = AppDictionary["landing"];
+
+function getSidebarItems(dictionary: LandingDictionary) {
+  return [
+    { icon: Briefcase, label: dictionary.mockup.applications, active: true },
+    { icon: FileText, label: dictionary.mockup.resumes, active: false },
+    { icon: ListChecks, label: dictionary.mockup.jobDescriptions, active: false },
+    { icon: Library, label: dictionary.mockup.bulletLibrary, active: false },
+    { icon: MessageSquare, label: dictionary.mockup.interviews, active: false },
+    { icon: BarChart3, label: dictionary.mockup.analytics, active: false },
+    { icon: Settings, label: dictionary.mockup.settings, active: false },
+  ];
+}
+
+function getApplicationColumns(dictionary: LandingDictionary) {
+  return [
+    {
+      title: dictionary.mockup.columns[0],
     count: 3,
     cards: [
       { company: "Acme", role: "Product Designer", color: "bg-blue-500" },
@@ -30,7 +37,7 @@ const applicationColumns = [
     ],
   },
   {
-    title: "Applied",
+    title: dictionary.mockup.columns[1],
     count: 2,
     cards: [
       { company: "Notion", role: "Senior Product Designer", color: "bg-neutral-800" },
@@ -38,28 +45,38 @@ const applicationColumns = [
     ],
   },
   {
-    title: "Interview",
+    title: dictionary.mockup.columns[2],
     count: 1,
     cards: [{ company: "Airbnb", role: "Design Lead", color: "bg-rose-500" }],
   },
   {
-    title: "Offer",
+    title: dictionary.mockup.columns[3],
     count: 0,
     cards: [],
   },
-];
+  ];
+}
 
 const strongMatches = ["Product Design", "Figma", "User Research", "Design Systems"];
 
-export function ProductMockup() {
+export function ProductMockup({
+  dictionary,
+}: {
+  dictionary: LandingDictionary;
+}) {
+  const sidebarItems = getSidebarItems(dictionary);
+  const applicationColumns = getApplicationColumns(dictionary);
+
   return (
-    <div className="relative w-full max-w-2xl" aria-label="Static Prologue product preview">
+    <div className="relative w-full max-w-2xl" aria-label={dictionary.aria.productPreview}>
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-primary/5">
         <div className="flex items-center gap-2 border-b border-border bg-secondary/30 px-4 py-3">
           <div className="h-3 w-3 rounded-full bg-red-400" />
           <div className="h-3 w-3 rounded-full bg-yellow-400" />
           <div className="h-3 w-3 rounded-full bg-green-400" />
-          <span className="ml-4 text-xs text-muted-foreground">Prologue — Applications</span>
+          <span className="ml-4 text-xs text-muted-foreground">
+            Prologue - {dictionary.mockup.applications}
+          </span>
         </div>
 
         <div className="flex">
@@ -83,8 +100,12 @@ export function ProductMockup() {
 
           <div className="min-h-[340px] flex-1 p-4">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-sm font-medium text-foreground">Application Board</h3>
-              <span className="text-xs text-muted-foreground">5 active</span>
+              <h3 className="text-sm font-medium text-foreground">
+                {dictionary.mockup.applicationBoard}
+              </h3>
+              <span className="text-xs text-muted-foreground">
+                {dictionary.mockup.activeCount}
+              </span>
             </div>
 
             <div className="grid grid-cols-4 gap-2">
@@ -113,7 +134,9 @@ export function ProductMockup() {
                     ))}
                     {column.cards.length === 0 && (
                       <div className="rounded-lg border border-dashed border-border p-3 text-center">
-                        <span className="text-[10px] text-muted-foreground">No items</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {dictionary.mockup.empty}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -149,12 +172,18 @@ export function ProductMockup() {
             </div>
           </div>
           <div>
-            <p className="mb-1 text-xs font-medium text-foreground">Overall Score</p>
-            <p className="text-[10px] text-muted-foreground">Resume Match</p>
+            <p className="mb-1 text-xs font-medium text-foreground">
+              {dictionary.mockup.overallScore}
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              {dictionary.mockup.resumeMatch}
+            </p>
           </div>
         </div>
         <div className="mt-3 border-t border-border pt-3">
-          <p className="mb-2 text-[10px] font-medium text-muted-foreground">Strong Matches</p>
+          <p className="mb-2 text-[10px] font-medium text-muted-foreground">
+            {dictionary.mockup.strongMatches}
+          </p>
           <div className="flex flex-wrap gap-1">
             {strongMatches.map((match) => (
               <span
@@ -167,7 +196,9 @@ export function ProductMockup() {
           </div>
           <div className="mt-2.5">
             <div className="mb-1 flex items-center justify-between">
-              <span className="text-[10px] text-muted-foreground">Keyword Coverage</span>
+              <span className="text-[10px] text-muted-foreground">
+                {dictionary.mockup.keywordCoverage}
+              </span>
               <span className="text-[10px] font-medium text-foreground">78%</span>
             </div>
             <div className="h-1 overflow-hidden rounded-full bg-secondary">
@@ -178,24 +209,26 @@ export function ProductMockup() {
       </div>
 
       <div className="absolute -bottom-8 -right-4 hidden w-64 rounded-xl border border-border bg-card p-4 shadow-xl lg:block">
-        <p className="mb-1.5 text-[10px] font-medium text-muted-foreground">Original Bullet</p>
-        <p className="mb-3 line-clamp-2 text-[10px] leading-relaxed text-muted-foreground">
-          Designed user interfaces for multiple products and collaborated with cross-functional
-          teams.
+        <p className="mb-1.5 text-[10px] font-medium text-muted-foreground">
+          {dictionary.mockup.bulletOriginalLabel}
         </p>
-        <p className="mb-1.5 text-[10px] font-medium text-primary">AI Rewrite</p>
+        <p className="mb-3 line-clamp-2 text-[10px] leading-relaxed text-muted-foreground">
+          {dictionary.mockup.bulletOriginal}
+        </p>
+        <p className="mb-1.5 text-[10px] font-medium text-primary">
+          {dictionary.mockup.aiRewrite}
+        </p>
         <p className="mb-3 line-clamp-2 text-xs leading-relaxed text-foreground">
-          Designed intuitive user interfaces for 3+ products, improving task completion through
-          user research and rapid prototyping.
+          {dictionary.mockup.bulletRewrite}
         </p>
         <div className="flex items-center gap-2">
           <button className="flex items-center gap-1 text-[10px] text-muted-foreground transition-colors hover:text-foreground">
             <RotateCcw className="h-3 w-3" />
-            Regenerate
+            {dictionary.mockup.regenerate}
           </button>
           <button className="flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-[10px] text-primary-foreground">
             <Check className="h-3 w-3" />
-            Use This
+            {dictionary.mockup.useThis}
           </button>
         </div>
       </div>

@@ -5,11 +5,13 @@ vi.mock("server-only", () => ({}));
 
 import {
   APPLICATION_STAGE_ORDER,
+  getApplicationStageLabel,
   getApplicationDashboardStats,
   getApplicationStageOptions,
   groupApplicationsByStage,
 } from "../src/lib/applications/stages";
 import type { ApplicationListItem } from "../src/lib/db/applications";
+import { dictionaries } from "../src/lib/i18n/dictionaries";
 
 const baseDate = new Date("2026-04-28T08:00:00.000Z");
 
@@ -33,9 +35,26 @@ describe("application stage helpers", () => {
     const enumValues = Object.values(ApplicationStage);
 
     expect(APPLICATION_STAGE_ORDER).toEqual(enumValues);
-    expect(getApplicationStageOptions().map((option) => option.value)).toEqual(
-      enumValues
-    );
+    expect(
+      getApplicationStageOptions(dictionaries.en.applicationStages).map(
+        (option) => option.value
+      )
+    ).toEqual(enumValues);
+  });
+
+  it("resolves stage labels for English and Chinese dictionaries", () => {
+    expect(
+      getApplicationStageLabel(
+        ApplicationStage.PREPARING,
+        dictionaries.en.applicationStages
+      )
+    ).toBe("Preparing");
+    expect(
+      getApplicationStageLabel(
+        ApplicationStage.PREPARING,
+        dictionaries["zh-CN"].applicationStages
+      )
+    ).toBe("准备投递");
   });
 
   it("groups applications into every enum-backed stage column", () => {

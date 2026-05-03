@@ -12,9 +12,9 @@ describe("application QA regressions", () => {
       "app/(app)/applications/new/ApplicationCreateForm.tsx"
     );
 
-    expect(form).toContain("Paste a job description before extracting.");
+    expect(form).toContain("copy.extractEmpty");
     expect(form).toContain("disabled={isExtracting}");
-    expect(form).toContain("Could not reach JD extraction.");
+    expect(form).toContain("copy.extractConnectionFailed");
     expect(form).not.toContain("disabled={isExtracting || jdText.trim().length === 0}");
   });
 
@@ -26,11 +26,11 @@ describe("application QA regressions", () => {
     const error = readProjectFile("app/(app)/applications/error.tsx");
 
     expect(form).toContain("useFormStatus");
-    expect(form).toContain("Saving...");
-    expect(form).toContain("No resume attached");
+    expect(form).toContain("dictionary.common.saving");
+    expect(form).toContain("copy.noResumeAttached");
     expect(form).toContain('href="/resumes/new"');
-    expect(loading).toContain("Loading your tracked applications.");
-    expect(error).toContain("Applications could not load");
+    expect(loading).toContain("dictionary.workspace.applications.loadingDescription");
+    expect(error).toContain("dictionary.workspace.applications.errorTitle");
   });
 
   it("returns a clear development error when OpenAI is not configured", () => {
@@ -63,31 +63,31 @@ describe("application QA regressions", () => {
     expect(detailPage).toContain('href="/applications"');
     expect(detailPage).toContain('href="/dashboard"');
     expect(detailPage).toContain('href={`/resumes/${application.resume.id}`}');
-    expect(detailPage).toContain("Attached resume");
-    expect(detailPage).toContain("No resume attached");
-    expect(detailPage).toContain('label="Company"');
-    expect(detailPage).toContain('label="Role"');
-    expect(detailPage).toContain('label="Location"');
-    expect(detailPage).toContain('label="Stage"');
-    expect(detailPage).toContain('label="Created"');
-    expect(detailPage).toContain('label="Updated"');
-    expect(detailPage).toContain("Original JD");
-    expect(detailPage).toContain("Seniority");
-    expect(detailPage).toContain("Employment type");
-    expect(detailPage).toContain("Required skills");
-    expect(detailPage).toContain("Preferred skills");
-    expect(detailPage).toContain("Responsibilities");
-    expect(detailPage).toContain("Keywords");
-    expect(detailPage).toContain("Warnings");
-    expect(detailPage).toContain("could not be displayed safely");
+    expect(detailPage).toContain("copy.attachedResume");
+    expect(detailPage).toContain("copy.noResumeAttached");
+    expect(detailPage).toContain("label={copy.company}");
+    expect(detailPage).toContain("label={copy.role}");
+    expect(detailPage).toContain("label={copy.location}");
+    expect(detailPage).toContain("label={copy.stage}");
+    expect(detailPage).toContain("label={dictionary.common.created}");
+    expect(detailPage).toContain("label={dictionary.common.updated}");
+    expect(detailPage).toContain("copy.originalJd");
+    expect(detailPage).toContain("copy.seniority");
+    expect(detailPage).toContain("copy.employmentType");
+    expect(detailPage).toContain("copy.requiredSkills");
+    expect(detailPage).toContain("copy.preferredSkills");
+    expect(detailPage).toContain("copy.responsibilities");
+    expect(detailPage).toContain("copy.keywords");
+    expect(detailPage).toContain("copy.warnings");
+    expect(detailPage).toContain("copy.invalidExtract");
     expect(detailPage).not.toContain("Diagnosis");
     expect(detailPage).not.toContain("Bullet Rewrite");
-    expect(notFound).toContain("may not belong to the current workspace");
+    expect(notFound).toContain("dictionary.workspace.applications.notFoundDescription");
     expect(notFound).toContain('href="/applications"');
     expect(notFound).toContain('href="/dashboard"');
     expect(stageSelect).toContain("updateApplicationStageAction");
     expect(resumeSelect).toContain("updateApplicationResumeAction");
-    expect(resumeSelect).toContain("No resume attached");
+    expect(resumeSelect).toContain("dictionary.workspace.applicationControls.noResumeAttached");
     expect(actions).toContain("updateUserApplicationStage");
     expect(actions).toContain("updateUserApplicationResume");
     expect(actions).toContain(
@@ -108,7 +108,7 @@ describe("application QA regressions", () => {
     expect(board).toContain("useDraggable");
     expect(board).toContain("useDroppable");
     expect(board).toContain("moveApplicationStageAction");
-    expect(board).toContain("Updated {formatRelativeDate");
+    expect(board).toContain("formatRelativeDate(application.updatedAt");
     expect(board).toContain("application.location");
     expect(board).toContain("GripVertical");
     expect(board).toContain("APPLICATION_STAGE_ORDER.map");
@@ -134,7 +134,7 @@ describe("application QA regressions", () => {
     expect(applicationsPage).toContain("stage={application.stage}");
     expect(applicationsPage).not.toContain("function stageLabel");
     expect(applicationsPage).not.toContain("stageLabel(application.stage)");
-    expect(badge).toContain("APPLICATION_STAGE_LABELS");
+    expect(badge).toContain("label");
     expect(badge).toContain("APPLICATION_STAGE_THEME");
     expect(badge).toContain("rounded-full");
     expect(badge).toContain("theme.dot");

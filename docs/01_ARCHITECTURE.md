@@ -33,6 +33,16 @@ Vercel
 - OpenAI SDK calls are centralized in `src/lib/ai/`.
 - Storage calls are centralized in `src/lib/storage/`.
 
+## Internationalization
+
+- Workspace UI supports English (`en`) and Simplified Chinese (`zh-CN`) without locale-prefixed routes.
+- The current locale is read from the current user's `UserPreference` record, with English as the default.
+- A `prologue-locale` cookie mirrors the saved preference for first paint and root `<html lang>`.
+- Shared UI copy and future feature copy should be added to `src/lib/i18n/dictionaries.ts` before wiring UI.
+- Authenticated workspace pages and client components receive serializable dictionary slices or final strings; dictionaries must not contain functions.
+- User-provided resumes, JDs, company names, role titles, and extracted facts stay in their source language unless translation is explicitly requested.
+- Future AI generation services should accept the current locale and use `src/lib/i18n/ai.ts` for output-language instructions.
+
 ## Current routes
 
 ```txt
@@ -82,6 +92,8 @@ src/lib/db/                     Prisma client and user-scoped repositories
 src/lib/resumes/                resume service logic
 src/lib/applications/           application service logic and stage metadata
 src/lib/ai/                     OpenAI client, model routing, prompts, schemas, services
+src/lib/i18n/                   locale config, dictionaries, server locale helpers, AI language instruction
+src/lib/user-preferences/       user preference service and settings form parsing
 src/lib/validations/            Zod input schemas for server actions and services
 ```
 

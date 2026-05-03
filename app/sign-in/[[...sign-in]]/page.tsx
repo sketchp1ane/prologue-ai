@@ -1,16 +1,21 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { SignIn } from "@clerk/nextjs";
 import { Lock, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 import { ClerkConfigurationNotice } from "@/components/auth/ClerkConfigurationNotice";
 import { SignInPreview } from "@/components/auth/SignInPreview";
+import { getCurrentLocale, getDictionary } from "@/src/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Sign in - Prologue / 第一页",
-  description:
-    "Sign in to your Prologue workspace to continue parsing resumes, analyzing job descriptions, and tracking applications.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getCurrentLocale();
+  const dictionary = getDictionary(locale);
+
+  return {
+    description: dictionary.auth.signIn.description,
+    title: dictionary.auth.signIn.metaTitle,
+  };
+}
 
 const clerkAppearance = {
   variables: {
@@ -79,10 +84,13 @@ const clerkAppearance = {
 
 const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
-export default function SignInPage() {
+export default async function SignInPage() {
+  const locale = await getCurrentLocale();
+  const dictionary = getDictionary(locale);
+  const auth = dictionary.auth;
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-background">
-      {/* Ambient background — echoes the homepage hero treatment */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-gradient-to-b from-secondary/60 via-background to-background"
@@ -100,12 +108,11 @@ export default function SignInPage() {
         className="pointer-events-none absolute -right-24 bottom-[-15%] hidden h-[380px] w-[380px] rounded-full bg-foreground/[0.04] blur-3xl lg:block"
       />
 
-      {/* Top brand bar */}
       <header className="relative z-10 mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <Link
           href="/"
           className="flex items-baseline gap-1.5"
-          aria-label="Prologue home"
+          aria-label={dictionary.landing.aria.prologueHome}
         >
           <span className="text-[15px] font-semibold tracking-tight text-foreground">
             Prologue
@@ -113,44 +120,38 @@ export default function SignInPage() {
           <span className="text-xs text-muted-foreground">/ 第一页</span>
         </Link>
         <p className="hidden text-sm text-muted-foreground sm:block">
-          New here?{" "}
+          {auth.signIn.newHere}{" "}
           <Link
             href="/sign-up"
             className="font-medium text-foreground underline-offset-4 transition-colors hover:underline"
           >
-            Create an account
+            {auth.signIn.createAccount}
           </Link>
         </p>
       </header>
 
       <div className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-7xl items-center px-6 pb-12">
         <div className="grid w-full items-center gap-12 lg:grid-cols-2 lg:gap-16">
-          {/* Left: hero-style visual panel (desktop only) */}
-          <section
-            aria-hidden="true"
-            className="hidden flex-col gap-8 lg:flex"
-          >
+          <section aria-hidden="true" className="hidden flex-col gap-8 lg:flex">
             <div className="inline-flex w-fit items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5">
               <Sparkles className="h-3.5 w-3.5 text-primary" />
               <span className="text-xs font-medium text-primary">
-                Welcome back to your workspace
+                {auth.signIn.heroBadge}
               </span>
             </div>
 
             <div className="max-w-md space-y-5">
               <h1 className="text-balance text-4xl font-semibold leading-[1.1] tracking-tight text-foreground">
-                Pick up where you left off.
+                {auth.signIn.heroTitle}
               </h1>
               <p className="text-pretty text-base leading-relaxed text-muted-foreground">
-                Sign in to continue parsing resumes, diagnosing job descriptions,
-                and tracking every application — all in one focused workspace.
+                {auth.signIn.heroDescription}
               </p>
             </div>
 
             <SignInPreview />
           </section>
 
-          {/* Right: form card */}
           <section className="mx-auto flex w-full max-w-md flex-col">
             <div className="mb-6 lg:hidden">
               <Link href="/" className="flex items-baseline gap-1.5">
@@ -164,33 +165,36 @@ export default function SignInPage() {
             <div className="rounded-2xl border border-border bg-card/80 p-6 shadow-xl shadow-primary/[0.04] backdrop-blur-sm sm:p-8">
               <div className="mb-6 space-y-1.5">
                 <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-                  Sign in
+                  {auth.signIn.formTitle}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Enter your details to access your Prologue workspace.
+                  {auth.signIn.formDescription}
                 </p>
               </div>
 
               {clerkPublishableKey ? (
                 <SignIn appearance={clerkAppearance} />
               ) : (
-                <ClerkConfigurationNotice mode="sign-in" />
+                <ClerkConfigurationNotice
+                  dictionary={auth.clerkNotice}
+                  mode="sign-in"
+                />
               )}
 
               <p className="mt-6 text-center text-sm text-muted-foreground">
-                Don&apos;t have an account?{" "}
+                {auth.signIn.noAccount}{" "}
                 <Link
                   href="/sign-up"
                   className="font-medium text-foreground underline-offset-4 transition-colors hover:underline"
                 >
-                  Sign up
+                  {auth.signIn.signUp}
                 </Link>
               </p>
             </div>
 
             <div className="mt-5 flex items-center justify-center gap-2 text-xs text-muted-foreground">
               <Lock className="h-3.5 w-3.5" aria-hidden />
-              <span>Secured by Clerk · End-to-end encrypted in transit</span>
+              <span>{auth.security}</span>
             </div>
           </section>
         </div>

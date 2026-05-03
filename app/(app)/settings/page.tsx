@@ -1,37 +1,65 @@
-"use client";
-
-import { Bell, CreditCard, Key, Shield, User } from "lucide-react";
+import { Bell, Check, CreditCard, Key, Languages, Shield, User } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 import { AppCard } from "@/components/app/AppCard";
 import { PageHeader } from "@/components/app/PageHeader";
 import { Button } from "@/components/ui/button";
+import { requireCurrentUserId } from "@/src/lib/auth/current-user";
+import {
+  LOCALE_LABELS,
+  SUPPORTED_LOCALES,
+  type AppLocale,
+} from "@/src/lib/i18n/config";
+import { getCurrentLocale, getDictionary } from "@/src/lib/i18n/server";
 import { cn } from "@/src/lib/utils";
 
-const settingsTabs = [
-  { label: "Profile", icon: User, href: "/settings" },
-  { label: "Notifications", icon: Bell, href: "/settings/notifications" },
-  { label: "Security", icon: Shield, href: "/settings/security" },
-  { label: "API Keys", icon: Key, href: "/settings/api-keys" },
-  { label: "Billing", icon: CreditCard, href: "/billing" },
-];
+import { updateLocaleAction } from "./actions";
 
-export default function SettingsPage() {
-  const pathname = usePathname();
+type SettingsPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function readSearchParam(
+  params: Record<string, string | string[] | undefined> | undefined,
+  key: string
+) {
+  const value = params?.[key];
+
+  return typeof value === "string" ? value : null;
+}
+
+export default async function SettingsPage({
+  searchParams,
+}: SettingsPageProps) {
+  const [params, userId] = await Promise.all([
+    searchParams,
+    requireCurrentUserId(),
+  ]);
+  const locale = await getCurrentLocale(userId);
+  const dictionary = getDictionary(locale);
+  const settings = dictionary.settings;
+  const status = readSearchParam(params, "language");
+  const error = readSearchParam(params, "error");
+  const settingsTabs = [
+    { label: settings.profile, icon: User, href: "/settings" },
+    {
+      label: settings.notifications,
+      icon: Bell,
+      href: "/settings/notifications",
+    },
+    { label: settings.security, icon: Shield, href: "/settings/security" },
+    { label: settings.apiKeys, icon: Key, href: "/settings/api-keys" },
+    { label: settings.billing, icon: CreditCard, href: "/billing" },
+  ];
 
   return (
     <>
-      <PageHeader
-        title="Settings"
-        description="Manage your account and workspace preferences."
-      />
+      <PageHeader title={settings.title} description={settings.description} />
 
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
-        {/* Settings Navigation */}
         <nav className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
           {settingsTabs.map((tab) => {
-            const isActive = pathname === tab.href;
+            const isActive = tab.href === "/settings";
             return (
               <Link
                 key={tab.href}
@@ -50,12 +78,50 @@ export default function SettingsPage() {
           })}
         </nav>
 
-        {/* Settings Content */}
         <div className="space-y-6">
-          {/* Profile Section */}
+          <AppCard>
+            <div className="mb-4 flex items-start gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Languages className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-foreground">
+                  {settings.languageTitle}
+                </h3>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  {settings.languageDescription}
+                </p>
+              </div>
+            </div>
+            <form action={updateLocaleAction} className="space-y-4">
+              <div className="grid gap-2 sm:grid-cols-2">
+                {SUPPORTED_LOCALES.map((option) => (
+                  <LocaleOption
+                    key={option}
+                    currentLocale={locale}
+                    locale={option}
+                  />
+                ))}
+              </div>
+              {status === "saved" && (
+                <p className="text-sm text-muted-foreground">
+                  {settings.languageSaved}
+                </p>
+              )}
+              {error === "invalid_locale" && (
+                <p className="text-sm text-destructive">
+                  {dictionary.errors.invalidLocale}
+                </p>
+              )}
+              <div className="flex justify-end">
+                <Button className="rounded-xl">{settings.saveChanges}</Button>
+              </div>
+            </form>
+          </AppCard>
+
           <AppCard>
             <h3 className="mb-4 text-lg font-medium text-foreground">
-              Profile Information
+              {settings.profileInformation}
             </h3>
             <div className="space-y-4">
               <div className="flex items-center gap-4">
@@ -69,22 +135,21 @@ export default function SettingsPage() {
                   </p>
                 </div>
                 <Button variant="outline" size="sm" className="ml-auto rounded-lg">
-                  Edit
+                  {settings.edit}
                 </Button>
               </div>
             </div>
           </AppCard>
 
-          {/* Account Details */}
           <AppCard>
             <h3 className="mb-4 text-lg font-medium text-foreground">
-              Account Details
+              {settings.accountDetails}
             </h3>
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-foreground">
-                    Full Name
+                    {settings.fullName}
                   </label>
                   <input
                     type="text"
@@ -94,7 +159,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-foreground">
-                    Email
+                    {settings.email}
                   </label>
                   <input
                     type="email"
@@ -105,50 +170,75 @@ export default function SettingsPage() {
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-foreground">
-                  Bio
+                  {settings.bio}
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="Tell us about yourself..."
+                  placeholder={settings.bioPlaceholder}
                   className="w-full resize-none rounded-xl border border-border bg-secondary/30 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <div className="flex justify-end">
-                <Button className="rounded-xl">Save Changes</Button>
+                <Button className="rounded-xl">{settings.saveChanges}</Button>
               </div>
             </div>
           </AppCard>
 
-          {/* Plan Info */}
           <AppCard>
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-medium text-foreground">
-                  Current Plan
+                  {settings.currentPlan}
                 </h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  You&apos;re on the Free plan with limited features.
+                  {settings.planDescription}
                 </p>
               </div>
               <div className="rounded-full border border-border bg-secondary/30 px-3 py-1 text-sm font-medium text-foreground">
-                Free
+                {settings.free}
               </div>
             </div>
             <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4">
               <p className="mb-2 text-sm font-medium text-foreground">
-                Upgrade to Pro
+                {settings.upgradeTitle}
               </p>
               <p className="mb-3 text-xs text-muted-foreground">
-                Get unlimited AI rewrites, advanced analytics, and priority
-                support.
+                {settings.upgradeDescription}
               </p>
               <Button size="sm" className="rounded-lg">
-                Upgrade Now
+                {settings.upgradeNow}
               </Button>
             </div>
           </AppCard>
         </div>
       </div>
     </>
+  );
+}
+
+function LocaleOption({
+  currentLocale,
+  locale,
+}: {
+  currentLocale: AppLocale;
+  locale: AppLocale;
+}) {
+  return (
+    <label
+      className="flex cursor-pointer items-center justify-between rounded-xl border border-border bg-secondary/30 px-4 py-3 text-sm text-foreground transition hover:bg-secondary/60 has-[:checked]:border-primary has-[:checked]:bg-primary has-[:checked]:text-primary-foreground"
+    >
+      <input
+        type="radio"
+        name="locale"
+        value={locale}
+        defaultChecked={currentLocale === locale}
+        className="peer sr-only"
+      />
+      <span className="font-medium">{LOCALE_LABELS[locale]}</span>
+      <Check
+        className="h-4 w-4 opacity-0 transition-opacity peer-checked:opacity-100"
+        aria-hidden="true"
+      />
+    </label>
   );
 }

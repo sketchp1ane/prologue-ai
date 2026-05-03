@@ -17,13 +17,15 @@ import { useCallback, useMemo, useState, useTransition } from "react";
 
 import { moveApplicationStageAction } from "@/app/(app)/applications/actions";
 import {
-  APPLICATION_STAGE_LABELS,
   APPLICATION_STAGE_ORDER,
   APPLICATION_STAGE_THEME,
   type ApplicationStageTheme,
   isApplicationStageValue,
   type ApplicationStageValue,
 } from "@/src/lib/applications/stage-metadata";
+import type { AppLocale } from "@/src/lib/i18n/config";
+import type { AppDictionary } from "@/src/lib/i18n/dictionaries";
+import { formatRelativeDate } from "@/src/lib/i18n/format";
 import { cn } from "@/src/lib/utils";
 
 type BoardApplication = {
@@ -37,25 +39,10 @@ type BoardApplication = {
 
 type ApplicationBoardProps = {
   applications: BoardApplication[];
+  dictionary: Pick<AppDictionary, "common" | "date" | "workspace">;
+  locale: AppLocale;
+  stageLabels: Record<ApplicationStageValue, string>;
 };
-
-function formatRelativeDate(value: string) {
-  const date = new Date(value);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (Number.isNaN(diffDays) || diffDays < 0) return "Today";
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return `${diffDays}d ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-
-  return new Intl.DateTimeFormat("en", {
-    day: "numeric",
-    month: "short",
-  }).format(date);
-}
 
 function groupBoardApplications(applications: BoardApplication[]) {
   const grouped = APPLICATION_STAGE_ORDER.reduce(
@@ -75,6 +62,9 @@ function groupBoardApplications(applications: BoardApplication[]) {
 
 export function ApplicationBoard({
   applications: initialApplications,
+  dictionary,
+  locale,
+  stageLabels,
 }: ApplicationBoardProps) {
   const [applications, setApplications] = useState(initialApplications);
   const [error, setError] = useState<string | null>(null);
@@ -127,13 +117,13 @@ export function ApplicationBoard({
           }
         } catch {
           setApplications(previousApplications);
-          setError("We could not update this application stage.");
+          setError(dictionary.workspace.applicationControls.stageUpdateFailed);
         } finally {
           setPendingApplicationId(null);
         }
       });
     },
-    [applications]
+    [applications, dictionary.workspace.applicationControls.stageUpdateFailed]
   );
 
   const handleDragEnd = useCallback(
@@ -168,9 +158,12 @@ export function ApplicationBoard({
               <DashboardColumn
                 key={stage}
                 applications={groupedApplications[stage]}
+                dictionary={dictionary}
                 isBoardPending={isPending || pendingApplicationId !== null}
+                locale={locale}
                 moveApplication={moveApplication}
                 stage={stage}
+                stageLabels={stageLabels}
               />
             ))}
           </div>
@@ -182,14 +175,20 @@ export function ApplicationBoard({
 
 function DashboardColumn({
   applications,
+  dictionary,
   isBoardPending,
+  locale,
   moveApplication,
   stage,
+  stageLabels,
 }: {
   applications: BoardApplication[];
+  dictionary: Pick<AppDictionary, "common" | "date" | "workspace">;
   isBoardPending: boolean;
+  locale: AppLocale;
   moveApplication: (applicationId: string, stage: ApplicationStageValue) => void;
   stage: ApplicationStageValue;
+  stageLabels: Record<ApplicationStageValue, string>;
 }) {
   const theme = APPLICATION_STAGE_THEME[stage];
   const { isOver, setNodeRef } = useDroppable({
@@ -205,7 +204,7 @@ function DashboardColumn({
             aria-hidden="true"
           />
           <h3 className="truncate text-sm font-medium text-foreground">
-            {APPLICATION_STAGE_LABELS[stage]}
+            {stageLabels[stage]}
           </h3>
         </div>
         <span
@@ -232,8 +231,11 @@ function DashboardColumn({
               <li key={application.id}>
                 <DashboardApplicationCard
                   application={application}
+                  dictionary={dictionary}
                   disabled={isBoardPending}
+                  locale={locale}
                   moveApplication={moveApplication}
+                  stageLabels={stageLabels}
                   theme={theme}
                 />
               </li>
@@ -241,7 +243,7 @@ function DashboardColumn({
           </ul>
         ) : (
           <div className="rounded-xl border border-dashed border-border/70 px-3 py-6 text-center text-[11px] leading-5 text-muted-foreground/80">
-            Empty
+            {dictionary.common.empty}
           </div>
         )}
       </div>
@@ -251,13 +253,19 @@ function DashboardColumn({
 
 function DashboardApplicationCard({
   application,
+  dictionary,
   disabled,
+  locale,
   moveApplication,
+  stageLabels,
   theme,
 }: {
   application: BoardApplication;
+  dictionary: Pick<AppDictionary, "common" | "date" | "workspace">;
   disabled: boolean;
+  locale: AppLocale;
   moveApplication: (applicationId: string, stage: ApplicationStageValue) => void;
+  stageLabels: Record<ApplicationStageValue, string>;
   theme: ApplicationStageTheme;
 }) {
   const {
@@ -323,7 +331,8 @@ function DashboardApplicationCard({
           </>
         )}
         <span className="shrink-0">
-          Updated {formatRelativeDate(application.updatedAt)}
+          {dictionary.common.updated}{" "}
+          {formatRelativeDate(application.updatedAt, locale, dictionary)}
         </span>
       </div>
 
@@ -347,7 +356,7 @@ function DashboardApplicationCard({
         >
           {APPLICATION_STAGE_ORDER.map((stage) => (
             <option key={stage} value={stage}>
-              {APPLICATION_STAGE_LABELS[stage]}
+              {stageLabels[stage]}
             </option>
           ))}
         </select>

@@ -44,4 +44,12 @@ describe("Clerk auth configuration", () => {
     expect(signInPage).toContain("ClerkConfigurationNotice");
     expect(signUpPage).toContain("ClerkConfigurationNotice");
   });
+
+  it("localizes Clerk components from the root provider", () => {
+    const rootLayout = readProjectFile("app/layout.tsx");
+
+    expect(rootLayout).toContain('@clerk/localizations');
+    expect(rootLayout).toContain('locale === "zh-CN" ? zhCN : undefined');
+    expect(rootLayout).toContain("localization={clerkLocalization}");
+  });
 });

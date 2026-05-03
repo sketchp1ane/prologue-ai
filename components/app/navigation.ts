@@ -11,47 +11,60 @@ import {
 } from "lucide-react";
 
 export type AppNavigationItem = {
-  label: string;
+  labelKey: AppNavigationLabelKey;
   href: string;
   icon: LucideIcon;
-  badge?: string;
+  badgeKey?: AppNavigationBadgeKey;
 };
+
+export type AppNavigationLabelKey =
+  | "analytics"
+  | "applications"
+  | "billing"
+  | "candidates"
+  | "dashboard"
+  | "interviews"
+  | "jdExtract"
+  | "resumes"
+  | "settings";
+
+export type AppNavigationBadgeKey = "new";
 
 // Single flat list - cleaner, less visual hierarchy
 export const appNavigationItems: AppNavigationItem[] = [
   {
-    label: "Dashboard",
+    labelKey: "dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
   },
   {
-    label: "JD Extract",
+    labelKey: "jdExtract",
     href: "/jd-extract",
     icon: FileSearch,
-    badge: "New",
+    badgeKey: "new",
   },
   {
-    label: "Resumes",
+    labelKey: "resumes",
     href: "/resumes",
     icon: FileText,
   },
   {
-    label: "Candidates",
+    labelKey: "candidates",
     href: "/candidates",
     icon: Users,
   },
   {
-    label: "Job Posts",
+    labelKey: "applications",
     href: "/applications",
     icon: Briefcase,
   },
   {
-    label: "Interviews",
+    labelKey: "interviews",
     href: "/interviews",
     icon: MessageSquare,
   },
   {
-    label: "Analytics",
+    labelKey: "analytics",
     href: "/analytics",
     icon: BarChart3,
   },
@@ -60,7 +73,7 @@ export const appNavigationItems: AppNavigationItem[] = [
 // Bottom nav items (settings, etc.)
 export const appBottomNavItems: AppNavigationItem[] = [
   {
-    label: "Settings",
+    labelKey: "settings",
     href: "/settings",
     icon: Settings,
   },

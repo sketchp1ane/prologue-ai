@@ -8,6 +8,7 @@ import { getApplicationDashboardStats } from "@/src/lib/applications/stages";
 import { listUserApplications } from "@/src/lib/applications/service";
 import { requireCurrentUserId } from "@/src/lib/auth/current-user";
 import { isPrismaClientInitializationError } from "@/src/lib/db/errors";
+import { getCurrentLocale, getDictionary } from "@/src/lib/i18n/server";
 import { cn } from "@/src/lib/utils";
 
 async function loadDashboardApplications(userId: string) {
@@ -30,6 +31,8 @@ async function loadDashboardApplications(userId: string) {
 
 export default async function DashboardPage() {
   const userId = await requireCurrentUserId();
+  const locale = await getCurrentLocale(userId);
+  const dictionary = getDictionary(locale);
   const dashboardData = await loadDashboardApplications(userId);
   const { applications } = dashboardData;
   const stats = getApplicationDashboardStats(applications);
@@ -38,23 +41,23 @@ export default async function DashboardPage() {
     return (
       <>
         <PageHeader
-          title="Dashboard"
-          description="Track each application from first paste to final outcome."
+          title={dictionary.workspace.dashboard.title}
+          description={dictionary.workspace.dashboard.unavailableDescription}
           action={{
             href: "/applications/new",
             icon: Plus,
-            label: "New Application",
+            label: dictionary.appShell.actions.newApplication,
           }}
         />
         <EmptyState
           icon={Database}
-          title="Database unavailable"
-          description="Your application data could not be loaded because the database connection is currently unavailable. Check the database connection and retry this page."
+          title={dictionary.workspace.dashboard.databaseUnavailableTitle}
+          description={dictionary.workspace.dashboard.databaseUnavailableDescription}
           secondaryAction={{
             href: "/dashboard",
-            label: "Retry dashboard",
+            label: dictionary.workspace.dashboard.retryDashboard,
           }}
-          statusLabel="No private resume or JD content was logged"
+          statusLabel={dictionary.workspace.dashboard.databaseStatus}
         />
       </>
     );
@@ -64,22 +67,22 @@ export default async function DashboardPage() {
     return (
       <>
         <PageHeader
-          title="Dashboard"
-          description="Track each application from first paste to final outcome."
+          title={dictionary.workspace.dashboard.title}
+          description={dictionary.workspace.dashboard.unavailableDescription}
           action={{
             href: "/applications/new",
             icon: Plus,
-            label: "New Application",
+            label: dictionary.appShell.actions.newApplication,
           }}
         />
         <EmptyState
           icon={Briefcase}
-          title="No applications yet"
-          description="Paste a job description to create your first tracked application."
+          title={dictionary.workspace.dashboard.emptyTitle}
+          description={dictionary.workspace.dashboard.emptyDescription}
           action={{
             href: "/applications/new",
             icon: Plus,
-            label: "Create application",
+            label: dictionary.appShell.actions.createApplication,
           }}
         />
       </>
@@ -90,10 +93,26 @@ export default async function DashboardPage() {
     stats.applied + stats.communicating + stats.interviewing;
 
   const summaryStats = [
-    { label: "Total", value: stats.total, hint: "applications" },
-    { label: "Active pipeline", value: activePipeline, hint: "in progress" },
-    { label: "Interviewing", value: stats.interviewing, hint: "this stage" },
-    { label: "Offers", value: stats.offer, hint: "received" },
+    {
+      label: dictionary.workspace.dashboard.stats.total,
+      value: stats.total,
+      hint: dictionary.workspace.dashboard.stats.applications,
+    },
+    {
+      label: dictionary.workspace.dashboard.stats.activePipeline,
+      value: activePipeline,
+      hint: dictionary.workspace.dashboard.stats.inProgress,
+    },
+    {
+      label: dictionary.workspace.dashboard.stats.interviewing,
+      value: stats.interviewing,
+      hint: dictionary.workspace.dashboard.stats.thisStage,
+    },
+    {
+      label: dictionary.workspace.dashboard.stats.offers,
+      value: stats.offer,
+      hint: dictionary.workspace.dashboard.stats.received,
+    },
   ];
   const boardApplications = applications.map((application) => ({
     companyName: application.companyName,
@@ -113,12 +132,12 @@ export default async function DashboardPage() {
   return (
     <>
       <PageHeader
-        title="Dashboard"
-        description="Your current application board, grouped by stage."
+        title={dictionary.workspace.dashboard.title}
+        description={dictionary.workspace.dashboard.description}
         action={{
           href: "/applications/new",
           icon: Plus,
-          label: "New Application",
+          label: dictionary.appShell.actions.newApplication,
         }}
       />
 
@@ -151,15 +170,21 @@ export default async function DashboardPage() {
       <div className="mb-3 flex items-end justify-between">
         <div>
           <h2 className="text-base font-medium text-foreground">
-            Application board
+            {dictionary.workspace.dashboard.boardTitle}
           </h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Move applications across stages as they progress.
+            {dictionary.workspace.dashboard.boardDescription}
           </p>
         </div>
       </div>
 
-      <ApplicationBoard key={boardKey} applications={boardApplications} />
+      <ApplicationBoard
+        key={boardKey}
+        applications={boardApplications}
+        dictionary={dictionary}
+        locale={locale}
+        stageLabels={dictionary.applicationStages}
+      />
     </>
   );
 }
