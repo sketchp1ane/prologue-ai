@@ -22,6 +22,33 @@ export type ResumeListItem = Prisma.ResumeGetPayload<{
   select: typeof resumeListItemSelect;
 }>;
 
+export const resumeDetailSelect = {
+  bullets: {
+    orderBy: {
+      orderIndex: "asc",
+    },
+    select: {
+      currentText: true,
+      id: true,
+      orderIndex: true,
+      originalText: true,
+      sectionTitle: true,
+      sectionType: true,
+    },
+  },
+  createdAt: true,
+  id: true,
+  parsedJson: true,
+  sourceText: true,
+  status: true,
+  title: true,
+  updatedAt: true,
+} satisfies Prisma.ResumeSelect;
+
+export type ResumeDetail = Prisma.ResumeGetPayload<{
+  select: typeof resumeDetailSelect;
+}>;
+
 export async function listResumesByUser(
   userId: string,
   db: ResumeDb = prisma
@@ -43,6 +70,20 @@ export async function getResumeByIdForUser(
   db: ResumeDb = prisma
 ) {
   return db.resume.findFirst({
+    where: {
+      id: resumeId,
+      userId,
+    },
+  });
+}
+
+export async function getResumeDetailByIdForUser(
+  userId: string,
+  resumeId: string,
+  db: ResumeDb = prisma
+): Promise<ResumeDetail | null> {
+  return db.resume.findFirst({
+    select: resumeDetailSelect,
     where: {
       id: resumeId,
       userId,

@@ -6,9 +6,11 @@ import {
   createPastedTextResume,
   deleteResumeForUser,
   getResumeByIdForUser,
+  getResumeDetailByIdForUser,
   listResumesByUser,
   markResumeFailedForUser,
   markResumeParsingForUser,
+  resumeDetailSelect,
   renameResumeForUser,
   resumeListItemSelect,
   saveParsedResumeForUser,
@@ -109,6 +111,31 @@ describe("resume repository", () => {
       where: {
         id: "resume_1",
         userId: "user_1",
+      },
+    });
+  });
+
+  it("loads a resume detail with ordered bullets only by id and userId", async () => {
+    const { db, resume } = createResumeDb();
+
+    await getResumeDetailByIdForUser("user_1", "resume_1", db);
+
+    expect(resume.findFirst).toHaveBeenCalledWith({
+      select: resumeDetailSelect,
+      where: {
+        id: "resume_1",
+        userId: "user_1",
+      },
+    });
+    expect(resumeDetailSelect.bullets).toMatchObject({
+      orderBy: {
+        orderIndex: "asc",
+      },
+      select: {
+        currentText: true,
+        originalText: true,
+        sectionTitle: true,
+        sectionType: true,
       },
     });
   });

@@ -1,5 +1,37 @@
 # DEVLOG
 
+## 2026-05-03 — Resume detail parse UI
+
+Turned `/resumes/[id]` into the primary Resume Parse v1 operation page.
+
+Included:
+
+- Added a user-scoped resume detail query that loads parsed JSON, source text,
+  and ordered `ResumeBullet` records
+- Added a client-side parse control that calls the existing
+  `POST /api/resumes/[id]/parse` route, shows pending state, supports retry
+  after failure, and refreshes the route after parsing
+- Rendered valid `parsedJson` with basics, summary, skills, experience,
+  education, projects, certifications, languages, and warnings
+- Added a safe invalid parsed JSON state with preserved source text and re-parse
+  path
+- Grouped read-only `ResumeBullet` records by section type and section title
+- Kept the original source text visible in a collapsible detail card
+- Added unit coverage for parsed JSON classification, bullet grouping, and the
+  detail repository query
+
+Not included:
+
+- Inline resume editing beyond existing rename/delete
+- Bullet Rewrite
+- Diagnosis
+- PDF upload
+- Homepage changes
+
+Validation:
+
+- Full validation results are recorded in the task final response
+
 ## 2026-05-03 — Resume parse route state machine
 
 Connected the existing Resume Parse service to persisted Resume state and
