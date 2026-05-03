@@ -11,8 +11,14 @@ type ResumeParseDb = Pick<
 >;
 
 export const resumeListItemSelect = {
+  _count: {
+    select: {
+      bullets: true,
+    },
+  },
   createdAt: true,
   id: true,
+  parsedJson: true,
   status: true,
   title: true,
   updatedAt: true,
