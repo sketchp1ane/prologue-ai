@@ -1,5 +1,33 @@
 # DEVLOG
 
+## 2026-05-03 — OpenAI resume parse service
+
+Implemented the server-only Resume Parse service without adding UI, routes, PDF
+upload, diagnosis, bullet rewrite, or homepage changes.
+
+Included:
+
+- Added `OPENAI_MODEL_PARSE` model routing and `.env.example` documentation
+- Added `parseResumeFromText` under `src/lib/ai/services/` using the existing
+  OpenAI Responses API structured-output pattern
+- Validated user, resume id, and pasted resume text before any OpenAI call
+- Checked resume ownership before linking an `AiGeneration` row
+- Sent private resume parse requests with `store: false`
+- Recorded success/failure `AiGeneration` rows for `RESUME_PARSE` with model,
+  prompt version, input hash, safe length metadata, usage JSON, and token counts
+  when available
+- Added service unit tests for input limits, model/API-key configuration errors,
+  ownership checks, success logging, schema failure logging, and privacy-safe
+  audit data
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test` passed: 15 test files, 58 tests
+- `pnpm build` passed
+- `pnpm check` passed
+
 ## 2026-04-29 — Dashboard database-unavailable fallback
 
 Fixed the dashboard runtime crash when Prisma cannot reach the configured
