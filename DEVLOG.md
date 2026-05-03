@@ -1,5 +1,27 @@
 # DEVLOG
 
+## 2026-04-29 — Dashboard database-unavailable fallback
+
+Fixed the dashboard runtime crash when Prisma cannot reach the configured
+database.
+
+Included:
+
+- Added a typed Prisma client initialization error guard
+- Updated `/dashboard` to render a safe database-unavailable state for
+  transient or misconfigured database connections
+- Preserved current-user scoping and avoided logging private resume or JD
+  content
+- Added unit coverage for the Prisma initialization error guard
+
+Validation:
+
+- `pnpm typecheck` passed
+- `pnpm lint` passed
+- `pnpm test` passed: 13 test files, 49 tests
+- `pnpm build` passed
+- `pnpm check` passed
+
 ## 2026-04-28 — End-of-day documentation maintenance
 
 Synchronized source-of-truth docs after updating local `main`.

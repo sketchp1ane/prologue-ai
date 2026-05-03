@@ -1,4 +1,4 @@
-import { Briefcase, Plus } from "lucide-react";
+import { Briefcase, Database, Plus } from "lucide-react";
 
 import { AppCard } from "@/components/app/AppCard";
 import { EmptyState } from "@/components/app/EmptyState";
@@ -7,12 +7,58 @@ import { ApplicationBoard } from "@/components/applications/ApplicationBoard";
 import { getApplicationDashboardStats } from "@/src/lib/applications/stages";
 import { listUserApplications } from "@/src/lib/applications/service";
 import { requireCurrentUserId } from "@/src/lib/auth/current-user";
+import { isPrismaClientInitializationError } from "@/src/lib/db/errors";
 import { cn } from "@/src/lib/utils";
+
+async function loadDashboardApplications(userId: string) {
+  try {
+    return {
+      applications: await listUserApplications(userId),
+      status: "ready" as const,
+    };
+  } catch (error) {
+    if (isPrismaClientInitializationError(error)) {
+      return {
+        applications: [],
+        status: "database-unavailable" as const,
+      };
+    }
+
+    throw error;
+  }
+}
 
 export default async function DashboardPage() {
   const userId = await requireCurrentUserId();
-  const applications = await listUserApplications(userId);
+  const dashboardData = await loadDashboardApplications(userId);
+  const { applications } = dashboardData;
   const stats = getApplicationDashboardStats(applications);
+
+  if (dashboardData.status === "database-unavailable") {
+    return (
+      <>
+        <PageHeader
+          title="Dashboard"
+          description="Track each application from first paste to final outcome."
+          action={{
+            href: "/applications/new",
+            icon: Plus,
+            label: "New Application",
+          }}
+        />
+        <EmptyState
+          icon={Database}
+          title="Database unavailable"
+          description="Your application data could not be loaded because the database connection is currently unavailable. Check the database connection and retry this page."
+          secondaryAction={{
+            href: "/dashboard",
+            label: "Retry dashboard",
+          }}
+          statusLabel="No private resume or JD content was logged"
+        />
+      </>
+    );
+  }
 
   if (applications.length === 0) {
     return (
