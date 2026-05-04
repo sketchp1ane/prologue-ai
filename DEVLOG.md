@@ -1,5 +1,63 @@
 # DEVLOG
 
+## 2026-05-04 — Resume Parse v1 QA closeout
+
+Closed Resume Parse v1 with documentation-only QA and validation.
+
+Implemented Resume Parse v1 scope confirmed:
+
+- Resume Parse schema, prompt, fixtures, and OpenAI service
+- `POST /api/resumes/[id]/parse` route with authenticated user scope
+- Parse lifecycle updates through `PARSING`, `READY`, and `FAILED`
+- `Resume.parsedJson` persistence for successful parses
+- `ResumeBullet` regeneration from parsed experience and project bullets
+- Resume detail structured rendering and generated bullet display
+- Resume list parse-state display
+- Pasted-text resume parsing and private PDF resume parsing through OpenAI
+  Responses file inputs
+
+QA confirmations:
+
+- Task G made no homepage edits to `app/page.tsx`, `components/landing/*`, or
+  `app/globals.css`
+- `app/api` contains only JD Extract and Resume Parse API routes
+- Diagnosis and Bullet Rewrite remain unimplemented; only Prisma models and
+  future-facing copy/metadata exist for those slices
+- OpenAI SDK calls remain in server-only `src/lib/ai/` service modules
+- `OPENAI_API_KEY` is read only by the server-only OpenAI client helper and is
+  not exposed as a `NEXT_PUBLIC_*` variable
+- Resume Parse reads `OPENAI_MODEL_PARSE` from environment-based model routing
+- Resume list, detail, create, update, delete, source replacement, and parse
+  paths are scoped by Clerk `userId`
+- Successful parses save `Resume.parsedJson`, set the resume back to `READY`,
+  and regenerate current-user `ResumeBullet` rows after deleting prior rows for
+  that resume to prevent duplicates
+- Failed parses set `Resume.status` to `FAILED` and record failure metadata in
+  `AiGeneration`
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test` passed: 21 test files, 128 tests
+- `pnpm build` passed
+- `pnpm check` passed
+
+Known limitations:
+
+- Manual browser QA was not performed because this closeout changed
+  documentation only
+- Rate limiting and user-facing cost visibility are not implemented yet
+- Diagnosis, Bullet Rewrite, Outreach, Interview Review, and Weekly Report
+  remain separate future slices
+- PDF parsing depends on OpenAI file-input processing and may use more tokens
+  than pasted text; pasted text remains the fallback path when PDF parsing fails
+
+Next recommended task:
+
+- Start Diagnosis Report v1 as a separate slice now that Resume Parse v1 is
+  documented and validation is green.
+
 ## 2026-05-04 — Resume list delete action
 
 Added delete support directly from the resume list.
