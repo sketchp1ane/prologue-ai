@@ -41,6 +41,7 @@
 - `/resumes` and `/resumes/[id]` render database-unavailable retry states instead of crashing when Prisma cannot initialize a database connection.
 - PDF resumes are stored in Vercel Blob through `src/lib/storage/`, enforce PDF-only files up to 10MB, and preserve pasted text as the stable fallback path.
 - PDF Resume Parse uses OpenAI Responses file inputs from the stored private PDF and records success/failure `AiGeneration` audit rows without storing raw PDF contents.
+- Resume Parse v1 QA closeout completed with documentation updates only and required validation commands passing.
 - Application creation vertical slice is closed: `/applications/new` supports pasted JD text, JD Extract, reviewed/editable extracted fields, and Save Application.
 - Applications persist `companyName`, `roleTitle`, `location`, `stage`, `jdText`, reviewed `jdExtractJson`, and `userId`.
 - `/applications` lists the current user's applications only.
@@ -97,6 +98,7 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - Pasted-text resume records are created in the non-AI `READY` state and do not create parsed JSON or resume bullets.
 - PDF resume records are created as `UPLOADING`, uploaded to private Blob storage, then marked `READY` with `fileUrl` and `filePath`.
 - PDF files are limited to `application/pdf` inputs up to 10MB. If PDF parsing fails, the product fallback is to create a pasted-text resume version.
+- Resume Parse v1 is closed for pasted-text and private PDF sources: parsing is triggered from `POST /api/resumes/[id]/parse`, uses `OPENAI_MODEL_PARSE`, persists `Resume.parsedJson`, regenerates current-user `ResumeBullet` rows without duplicates, and records `AiGeneration` success/failure audit rows without storing full resume input.
 - Application creation supports pasted JD text only and stores reviewed JD Extract JSON in `Application.jdExtractJson`.
 - Application reads and writes are user-scoped through Clerk `userId` and repository/service functions.
 - Application detail loads and stage updates are scoped by both `Application.id` and Clerk `userId`; missing and unauthorized records render the same safe not-found state.
@@ -107,6 +109,7 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - Dashboard board columns are fixed from the current `ApplicationStage` enum and do not persist within-column ordering.
 - Resume deletion detaches related applications through `ON DELETE SET NULL` rather than deleting application records.
 - Workspace Data v1 validation passed on 2026-04-28 with `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `pnpm check`.
+- Resume Parse v1 QA validation passed on 2026-05-04 with `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `pnpm check`.
 - Dashboard draggable board and Applications badge polish landed after the Workspace Data v1 closeout.
 - Workspace language preference landed for English and Simplified Chinese without locale-prefixed routes.
 - `/settings` can save the current user's language in `UserPreference` and mirror it to the `prologue-locale` cookie.

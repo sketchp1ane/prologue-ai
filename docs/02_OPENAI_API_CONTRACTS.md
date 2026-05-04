@@ -4,7 +4,7 @@
 
 JD Extract is implemented through `src/lib/ai/services/extract-jd.ts` and exposed by `POST /api/applications/extract-jd`.
 
-Resume Parse is implemented for existing pasted-text resume records through `src/lib/ai/services/parse-resume.ts` and exposed by `POST /api/resumes/[id]/parse`. PDF file input remains planned.
+Resume Parse is implemented for existing pasted-text and private PDF resume records through `src/lib/ai/services/parse-resume.ts` and exposed by `POST /api/resumes/[id]/parse`. PDF parsing uses OpenAI Responses file inputs from the stored private PDF.
 
 ## Model routing
 
@@ -12,6 +12,7 @@ Use environment variables, not hardcoded model IDs:
 
 ```env
 OPENAI_MODEL_EXTRACT=gpt-5.4-nano
+OPENAI_MODEL_PARSE=gpt-5.4-mini
 OPENAI_MODEL_GENERATE=gpt-5.4-mini
 OPENAI_MODEL_REASONING=gpt-5.4
 ```
@@ -33,14 +34,14 @@ Codex may adjust model names only after checking current OpenAI docs.
 
 ### Resume parse
 
-Status: implemented for pasted text API parsing; PDF input and UI display are planned.
+Status: implemented for pasted-text and private PDF API parsing with resume list/detail UI display.
 
 Input:
 
 ```ts
 {
   sourceType: "pdf" | "pasted_text";
-  fileId?: string;
+  filePath?: string;
   text?: string;
 }
 ```
