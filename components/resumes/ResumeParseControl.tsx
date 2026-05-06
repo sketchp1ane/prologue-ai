@@ -51,7 +51,7 @@ export function ResumeParseControl({
         const body = (await response.json()) as ParseResponse;
 
         if (!response.ok || !body.data) {
-          toast.error(copy.genericError);
+          toast.error(body.error?.message ?? copy.genericError);
           router.refresh();
           return;
         }
