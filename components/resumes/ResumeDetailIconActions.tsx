@@ -1,20 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useTransition, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { toast } from "sonner";
-import {
-  ArrowLeft,
-  Info,
-  Loader2,
-  RefreshCw,
-  Sparkles,
-  Trash2,
-  Upload,
-  X,
-} from "lucide-react";
+import { ArrowLeft, Info, Trash2, Upload, X } from "lucide-react";
 
 import { ResumeSourceReplaceForm } from "@/components/resumes/ResumeSourceReplaceForm";
 import { Button } from "@/components/ui/button";
@@ -45,10 +34,6 @@ type ResumeDetailIconActionsProps = {
     | "source"
     | "status"
   >;
-  dictionary: Pick<AppDictionary, "common" | "workspace">;
-  hasFile: boolean;
-  hasParsedJson: boolean;
-  hasSourceText: boolean;
   parsedJsonLabel: string;
   pdfMaxBytes: number;
   replaceAction: (formData: FormData) => void | Promise<void>;
@@ -56,20 +41,8 @@ type ResumeDetailIconActionsProps = {
   resumeId: string;
   sourceLabel: string;
   sourceTextMaxLength: number;
-  status: string;
   statusLabel: string;
   updatedAtLabel: string;
-};
-
-type ParseResponse = {
-  data?: {
-    bulletCount: number;
-    resumeId: string;
-    status: string;
-  };
-  error?: {
-    message?: string;
-  };
 };
 
 export function ResumeDetailIconActions({
@@ -80,10 +53,6 @@ export function ResumeDetailIconActions({
   createdAtLabel,
   deleteAction,
   detailCopy,
-  dictionary,
-  hasFile,
-  hasParsedJson,
-  hasSourceText,
   parsedJsonLabel,
   pdfMaxBytes,
   replaceAction,
@@ -91,48 +60,9 @@ export function ResumeDetailIconActions({
   resumeId,
   sourceLabel,
   sourceTextMaxLength,
-  status,
   statusLabel,
   updatedAtLabel,
 }: ResumeDetailIconActionsProps) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const isParsing = isPending || status === "PARSING";
-  const parseDisabled = isParsing || (!hasSourceText && !hasFile);
-  const parseLabel = hasParsedJson ? actionsCopy.reparse : actionsCopy.parse;
-
-  function handleParse() {
-    if (!hasSourceText && !hasFile) {
-      toast.error(dictionary.workspace.resumeDetail.parseControl.missingSource);
-      return;
-    }
-
-    startTransition(async () => {
-      try {
-        const response = await fetch(`/api/resumes/${resumeId}/parse`, {
-          method: "POST",
-        });
-        const body = (await response.json()) as ParseResponse;
-
-        if (!response.ok || !body.data) {
-          toast.error(dictionary.workspace.resumeDetail.parseControl.genericError);
-          router.refresh();
-          return;
-        }
-
-        toast.success(
-          dictionary.workspace.resumeDetail.parseControl.success.replace(
-            "{count}",
-            String(body.data.bulletCount)
-          )
-        );
-        router.refresh();
-      } catch {
-        toast.error(dictionary.workspace.resumeDetail.parseControl.connectionFailed);
-      }
-    });
-  }
-
   return (
     <div className="flex flex-col items-end gap-2">
       <div
@@ -160,21 +90,6 @@ export function ResumeDetailIconActions({
           statusLabel={statusLabel}
           updatedAtLabel={updatedAtLabel}
         />
-
-        <IconButton
-          ariaLabel={parseLabel}
-          disabled={parseDisabled}
-          onClick={handleParse}
-          title={parseLabel}
-        >
-          {isParsing ? (
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          ) : hasParsedJson ? (
-            <RefreshCw className="h-4 w-4" aria-hidden="true" />
-          ) : (
-            <Sparkles className="h-4 w-4" aria-hidden="true" />
-          )}
-        </IconButton>
 
         <SourceDialog
           actionsCopy={actionsCopy}

@@ -1,5 +1,35 @@
 # DEVLOG
 
+## 2026-05-05 — Resume Parse manual QA hardening
+
+Implemented the Resume Parse manual QA closeout fixes.
+
+Included:
+
+- Added a visible Resume Parse control card on `/resumes/[id]`
+- Removed the duplicate icon-only parse action from the resume detail header
+- Restored read-only original pasted source text display on resume detail
+- Kept PDF-only resumes on the privacy-preserving stored-PDF fallback message
+- Changed the parse client toast to prefer the API error message, so missing
+  OpenAI configuration is explicit
+- Added static QA regression coverage for the parse control, source display,
+  API error message handling, and no Diagnosis/Bullet Rewrite/Streaming scope
+  expansion
+
+Validation:
+
+- `pnpm test -- tests/resume-qa-regressions.test.ts tests/resume-parse-route.test.ts tests/resume-parse-state-machine.test.ts tests/ai/parse-resume-service.test.ts` passed
+- `pnpm check` passed: 22 test files, 132 tests
+- `pnpm build` passed
+- Local dev server smoke: `/` returned 200 and unauthenticated `/resumes`
+  redirected to `/sign-in`
+
+Manual QA note:
+
+- Full two-user Clerk browser QA still requires completing live sign-up/login
+  verification in the browser. The auth and ownership paths remain covered by
+  route/service/repository tests and the unauthenticated route smoke check.
+
 ## 2026-05-04 — Resume Parse v1 QA closeout
 
 Closed Resume Parse v1 with documentation-only QA and validation.

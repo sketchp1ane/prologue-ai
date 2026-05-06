@@ -14,6 +14,7 @@ import { RouteToast } from "@/components/app/RouteToast";
 import { ResumeBulletGroupsView } from "@/components/resumes/ResumeBulletGroupsView";
 import { ResumeDetailIconActions } from "@/components/resumes/ResumeDetailIconActions";
 import { ParsedResumeView } from "@/components/resumes/ResumeParsedView";
+import { ResumeParseControl } from "@/components/resumes/ResumeParseControl";
 import { ResumeTitleInlineEditor } from "@/components/resumes/ResumeTitleInlineEditor";
 import { Button } from "@/components/ui/button";
 import { requireCurrentUserId } from "@/src/lib/auth/current-user";
@@ -183,10 +184,6 @@ export default async function ResumeDetailPage({
             source: copy.source,
             status: copy.status,
           }}
-          dictionary={dictionary}
-          hasFile={hasFile}
-          hasParsedJson={hasStoredParsedJson}
-          hasSourceText={hasSourceText}
           parsedJsonLabel={
             parsedResume.status === "valid"
               ? dictionary.common.valid
@@ -206,7 +203,6 @@ export default async function ResumeDetailPage({
                 : copy.noSourceText
           }
           sourceTextMaxLength={RESUME_SOURCE_TEXT_MAX_LENGTH}
-          status={resume.status}
           statusLabel={
             copy.statusLabels[
               resume.status as keyof typeof copy.statusLabels
@@ -219,6 +215,32 @@ export default async function ResumeDetailPage({
       <RouteToast error={error} success={success} />
 
       <div className="space-y-5">
+        <AppCard padding="lg">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-primary/5 text-primary">
+                <FileText className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div>
+                <h2 className="text-base font-medium text-foreground">
+                  {copy.parseTitle}
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  {copy.parseDescription}
+                </p>
+              </div>
+            </div>
+            <ResumeParseControl
+              dictionary={dictionary}
+              hasFile={hasFile}
+              hasParsedJson={hasStoredParsedJson}
+              hasSourceText={hasSourceText}
+              resumeId={resume.id}
+              status={resume.status}
+            />
+          </div>
+        </AppCard>
+
         {parsedResume.status === "valid" ? (
           <ParsedResumeView
             key={resume.updatedAt.toISOString()}
@@ -266,6 +288,31 @@ export default async function ResumeDetailPage({
         )}
 
         <ResumeBulletGroupsView dictionary={dictionary} groups={bulletGroups} />
+
+        <AppCard padding="lg">
+          <div className="flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-primary/5 text-primary">
+              <FileText className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base font-medium text-foreground">
+                {copy.sourceTitle}
+              </h2>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                {copy.sourceDescription}
+              </p>
+              {hasSourceText ? (
+                <pre className="mt-4 max-h-[32rem] overflow-auto whitespace-pre-wrap break-words rounded-xl border border-border bg-secondary/20 p-4 font-mono text-xs leading-6 text-foreground">
+                  {resume.sourceText}
+                </pre>
+              ) : (
+                <div className="mt-4 rounded-xl border border-dashed border-border bg-secondary/20 p-4 text-sm leading-6 text-muted-foreground">
+                  {hasFile ? copy.pdfStored : copy.noSourceTextStored}
+                </div>
+              )}
+            </div>
+          </div>
+        </AppCard>
       </div>
     </div>
   );
