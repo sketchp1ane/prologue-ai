@@ -93,3 +93,181 @@ body {
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
 }
+
+@keyframes sheet-overlay-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sheet-overlay-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes sheet-slide-in-from-right {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes sheet-slide-out-to-right {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes diagnosis-ring-draw {
+  from {
+    stroke-dashoffset: 100;
+  }
+
+  to {
+    stroke-dashoffset: var(--ring-offset);
+  }
+}
+
+@keyframes diagnosis-score-bar-fill {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(var(--score-scale));
+  }
+}
+
+@keyframes diagnosis-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sheet-overlay[data-state="open"] {
+  animation: sheet-overlay-in 180ms ease-out both;
+}
+
+.sheet-overlay[data-state="closed"] {
+  animation: sheet-overlay-out 140ms ease-in both;
+}
+
+.sheet-content[data-side="right"][data-state="open"] {
+  animation: sheet-slide-in-from-right 360ms cubic-bezier(0.16, 1, 0.3, 1)
+    both;
+}
+
+.sheet-content[data-side="right"][data-state="closed"] {
+  animation: sheet-slide-out-to-right 240ms cubic-bezier(0.7, 0, 0.84, 0)
+    both;
+}
+
+.context-rail-shell {
+  transition:
+    width 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    height 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-radius 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.context-rail-collapsed,
+.context-rail-expanded {
+  transition:
+    opacity 160ms ease-out,
+    visibility 160ms ease-out;
+}
+
+.context-rail-shell[data-state="closed"] .context-rail-collapsed {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 140ms;
+}
+
+.context-rail-shell[data-state="open"] .context-rail-collapsed {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.context-rail-shell[data-state="closed"] .context-rail-expanded {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.context-rail-shell[data-state="open"] .context-rail-expanded {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 120ms;
+}
+
+.diagnosis-ring-progress {
+  transition: stroke-dashoffset 900ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.diagnosis-score-bar-fill {
+  transition: transform var(--score-duration, 650ms) cubic-bezier(0.16, 1, 0.3, 1)
+    var(--score-delay, 0ms);
+  transform: scaleX(var(--score-scale));
+  transform-origin: left center;
+}
+
+.diagnosis-reveal {
+  animation: diagnosis-fade-up 420ms ease-out both;
+}
+
+.diagnosis-card-reveal {
+  opacity: 0;
+  transform: translate3d(1.75rem, 1.25rem, 0) scale(0.985);
+  transition:
+    opacity 460ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 460ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.diagnosis-card-reveal[data-visible="true"] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-overlay[data-state],
+  .sheet-content[data-side="right"][data-state],
+  .context-rail-shell,
+  .context-rail-collapsed,
+  .context-rail-expanded,
+  .diagnosis-ring-progress,
+  .diagnosis-score-bar-fill,
+  .diagnosis-reveal,
+  .diagnosis-card-reveal {
+    animation: none;
+    transition: none;
+  }
+
+  .diagnosis-card-reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

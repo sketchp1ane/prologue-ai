@@ -1,5 +1,386 @@
 # DEVLOG
 
+## 2026-05-07 — Diagnosis section navigation
+
+Added an in-report sticky navigation bar to the application Diagnosis Report so
+users can jump directly to summary, score breakdown, strengths, gaps,
+recommended actions, rewrite targets, and warnings.
+
+Included:
+
+- Added stable diagnosis section anchors and smooth in-page navigation
+- Added active-section tracking with `IntersectionObserver`
+- Added a compact horizontal pill navigation that stays near the top while
+  reading the diagnosis report
+- Reused existing diagnosis labels and added Summary / Report sections copy in
+  English and Simplified Chinese
+- Preserved existing score animations, card reveal animations, and generation
+  flow
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test -- tests/application-qa-regressions.test.ts` passed
+- `pnpm check` passed
+
+## 2026-05-07 — Context rail collapsed spacing polish
+
+Polished the collapsed application context rail so icon buttons sit with even
+left and right spacing inside the narrow rail.
+
+Included:
+
+- Centered the collapsed rail controls with a dedicated `items-center` column
+- Tuned collapsed rail vertical spacing and height to match the larger icon
+  gaps
+- Added regression coverage for the centered collapsed rail layout classes
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test -- tests/application-qa-regressions.test.ts` passed
+- `pnpm check` passed
+
+## 2026-05-07 — Context rail single-container morph
+
+Reworked the application detail context rail so the collapsed rail itself
+morphs into the expanded context panel instead of showing a second sibling
+panel beside it.
+
+Included:
+
+- Replaced the separate `right-full` floating panel with one desktop
+  `context-rail-shell`
+- The shell now transitions between `4.5rem` and `22rem` while keeping its
+  right edge anchored to the rail column
+- Collapsed icon controls and expanded context content crossfade inside the
+  same shell so both states are not visually present at once
+- Preserved the right-panel internal `scrollTo` shortcut behavior and mobile
+  card flow
+- Added reduced-motion handling for the morph and crossfade transitions
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test -- tests/application-qa-regressions.test.ts` passed
+- `pnpm check` passed
+
+## 2026-05-07 — Context rail floating panel scroll UX
+
+Changed the application detail context rail from a layout-resizing side column
+into a fixed narrow rail with a floating, independently scrollable context
+panel.
+
+Included:
+
+- Kept the desktop application detail grid fixed at the narrow rail width so
+  expanding context does not reflow the diagnosis column
+- Added an anchored floating context panel that opens beside the narrow rail
+- Moved stage, details, JD materials, and attached resume into an internal
+  scroll container with a fixed panel header
+- Replaced page-level `scrollIntoView` shortcut behavior with right-panel
+  `scrollTo` behavior so shortcut clicks no longer move the diagnosis column
+- Preserved the mobile card flow and existing stage, JD drawer, and resume
+  dialog interactions
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test -- tests/application-qa-regressions.test.ts` passed
+- `pnpm check` passed
+
+## 2026-05-07 — Context rail sticky offset fix
+
+Fixed the collapsed application context rail so its expand/collapse control no
+longer slides under the sticky topbar while scrolling.
+
+Included:
+
+- Raised the desktop sticky offset from generic page spacing to the app topbar
+  height plus breathing room
+- Added regression coverage for the `lg:top-24` offset
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test -- tests/application-qa-regressions.test.ts` passed
+- `pnpm check` passed
+
+## 2026-05-07 — Application context rail collapse
+
+Refocused the application detail page around the JD Diagnosis Report by moving
+the right-side context modules into a collapsible client rail.
+
+Included:
+
+- Added `ApplicationContextRail` as the owner of the stage, details, JD
+  materials, and attached resume context modules
+- Desktop now defaults the context rail to a narrow icon-only column so the
+  diagnosis report gets more horizontal space
+- Expanded rail restores the full context cards and preserves existing stage
+  select, JD drawer, and resume dialog interactions
+- Collapsed shortcut buttons expand the rail and scroll to the selected context
+  module
+- Mobile keeps the context modules expanded in the normal page flow
+- English and Simplified Chinese copy now include context rail title and
+  expand/collapse labels
+
+Not included:
+
+- Diagnosis, JD, resume, application schema, API, Server Action, or database
+  changes
+- New tooltip or drawer dependencies
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test` passed: 25 test files, 156 tests
+- `pnpm build` passed
+- `pnpm check` passed
+
+## 2026-05-07 — Diagnosis score motion polish
+
+Added restrained data-reveal motion to the Diagnosis Report scoring areas.
+
+Included:
+
+- Replaced the overall-score conic background with an SVG stroke ring that
+  draws from 0 to the saved score
+- Added count-up numbers for the overall score and dimension scores
+- Reworked the overall progress strip and radar score bars to animate via
+  `transform: scaleX()` instead of layout-changing width updates
+- Added lightweight reveal motion for the report score sections
+- Added `prefers-reduced-motion` handling for diagnosis score animations
+- Added regression coverage for the local animation components, CSS keyframes,
+  reduced-motion handling, and avoiding new motion dependencies
+- Follow-up fix: score rings and progress bars now explicitly mount at 0 and
+  transition to the target score on the next animation frame, so initial page
+  entry does not render them already filled
+- Follow-up fix: score rings and progress bars now start only after their
+  section first enters the viewport, so below-the-fold diagnosis scores do not
+  finish animating before the user scrolls to them
+- Follow-up fix: dimension score bars and their right-side numeric scores now
+  share the same row delay and duration, so each row fills and counts in sync
+
+Not included:
+
+- Diagnosis schema, API, Server Action, database, or generation changes
+- New animation dependencies
+- Layout changes outside the Diagnosis Report presentation
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test` passed: 25 test files, 156 tests
+- `pnpm build` passed
+- `pnpm check` passed
+
+## 2026-05-07 — Diagnosis card reveal motion
+
+Added scroll-triggered reveal motion to the Diagnosis Report content cards below
+the score section.
+
+Included:
+
+- Added shared `RevealSection` and `RevealCard` helpers that reuse the existing
+  viewport-once observer
+- Strengths, gaps, recommended actions, rewrite targets, and warnings now reveal
+  their cards only after each section first enters the viewport
+- Cards reveal one after another with a 70ms stagger inside each section
+- Empty states use the same reveal treatment
+- Added reduced-motion handling and regression coverage for the shared reveal
+  classes and delay token
+- Follow-up polish: card reveal motion now starts from the local lower-right and
+  settles into place with a 460ms transition, matching the requested attachment
+  feel
+
+Not included:
+
+- Diagnosis data, schema, API, Server Action, or generation changes
+- New animation dependencies
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test` passed: 25 test files, 156 tests
+- `pnpm build` passed
+- `pnpm check` passed
+
+## 2026-05-07 — JD drawer sheet motion
+
+Refined the JD information drawers so they feel less abrupt and better match a
+native right-side sheet interaction.
+
+Included:
+
+- Added a reusable `components/ui/sheet.tsx` wrapper around the existing Radix
+  Dialog primitives
+- Reworked the JD material drawers to use the shared Sheet component
+- Added right-side slide and overlay fade animations for sheet open/close states
+- Tuned sheet motion to 360ms on open and 240ms on close
+- Added `prefers-reduced-motion` handling for the sheet animations
+- Increased desktop drawer width to roughly two thirds of the viewport while
+  keeping mobile close to full width
+- Added regression coverage for the shared Sheet component, animation hooks, and
+  larger drawer width
+
+Not included:
+
+- New drawer dependencies
+- JD schema, API, database, or extraction behavior changes
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test` passed: 25 test files, 156 tests
+- `pnpm build` passed
+- `pnpm check` passed
+
+## 2026-05-07 — JD material drawers
+
+Moved saved JD reference material out of the application-detail main column and
+into right-rail drawer buttons.
+
+Included:
+
+- The main application detail column now focuses on the Diagnosis Report
+- Added a right-rail JD materials card with buttons for Original JD and
+  Extracted structured fields
+- Each button opens a right-side Radix Dialog drawer with the existing read-only
+  JD content, including invalid and missing extract states
+- English and Simplified Chinese copy now include the JD materials card title
+  and description
+
+Not included:
+
+- JD extraction schema changes
+- API, Server Action, database, or OpenAI service changes
+- JD editing or re-extraction behavior
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test` passed: 25 test files, 156 tests
+- `pnpm build` passed
+- `pnpm check` passed
+
+## 2026-05-07 — Attached resume dialog settings
+
+Changed the application-detail attached resume control from an inline select to
+a settings dialog.
+
+Included:
+
+- The attached resume card now keeps the current preview or empty state in the
+  card body and places a compact settings icon in the card header
+- The settings dialog lists "no resume attached" plus all current-user resumes
+  with status and updated metadata
+- Changing the attached resume now requires an explicit Save from the dialog and
+  still uses the existing `updateApplicationResumeAction`
+- English and Simplified Chinese copy now include an accessible settings label
+
+Not included:
+
+- Resume relationship schema changes
+- Application API or Server Action changes
+- Diagnosis prerequisite changes
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test` passed: 25 test files, 156 tests
+- `pnpm build` passed
+- `pnpm check` passed
+
+## 2026-05-07 — Application detail right-rail stage layout
+
+Moved the application stage control out of the main content flow and into the
+right rail so the Diagnosis Report can start immediately under the page header.
+
+Included:
+
+- Removed the full-width current-stage card above the application detail grid
+- Added a right-rail current-stage card above application metadata and attached
+  resume controls
+- Kept the stage selector wired to the existing colored Radix stage dropdown
+- Let the stage dropdown be the only visible current-stage value in that card
+- Removed the duplicate stage row from the metadata card
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test` passed: 25 test files, 156 tests
+- `pnpm build` passed
+- `pnpm check` passed
+
+## 2026-05-07 — Application detail stage select color polish
+
+Added shared lightweight application-stage color markers to the stage selector
+on application detail pages.
+
+Included:
+
+- `/applications/[id]` keeps the current stage summary text simple while the
+  right-side stage selector now shows the current stage dot in the trigger
+- The stage dropdown menu now renders every option with the shared
+  `APPLICATION_STAGE_THEME` color dot and a checked indicator
+- The selector still submits through the existing `updateApplicationStageAction`;
+  the application stage data model is unchanged
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test` passed: 25 test files, 156 tests
+- `pnpm build` passed
+- `pnpm check` passed
+
+## 2026-05-07 — Diagnosis report hierarchy polish
+
+Refined the application-detail Diagnosis Report reading experience without
+changing the diagnosis schema, API, persistence, or AI generation behavior.
+
+Included:
+
+- Reworked the report into a conclusion-first flow with a score ring, verdict
+  chips, summary, dimension bars, strengths, gaps, actions, rewrite targets,
+  and warnings
+- Added restrained sage, amber, and rose accents only for semantic markers,
+  priority chips, left rails, progress accents, and warning icons
+- Changed recommended actions into a numbered list and rewrite targets into a
+  clearer display-only bullet review structure
+- Preserved duplicate-safe list keys for repeated read-only diagnosis strings
+
+Not included:
+
+- Diagnosis schema changes
+- API, Server Action, database, or OpenAI service changes
+- Bullet Rewrite implementation
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test` passed: 25 test files, 156 tests
+- `pnpm build` passed
+- `pnpm check` passed after rerunning it separately from `pnpm build`
+- Browser smoke on the existing `http://localhost:3000` dev server confirmed
+  protected application detail routes redirect to sign-in with no Next.js error
+  dialog or build/runtime error text; authenticated report content still needs a
+  signed-in browser session for visual inspection
+
 ## 2026-05-07 — Application list duplicate key fix
 
 Fixed duplicate React key warnings in read-only application list displays.
