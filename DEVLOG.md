@@ -1,5 +1,38 @@
 # DEVLOG
 
+## 2026-05-07 — Diagnosis OpenAI service alignment
+
+Aligned the existing Diagnosis Report OpenAI service with the Task B
+server-side contract without changing the application detail UI, homepage,
+Bullet Rewrite, streaming, Outreach, or route wiring.
+
+Included:
+
+- Added canonical `OPENAI_MODEL_DIAGNOSE` model routing through
+  `getDiagnoseModel()`
+- Kept `OPENAI_MODEL_REASONING` as a temporary fallback for existing
+  deployments
+- Added `OPENAI_MODEL_DIAGNOSE` to `.env.example`
+- Added low-level `generateDiagnosis()` input validation for required ids,
+  parsed resume JSON, JD text, locale, application fields, JD extract shape,
+  and non-empty ResumeBullet records
+- Kept OpenAI Responses Structured Outputs through `zodTextFormat` and a
+  second `diagnosisSchema.parse()` validation pass
+- Preserved safe `AiGeneration` success/failure audit rows without storing raw
+  resume text, full JD text, or serialized prompts
+- Expanded diagnosis service tests for canonical model routing, fallback
+  routing, OpenAI configuration failures, pre-OpenAI input rejection, schema
+  failures, unknown rewrite targets, locale instruction, and private-content
+  logging guards
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test` passed: 25 test files, 152 tests
+- `pnpm build` passed
+- `pnpm check` passed
+
 ## 2026-05-07 — Diagnosis schema contract v2
 
 Updated the Diagnosis Report structured output contract without adding OpenAI
