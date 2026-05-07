@@ -80,8 +80,11 @@ export default async function JDExtractPage() {
               {copy.whatYouGet}
             </p>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              {copy.results.map((item) => (
-                <li key={item} className="flex items-center gap-2">
+              {copy.results.map((item, index) => (
+                <li
+                  key={`${item}-${index}`}
+                  className="flex items-center gap-2"
+                >
                   <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                   {item}
                 </li>

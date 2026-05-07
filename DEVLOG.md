@@ -1,5 +1,33 @@
 # DEVLOG
 
+## 2026-05-07 — Application list duplicate key fix
+
+Fixed duplicate React key warnings in read-only application list displays.
+
+Included:
+
+- `/applications/[id]` now renders saved JD Extract list items with keys that
+  stay unique even when an extracted array contains repeated values
+- Diagnosis report read-only lists use the same duplicate-safe key pattern
+- The JD Extract preview list no longer keys rows only by display text
+- Regression coverage prevents the application detail and diagnosis report
+  lists from returning to `key={item}`
+
+Not included:
+
+- JD Extract schema changes
+- Stored `jdExtractJson` cleanup or deduplication
+- Database migrations
+- API, Server Action, or OpenAI service changes
+
+Validation:
+
+- `pnpm typecheck` passed
+- `pnpm check` passed
+- Browser smoke opened the protected application detail URL in a fresh
+  Playwright session, confirmed no framework overlay and no duplicate-key
+  console message before Clerk redirected to sign-in
+
 ## 2026-05-07 — Diagnosis Report UI completion
 
 Completed the Task D application-detail Diagnosis Report UI without changing

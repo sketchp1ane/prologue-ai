@@ -382,9 +382,9 @@ function ReportList({
       <h3 className="text-sm font-medium text-foreground">{title}</h3>
       {items.length > 0 ? (
         <ul className="mt-2 space-y-2">
-          {items.map((item) => (
+          {items.map((item, index) => (
             <li
-              key={item}
+              key={`${item}-${index}`}
               className="rounded-xl border border-border bg-secondary/20 px-4 py-3 text-sm leading-6 text-foreground"
             >
               {item}

@@ -439,9 +439,9 @@ function ListSection({
       <h3 className="text-sm font-medium text-foreground">{title}</h3>
       {items.length > 0 ? (
         <div className="mt-2 flex flex-wrap gap-2">
-          {items.map((item) => (
+          {items.map((item, index) => (
             <span
-              key={item}
+              key={`${item}-${index}`}
               className="rounded-full border border-border bg-secondary/30 px-2.5 py-1 text-xs text-foreground"
             >
               {item}

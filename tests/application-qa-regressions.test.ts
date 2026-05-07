@@ -85,6 +85,8 @@ describe("application QA regressions", () => {
     expect(detailPage).toContain("copy.keywords");
     expect(detailPage).toContain("copy.warnings");
     expect(detailPage).toContain("copy.invalidExtract");
+    expect(detailPage).toContain("key={`${item}-${index}`}");
+    expect(detailPage).not.toContain("key={item}");
     expect(detailPage).toContain("parseDiagnosis");
     expect(detailPage).not.toContain("Bullet Rewrite");
     expect(notFound).toContain("dictionary.workspace.applications.notFoundDescription");
@@ -117,6 +119,8 @@ describe("application QA regressions", () => {
     expect(diagnosisPanel).toContain("copy.verdictLevelLabels");
     expect(diagnosisPanel).toContain("gap.recommendation");
     expect(diagnosisPanel).toContain("copy.displayOnly");
+    expect(diagnosisPanel).toContain("key={`${item}-${index}`}");
+    expect(diagnosisPanel).not.toContain("key={item}");
     expect(diagnosisPanel).toContain(
       "JSON.stringify({ force: hasDiagnosis })"
     );
