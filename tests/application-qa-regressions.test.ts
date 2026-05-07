@@ -53,13 +53,20 @@ describe("application QA regressions", () => {
     const stageSelect = readProjectFile(
       "components/applications/ApplicationStageSelect.tsx"
     );
+    const contextRail = readProjectFile(
+      "components/applications/ApplicationContextRail.tsx"
+    );
+    const jdDrawers = readProjectFile(
+      "components/applications/ApplicationJdDrawers.tsx"
+    );
+    const sheet = readProjectFile("components/ui/sheet.tsx");
+    const globals = readProjectFile("app/globals.css");
     const resumeSelect = readProjectFile(
       "components/applications/ApplicationResumeSelect.tsx"
     );
     const actions = readProjectFile("app/(app)/applications/actions.ts");
 
-    expect(detailPage).toContain("ApplicationStageSelect");
-    expect(detailPage).toContain("ApplicationResumeSelect");
+    expect(detailPage).toContain("ApplicationContextRail");
     expect(detailPage).toContain("ApplicationDiagnosisPanel");
     expect(detailPage).toContain("resumeParseSchema.safeParse");
     expect(detailPage).toContain("resumePrerequisite={resumePrerequisite}");
@@ -67,34 +74,83 @@ describe("application QA regressions", () => {
     expect(detailPage).toContain('status: "resume_unparsed"');
     expect(detailPage).toContain('href="/applications"');
     expect(detailPage).toContain('href="/dashboard"');
-    expect(detailPage).toContain('href={`/resumes/${application.resume.id}`}');
-    expect(detailPage).toContain("copy.attachedResume");
-    expect(detailPage).toContain("copy.noResumeAttached");
-    expect(detailPage).toContain("label={copy.company}");
-    expect(detailPage).toContain("label={copy.role}");
-    expect(detailPage).toContain("label={copy.location}");
-    expect(detailPage).toContain("label={copy.stage}");
-    expect(detailPage).toContain("label={dictionary.common.created}");
-    expect(detailPage).toContain("label={dictionary.common.updated}");
-    expect(detailPage).toContain("copy.originalJd");
-    expect(detailPage).toContain("copy.seniority");
-    expect(detailPage).toContain("copy.employmentType");
-    expect(detailPage).toContain("copy.requiredSkills");
-    expect(detailPage).toContain("copy.preferredSkills");
-    expect(detailPage).toContain("copy.responsibilities");
-    expect(detailPage).toContain("copy.keywords");
-    expect(detailPage).toContain("copy.warnings");
-    expect(detailPage).toContain("copy.invalidExtract");
-    expect(detailPage).toContain("key={`${item}-${index}`}");
-    expect(detailPage).not.toContain("key={item}");
+    expect(detailPage).toContain("resumePreview={");
+    expect(detailPage).toContain("stageOptions={stageOptions}");
+    expect(detailPage).toContain("jdText={application.jdText}");
+    expect(detailPage).not.toContain("<pre className=\"mt-6");
     expect(detailPage).toContain("parseDiagnosis");
     expect(detailPage).not.toContain("Bullet Rewrite");
     expect(notFound).toContain("dictionary.workspace.applications.notFoundDescription");
     expect(notFound).toContain('href="/applications"');
     expect(notFound).toContain('href="/dashboard"');
     expect(stageSelect).toContain("updateApplicationStageAction");
+    expect(stageSelect).toContain("@radix-ui/react-select");
+    expect(stageSelect).toContain("APPLICATION_STAGE_THEME");
+    expect(stageSelect).toContain("Select.Item");
+    expect(contextRail).toContain("useState(false)");
+    expect(contextRail).toContain("ApplicationStageSelect");
+    expect(contextRail).toContain("ApplicationJdDrawers");
+    expect(contextRail).toContain("ApplicationResumeSelect");
+    expect(contextRail).toContain("lg:grid-cols-[minmax(0,1fr)_4.5rem]");
+    expect(contextRail).not.toContain("lg:grid-cols-[minmax(0,1fr)_22rem]");
+    expect(contextRail).toContain("lg:top-24");
+    expect(contextRail).toContain("railScrollRef");
+    expect(contextRail).toContain("scrollTo");
+    expect(contextRail).not.toContain("right-full");
+    expect(contextRail).toContain("context-rail-shell");
+    expect(contextRail).toContain("context-rail-collapsed");
+    expect(contextRail).toContain("context-rail-expanded");
+    expect(contextRail).toContain("flex flex-col items-center px-3 py-3");
+    expect(contextRail).toContain("flex flex-col items-center gap-4");
+    expect(contextRail).toContain('data-state={expanded ? "open" : "closed"}');
+    expect(contextRail).toContain("w-[22rem]");
+    expect(contextRail).toContain("w-[4.5rem]");
+    expect(contextRail).toContain("max-h-[calc(100dvh-7rem)]");
+    expect(globals).toContain(".context-rail-shell");
+    expect(globals).toContain("width 320ms cubic-bezier(0.16, 1, 0.3, 1)");
+    expect(globals).toContain(".context-rail-shell[data-state=\"open\"]");
+    expect(globals).toContain("prefers-reduced-motion: reduce");
+    expect(contextRail).toContain("copy.contextRailTitle");
+    expect(contextRail).toContain("copy.expandContextRail");
+    expect(contextRail).toContain("copy.collapseContextRail");
+    expect(contextRail).not.toContain("scrollIntoView");
+    expect(contextRail).toContain("sectionRefs");
+    expect(contextRail).toContain("copy.currentStage");
+    expect(contextRail).toContain("copy.jdMaterials");
+    expect(contextRail).toContain("copy.attachedResume");
+    expect(contextRail).toContain("copy.noResumeAttached");
+    expect(contextRail).toContain("label={copy.company}");
+    expect(contextRail).toContain("label={copy.role}");
+    expect(contextRail).toContain("label={copy.location}");
+    expect(contextRail).not.toContain("label={copy.stage}");
+    expect(contextRail).toContain("label={dictionary.common.created}");
+    expect(contextRail).toContain("label={dictionary.common.updated}");
+    expect(contextRail).toContain('href={resumePreview.href}');
+    expect(jdDrawers).toContain("@/components/ui/sheet");
+    expect(jdDrawers).toContain("SheetTrigger");
+    expect(jdDrawers).toContain("SheetContent");
+    expect(jdDrawers).toContain("copy.originalJd");
+    expect(jdDrawers).toContain("copy.extractedFields");
+    expect(jdDrawers).toContain("copy.invalidExtract");
+    expect(jdDrawers).toContain("copy.missingExtract");
+    expect(jdDrawers).toContain("key={`${item}-${index}`}");
+    expect(jdDrawers).not.toContain("key={item}");
+    expect(sheet).toContain("@radix-ui/react-dialog");
+    expect(sheet).toContain("sm:w-[66vw]");
+    expect(sheet).toContain("sheet-content");
+    expect(globals).toContain("sheet-slide-in-from-right");
+    expect(globals).toContain("sheet-slide-out-to-right");
+    expect(globals).toContain("360ms cubic-bezier(0.16, 1, 0.3, 1)");
+    expect(globals).toContain("240ms cubic-bezier(0.7, 0, 0.84, 0)");
+    expect(globals).toContain(".sheet-content[data-side=\"right\"][data-state=\"open\"]");
+    expect(globals).toContain("@media (prefers-reduced-motion: reduce)");
     expect(resumeSelect).toContain("updateApplicationResumeAction");
-    expect(resumeSelect).toContain("dictionary.workspace.applicationControls.noResumeAttached");
+    expect(resumeSelect).toContain("@radix-ui/react-dialog");
+    expect(resumeSelect).toContain("Dialog.Trigger");
+    expect(resumeSelect).toContain("Dialog.Content");
+    expect(resumeSelect).toContain('name="resumeId"');
+    expect(resumeSelect).toContain("controlsCopy.configureAttachedResume");
+    expect(resumeSelect).toContain("controlsCopy.noResumeAttached");
     expect(actions).toContain("updateUserApplicationStage");
     expect(actions).toContain("updateUserApplicationResume");
     expect(actions).toContain(
@@ -107,6 +163,7 @@ describe("application QA regressions", () => {
       "components/applications/ApplicationDiagnosisPanel.tsx"
     );
     const dictionaries = readProjectFile("src/lib/i18n/dictionaries.ts");
+    const globals = readProjectFile("app/globals.css");
 
     expect(diagnosisPanel).toContain("resumePrerequisite");
     expect(diagnosisPanel).toContain("canGenerate");
@@ -116,6 +173,43 @@ describe("application QA regressions", () => {
     expect(diagnosisPanel).toContain("diagnosis.radarScores");
     expect(diagnosisPanel).toContain("diagnosis.rewriteTargets");
     expect(diagnosisPanel).toContain("diagnosis.warnings");
+    expect(diagnosisPanel).toContain("ScoreRing");
+    expect(diagnosisPanel).toContain("AnimatedScoreBar");
+    expect(diagnosisPanel).toContain("useAnimatedNumber");
+    expect(diagnosisPanel).toContain("useAnimatedProgress");
+    expect(diagnosisPanel).toContain("useInViewOnce");
+    expect(diagnosisPanel).toContain("IntersectionObserver");
+    expect(diagnosisPanel).toContain("threshold: 0.01");
+    expect(diagnosisPanel).toContain("DIAGNOSIS_NAV_SECTIONS");
+    expect(diagnosisPanel).toContain("DiagnosisSectionNav");
+    expect(diagnosisPanel).toContain("useActiveDiagnosisSection");
+    expect(diagnosisPanel).toContain("data-diagnosis-section");
+    expect(diagnosisPanel).toContain("diagnosis-section-summary");
+    expect(diagnosisPanel).toContain("diagnosis-section-${id}");
+    expect(diagnosisPanel).toContain('id: "scores"');
+    expect(diagnosisPanel).toContain('id: "strengths"');
+    expect(diagnosisPanel).toContain('id: "gaps"');
+    expect(diagnosisPanel).toContain('id: "actions"');
+    expect(diagnosisPanel).toContain('id: "rewriteTargets"');
+    expect(diagnosisPanel).toContain('id: "warnings"');
+    expect(diagnosisPanel).toContain("copy.sectionNavigation");
+    expect(diagnosisPanel).toContain("copy[section.labelKey]");
+    expect(diagnosisPanel).toContain("scroll-mt-28");
+    expect(diagnosisPanel).toContain("w-max min-w-full justify-center");
+    expect(diagnosisPanel).toContain("hasSummaryEnteredView");
+    expect(diagnosisPanel).toContain("hasScoresEnteredView");
+    expect(diagnosisPanel).toContain("RevealSection");
+    expect(diagnosisPanel).toContain("RevealCard");
+    expect(diagnosisPanel).toContain("diagnosis-card-reveal");
+    expect(diagnosisPanel).toContain("data-visible={visible}");
+    expect(diagnosisPanel).toContain("--reveal-delay");
+    expect(diagnosisPanel).toContain("index * 70");
+    expect(diagnosisPanel).toContain("requestAnimationFrame(() => {");
+    expect(diagnosisPanel).toContain("setProgress(0)");
+    expect(diagnosisPanel).toContain("setProgress(target)");
+    expect(diagnosisPanel).toContain("const rowDelay = index * 80");
+    expect(diagnosisPanel).toContain("delay={rowDelay}");
+    expect(diagnosisPanel).toContain("duration={650}");
     expect(diagnosisPanel).toContain("copy.verdictLevelLabels");
     expect(diagnosisPanel).toContain("gap.recommendation");
     expect(diagnosisPanel).toContain("copy.displayOnly");
@@ -126,13 +220,34 @@ describe("application QA regressions", () => {
     );
     expect(diagnosisPanel).not.toContain("recharts");
     expect(diagnosisPanel).not.toContain("RadarChart");
+    expect(diagnosisPanel).not.toContain("framer-motion");
+    expect(diagnosisPanel).not.toContain("motion/react");
     expect(diagnosisPanel).not.toContain("Streaming");
     expect(diagnosisPanel).not.toContain("Outreach");
     expect(diagnosisPanel).not.toContain("Bullet Rewrite");
+    expect(globals).toContain("diagnosis-ring-draw");
+    expect(globals).toContain("diagnosis-score-bar-fill");
+    expect(globals).toContain("diagnosis-fade-up");
+    expect(globals).toContain(".diagnosis-card-reveal");
+    expect(globals).toContain('.diagnosis-card-reveal[data-visible="true"]');
+    expect(globals).toContain(
+      "translate3d(1.75rem, 1.25rem, 0) scale(0.985)"
+    );
+    expect(globals).toContain("translate3d(0, 0, 0) scale(1)");
+    expect(globals).toContain("opacity 460ms cubic-bezier(0.16, 1, 0.3, 1)");
+    expect(globals).toContain("transform 460ms cubic-bezier(0.16, 1, 0.3, 1)");
+    expect(globals).toContain("transition-delay: var(--reveal-delay, 0ms)");
+    expect(globals).toContain("var(--score-duration, 650ms)");
+    expect(globals).toContain("@media (prefers-reduced-motion: reduce)");
     expect(dictionaries).toContain("radarScoreLabels");
+    expect(dictionaries).toContain("sectionNavigation");
+    expect(dictionaries).toContain("summarySection");
     expect(dictionaries).toContain("rewriteTargets");
     expect(dictionaries).toContain("attachResumeFirstTitle");
     expect(dictionaries).toContain("parseResumeFirstTitle");
+    expect(dictionaries).toContain("contextRailTitle");
+    expect(dictionaries).toContain("expandContextRail");
+    expect(dictionaries).toContain("collapseContextRail");
   });
 
   it("renders the dashboard with a draggable compact application board", () => {
