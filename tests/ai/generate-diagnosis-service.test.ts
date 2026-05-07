@@ -97,8 +97,10 @@ async function expectServiceError(
 
 describe("generateDiagnosis", () => {
   beforeEach(() => {
+    vi.unstubAllEnvs();
     vi.clearAllMocks();
-    vi.stubEnv("OPENAI_MODEL_REASONING", "gpt-5.4");
+    vi.stubEnv("OPENAI_MODEL_DIAGNOSE", "gpt-5.4");
+    vi.stubEnv("OPENAI_MODEL_REASONING", "gpt-legacy-reasoning");
     mockOpenAIResponse();
   });
 
@@ -148,6 +150,18 @@ describe("generateDiagnosis", () => {
     expect(generationData.inputHash).toMatch(/^[a-f0-9]{64}$/);
     expect(JSON.stringify(generationData)).not.toContain(jdText);
     expect(JSON.stringify(generationData)).not.toContain(privateResumeText);
+  });
+
+  it("falls back to the legacy reasoning model while deployments migrate", async () => {
+    vi.stubEnv("OPENAI_MODEL_DIAGNOSE", "");
+
+    await generateDiagnosis(diagnosisParams());
+
+    expect(mocks.responsesParse).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: "gpt-legacy-reasoning",
+      })
+    );
   });
 
   it("records a failed generation for schema failures without raw private input", async () => {
@@ -211,7 +225,8 @@ describe("generateDiagnosis", () => {
     });
   });
 
-  it("records OpenAI configuration failures", async () => {
+  it("records OpenAI model configuration failures", async () => {
+    vi.stubEnv("OPENAI_MODEL_DIAGNOSE", "");
     vi.stubEnv("OPENAI_MODEL_REASONING", "");
 
     await expectServiceError(
@@ -223,9 +238,96 @@ describe("generateDiagnosis", () => {
     expect(mocks.responsesParse).not.toHaveBeenCalled();
     expect(mocks.aiGenerationCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        errorMessage: "OPENAI_MODEL_REASONING is not configured.",
+        errorMessage: "OPENAI_MODEL_DIAGNOSE is not configured.",
         feature: "DIAGNOSIS",
         model: "unconfigured",
+        status: "FAILED",
+      }),
+    });
+  });
+
+  it("records OpenAI API key configuration failures", async () => {
+    mocks.getOpenAIClient.mockImplementationOnce(() => {
+      throw new Error("OPENAI_API_KEY is not configured.");
+    });
+
+    await expectServiceError(
+      generateDiagnosis(diagnosisParams()),
+      "configuration"
+    );
+
+    expect(mocks.responsesParse).not.toHaveBeenCalled();
+    expect(mocks.aiGenerationCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        errorMessage: "OPENAI_API_KEY is not configured.",
+        feature: "DIAGNOSIS",
+        model: "gpt-5.4",
+        status: "FAILED",
+      }),
+    });
+  });
+
+  it("rejects missing parsed resumes before calling OpenAI", async () => {
+    await expectServiceError(
+      generateDiagnosis({
+        ...diagnosisParams(),
+        parsedResume: null as never,
+      }),
+      "diagnosis_failed"
+    );
+
+    expect(mocks.getOpenAIClient).not.toHaveBeenCalled();
+    expect(mocks.responsesParse).not.toHaveBeenCalled();
+    expect(mocks.aiGenerationCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        errorMessage: expect.any(String),
+        feature: "DIAGNOSIS",
+        model: "not_called",
+        status: "FAILED",
+      }),
+    });
+  });
+
+  it("rejects missing JD text before calling OpenAI", async () => {
+    await expectServiceError(
+      generateDiagnosis({
+        ...diagnosisParams(),
+        application: {
+          ...diagnosisParams().application,
+          jdText: "   ",
+        },
+      }),
+      "diagnosis_failed"
+    );
+
+    expect(mocks.getOpenAIClient).not.toHaveBeenCalled();
+    expect(mocks.responsesParse).not.toHaveBeenCalled();
+    expect(mocks.aiGenerationCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        errorMessage: "Application job description is missing.",
+        feature: "DIAGNOSIS",
+        model: "not_called",
+        status: "FAILED",
+      }),
+    });
+  });
+
+  it("rejects empty resume bullets before calling OpenAI", async () => {
+    await expectServiceError(
+      generateDiagnosis({
+        ...diagnosisParams(),
+        bullets: [],
+      }),
+      "diagnosis_failed"
+    );
+
+    expect(mocks.getOpenAIClient).not.toHaveBeenCalled();
+    expect(mocks.responsesParse).not.toHaveBeenCalled();
+    expect(mocks.aiGenerationCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        errorMessage: "Run Resume Parse to generate resume bullet records first.",
+        feature: "DIAGNOSIS",
+        model: "not_called",
         status: "FAILED",
       }),
     });
