@@ -91,8 +91,9 @@ describe("application QA regressions", () => {
     expect(contextRail).toContain("ApplicationStageSelect");
     expect(contextRail).toContain("ApplicationJdDrawers");
     expect(contextRail).toContain("ApplicationResumeSelect");
+    expect(contextRail).toContain("lg:transition-[grid-template-columns]");
     expect(contextRail).toContain("lg:grid-cols-[minmax(0,1fr)_4.5rem]");
-    expect(contextRail).not.toContain("lg:grid-cols-[minmax(0,1fr)_22rem]");
+    expect(contextRail).toContain("lg:grid-cols-[minmax(0,1fr)_22rem]");
     expect(contextRail).toContain("lg:top-24");
     expect(contextRail).toContain("railScrollRef");
     expect(contextRail).toContain("scrollTo");

@@ -168,7 +168,12 @@ export function ApplicationContextRail({
 
   return (
     <div
-      className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_4.5rem] lg:items-start"
+      className={cn(
+        "grid gap-5 lg:items-start lg:transition-[grid-template-columns] lg:duration-300 lg:ease-out",
+        expanded
+          ? "lg:grid-cols-[minmax(0,1fr)_22rem]"
+          : "lg:grid-cols-[minmax(0,1fr)_4.5rem]"
+      )}
     >
       <div className="min-w-0">{children}</div>
 
