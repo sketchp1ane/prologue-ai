@@ -24,6 +24,7 @@ import {
   type Diagnosis,
 } from "@/src/lib/ai/schemas/diagnosis";
 import { jdExtractSchema, type JdExtract } from "@/src/lib/ai/schemas/jd-extract";
+import { resumeParseSchema } from "@/src/lib/ai/schemas/resume-parse";
 import {
   getApplicationStageLabel,
   getApplicationStageOptions,
@@ -131,6 +132,15 @@ export default async function ApplicationDetailPage({
 
   const extract = parseExtract(application.jdExtractJson);
   const diagnosis = parseDiagnosis(application.diagnosisJson);
+  const resumePrerequisite = application.resume
+    ? resumeParseSchema.safeParse(application.resume.parsedJson).success
+      ? { status: "ready" as const }
+      : {
+          resumeHref: `/resumes/${application.resume.id}`,
+          resumeTitle: application.resume.title,
+          status: "resume_unparsed" as const,
+        }
+    : { createResumeHref: "/resumes/new", status: "resume_missing" as const };
   const stageOptions = getApplicationStageOptions(dictionary.applicationStages);
 
   return (
@@ -193,6 +203,7 @@ export default async function ApplicationDetailPage({
               diagnosis.status === "valid" ? diagnosis.data : null
             }
             initialState={diagnosis.status}
+            resumePrerequisite={resumePrerequisite}
           />
 
           <AppCard padding="lg">

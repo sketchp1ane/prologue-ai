@@ -61,6 +61,10 @@ describe("application QA regressions", () => {
     expect(detailPage).toContain("ApplicationStageSelect");
     expect(detailPage).toContain("ApplicationResumeSelect");
     expect(detailPage).toContain("ApplicationDiagnosisPanel");
+    expect(detailPage).toContain("resumeParseSchema.safeParse");
+    expect(detailPage).toContain("resumePrerequisite={resumePrerequisite}");
+    expect(detailPage).toContain('status: "resume_missing"');
+    expect(detailPage).toContain('status: "resume_unparsed"');
     expect(detailPage).toContain('href="/applications"');
     expect(detailPage).toContain('href="/dashboard"');
     expect(detailPage).toContain('href={`/resumes/${application.resume.id}`}');
@@ -94,6 +98,37 @@ describe("application QA regressions", () => {
     expect(actions).toContain(
       "revalidatePath(`/applications/${parsed.data.applicationId}`)"
     );
+  });
+
+  it("renders diagnosis report data without adding future AI scope", () => {
+    const diagnosisPanel = readProjectFile(
+      "components/applications/ApplicationDiagnosisPanel.tsx"
+    );
+    const dictionaries = readProjectFile("src/lib/i18n/dictionaries.ts");
+
+    expect(diagnosisPanel).toContain("resumePrerequisite");
+    expect(diagnosisPanel).toContain("canGenerate");
+    expect(diagnosisPanel).toContain("disabled={isPending || !canGenerate}");
+    expect(diagnosisPanel).toContain("copy.attachResumeFirstTitle");
+    expect(diagnosisPanel).toContain("copy.parseResumeFirstTitle");
+    expect(diagnosisPanel).toContain("diagnosis.radarScores");
+    expect(diagnosisPanel).toContain("diagnosis.rewriteTargets");
+    expect(diagnosisPanel).toContain("diagnosis.warnings");
+    expect(diagnosisPanel).toContain("copy.verdictLevelLabels");
+    expect(diagnosisPanel).toContain("gap.recommendation");
+    expect(diagnosisPanel).toContain("copy.displayOnly");
+    expect(diagnosisPanel).toContain(
+      "JSON.stringify({ force: hasDiagnosis })"
+    );
+    expect(diagnosisPanel).not.toContain("recharts");
+    expect(diagnosisPanel).not.toContain("RadarChart");
+    expect(diagnosisPanel).not.toContain("Streaming");
+    expect(diagnosisPanel).not.toContain("Outreach");
+    expect(diagnosisPanel).not.toContain("Bullet Rewrite");
+    expect(dictionaries).toContain("radarScoreLabels");
+    expect(dictionaries).toContain("rewriteTargets");
+    expect(dictionaries).toContain("attachResumeFirstTitle");
+    expect(dictionaries).toContain("parseResumeFirstTitle");
   });
 
   it("renders the dashboard with a draggable compact application board", () => {

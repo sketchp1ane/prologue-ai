@@ -49,6 +49,7 @@ import {
 function diagnosisApplication(params?: {
   bullets?: unknown[];
   diagnosisJson?: unknown;
+  jdExtractJson?: unknown;
   jdText?: string;
   parsedJson?: unknown;
   resume?: unknown;
@@ -87,7 +88,7 @@ function diagnosisApplication(params?: {
     companyName: "Acme",
     diagnosisJson: params?.diagnosisJson ?? null,
     id: "application_1",
-    jdExtractJson: null,
+    jdExtractJson: params?.jdExtractJson ?? null,
     jdText:
       params?.jdText ??
       "Acme is hiring a Frontend Engineer to build React onboarding workflows with TypeScript and accessibility best practices.",
@@ -98,6 +99,20 @@ function diagnosisApplication(params?: {
     userId: "user_1",
   };
 }
+
+const validJdExtract = {
+  companyName: "Acme",
+  confidence: 0.9,
+  employmentType: null,
+  keywords: ["React", "TypeScript"],
+  location: "Remote",
+  preferredSkills: ["Accessibility"],
+  requiredSkills: ["React", "TypeScript"],
+  responsibilities: ["Build onboarding workflows."],
+  roleTitle: "Frontend Engineer",
+  seniority: null,
+  warnings: [],
+};
 
 async function expectServiceError(
   promise: Promise<unknown>,
@@ -167,6 +182,11 @@ describe("generateUserApplicationDiagnosis", () => {
 
     expect(mocks.generateDiagnosis).toHaveBeenCalledWith(
       expect.objectContaining({
+        application: expect.objectContaining({
+          jdExtract: null,
+          jdText:
+            "Acme is hiring a Frontend Engineer to build React onboarding workflows with TypeScript and accessibility best practices.",
+        }),
         applicationId: "application_1",
         locale: "en",
         resumeId: "resume_1",
@@ -178,6 +198,35 @@ describe("generateUserApplicationDiagnosis", () => {
       id: "application_1",
       userId: "user_1",
     });
+  });
+
+  it("uses valid JD extract JSON when raw JD text is blank", async () => {
+    mocks.getApplicationDiagnosisInputForUser.mockResolvedValue(
+      diagnosisApplication({
+        jdExtractJson: validJdExtract,
+        jdText: "   ",
+      })
+    );
+
+    await expect(
+      generateUserApplicationDiagnosis("user_1", {
+        applicationId: "application_1",
+        force: true,
+        locale: "en",
+      })
+    ).resolves.toEqual({
+      cached: false,
+      diagnosis: validDiagnosisFixture,
+    });
+
+    expect(mocks.generateDiagnosis).toHaveBeenCalledWith(
+      expect.objectContaining({
+        application: expect.objectContaining({
+          jdExtract: validJdExtract,
+          jdText: null,
+        }),
+      })
+    );
   });
 
   it("rejects missing or unauthorized applications before OpenAI", async () => {
@@ -217,6 +266,15 @@ describe("generateUserApplicationDiagnosis", () => {
       },
       {
         application: diagnosisApplication({
+          jdText: "   ",
+        }),
+        code: "jd_missing",
+      },
+      {
+        application: diagnosisApplication({
+          jdExtractJson: {
+            roleTitle: "Frontend Engineer",
+          },
           jdText: "   ",
         }),
         code: "jd_missing",

@@ -22,7 +22,10 @@ import type { AppLocale } from "@/src/lib/i18n/config";
 import { getAiOutputLanguageInstruction } from "@/src/lib/i18n/ai";
 import { prisma } from "@/src/lib/db/prisma";
 
-type DiagnosisServiceErrorCode = "configuration" | "diagnosis_failed";
+type DiagnosisServiceErrorCode =
+  | "configuration"
+  | "diagnosis_failed"
+  | "schema_validation_failed";
 
 export class DiagnosisServiceError extends Error {
   code: DiagnosisServiceErrorCode;
@@ -63,14 +66,20 @@ const generateDiagnosisInputSchema = z
       .object({
         companyName: z.string().trim().min(1, "Company name is required."),
         jdExtract: jdExtractSchema.nullable(),
-        jdText: z
-          .string()
-          .trim()
-          .min(1, "Application job description is missing."),
+        jdText: z.string().trim().nullable(),
         location: z.string().trim().nullable(),
         roleTitle: z.string().trim().min(1, "Role title is required."),
       })
-      .strict(),
+      .strict()
+      .refine(
+        (application) =>
+          (application.jdText !== null && application.jdText.length > 0) ||
+          application.jdExtract !== null,
+        {
+          message: "Application job description is missing.",
+          path: ["jdText"],
+        }
+      ),
     applicationId: z.string().trim().min(1, "Application id is required."),
     bullets: z
       .array(diagnosisResumeBulletSchema)
@@ -97,6 +106,17 @@ function safeErrorMessage(error: unknown) {
 }
 
 function toPublicServiceError(error: unknown) {
+  if (error instanceof DiagnosisServiceError) {
+    return error;
+  }
+
+  if (error instanceof z.ZodError) {
+    return new DiagnosisServiceError(
+      "The model returned diagnosis data that did not match the expected schema.",
+      "schema_validation_failed"
+    );
+  }
+
   if (
     error instanceof Error &&
     (error.message === "OPENAI_API_KEY is not configured." ||
@@ -264,7 +284,7 @@ export async function generateDiagnosis(
   const inputHash = hashInput(serializedInput);
   const metadata = {
     bulletCount: parsedParams.bullets.length,
-    jdTextLength: parsedParams.application.jdText.length,
+    jdTextLength: parsedParams.application.jdText?.length ?? 0,
     locale: parsedParams.locale,
     promptVersion: DIAGNOSIS_PROMPT_VERSION,
   } satisfies Prisma.InputJsonObject;
@@ -306,7 +326,8 @@ export async function generateDiagnosis(
 
     if (!response.output_parsed) {
       throw new DiagnosisServiceError(
-        "The model did not return diagnosis data."
+        "The model did not return diagnosis data.",
+        "schema_validation_failed"
       );
     }
 

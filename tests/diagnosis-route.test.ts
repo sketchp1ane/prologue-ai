@@ -178,6 +178,12 @@ describe("POST /api/applications/[id]/diagnose", () => {
         message:
           "Could not generate this diagnosis report. Check the resume and JD, then try again.",
       },
+      {
+        code: "schema_validation_failed",
+        expectedStatus: 502,
+        message:
+          "The diagnosis response did not match the expected schema. Please try again.",
+      },
     ];
 
     for (const testCase of cases) {

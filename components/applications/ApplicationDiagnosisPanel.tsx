@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
+  FileText,
   Loader2,
   RefreshCcw,
   Sparkles,
@@ -22,11 +24,26 @@ import { cn } from "@/src/lib/utils";
 
 type DiagnosisInitialState = "invalid" | "missing" | "valid";
 
+type DiagnosisResumePrerequisite =
+  | {
+      createResumeHref: string;
+      status: "resume_missing";
+    }
+  | {
+      resumeHref: string;
+      resumeTitle: string;
+      status: "resume_unparsed";
+    }
+  | {
+      status: "ready";
+    };
+
 type ApplicationDiagnosisPanelProps = {
   applicationId: string;
   dictionary: Pick<AppDictionary, "common" | "workspace">;
   initialDiagnosis: Diagnosis | null;
   initialState: DiagnosisInitialState;
+  resumePrerequisite: DiagnosisResumePrerequisite;
 };
 
 const VERDICT_STYLES = {
@@ -61,6 +78,7 @@ export function ApplicationDiagnosisPanel({
   dictionary,
   initialDiagnosis,
   initialState,
+  resumePrerequisite,
 }: ApplicationDiagnosisPanelProps) {
   const copy = dictionary.workspace.applicationDetail.diagnosis;
   const [diagnosis, setDiagnosis] = useState(initialDiagnosis);
@@ -68,8 +86,14 @@ export function ApplicationDiagnosisPanel({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const hasDiagnosis = Boolean(diagnosis);
+  const canGenerate = resumePrerequisite.status === "ready";
+  const showRetry = Boolean(error && !hasDiagnosis && canGenerate);
 
   function handleGenerate() {
+    if (!canGenerate) {
+      return;
+    }
+
     setError(null);
 
     startTransition(async () => {
@@ -112,7 +136,7 @@ export function ApplicationDiagnosisPanel({
           <Button
             type="button"
             onClick={handleGenerate}
-            disabled={isPending}
+            disabled={isPending || !canGenerate}
             className="rounded-xl"
             variant={hasDiagnosis ? "outline" : "default"}
           >
@@ -125,13 +149,22 @@ export function ApplicationDiagnosisPanel({
             )}
             {isPending
               ? copy.generating
-              : hasDiagnosis
+              : showRetry
+                ? copy.retry
+                : hasDiagnosis
                 ? copy.regenerate
                 : copy.generate}
           </Button>
         }
       />
       <AppCardContent>
+        {resumePrerequisite.status !== "ready" && (
+          <PrerequisiteNotice
+            dictionary={dictionary}
+            prerequisite={resumePrerequisite}
+          />
+        )}
+
         {error && (
           <div
             className="mb-4 rounded-xl border border-destructive/30 bg-card px-4 py-3 text-sm text-destructive shadow-sm"
@@ -144,13 +177,72 @@ export function ApplicationDiagnosisPanel({
 
         {!diagnosis ? (
           <div className="rounded-xl border border-dashed border-border bg-secondary/20 p-6 text-sm leading-6 text-muted-foreground">
-            {state === "invalid" ? copy.invalidCached : copy.empty}
+            {state === "invalid"
+              ? copy.invalidCached
+              : resumePrerequisite.status === "ready"
+                ? copy.empty
+                : copy.emptyBlocked}
           </div>
         ) : (
           <DiagnosisReport diagnosis={diagnosis} dictionary={dictionary} />
         )}
       </AppCardContent>
     </AppCard>
+  );
+}
+
+function PrerequisiteNotice({
+  dictionary,
+  prerequisite,
+}: {
+  dictionary: Pick<AppDictionary, "workspace">;
+  prerequisite: Exclude<DiagnosisResumePrerequisite, { status: "ready" }>;
+}) {
+  const copy = dictionary.workspace.applicationDetail.diagnosis;
+
+  return (
+    <div className="mb-4 rounded-xl border border-dashed border-border bg-secondary/20 p-4 text-sm leading-6 text-muted-foreground">
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-primary">
+          <FileText className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
+          <p className="font-medium text-foreground">
+            {prerequisite.status === "resume_missing"
+              ? copy.attachResumeFirstTitle
+              : copy.parseResumeFirstTitle}
+          </p>
+          <p className="mt-1">
+            {prerequisite.status === "resume_missing"
+              ? copy.attachResumeFirstDescription
+              : copy.parseResumeFirstDescription}
+          </p>
+          {prerequisite.status === "resume_missing" ? (
+            <Button
+              asChild
+              className="mt-3 rounded-xl"
+              size="sm"
+              variant="outline"
+            >
+              <Link href={prerequisite.createResumeHref}>
+                {copy.createResume}
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              asChild
+              className="mt-3 rounded-xl"
+              size="sm"
+              variant="outline"
+            >
+              <Link href={prerequisite.resumeHref}>
+                {copy.openResume} {prerequisite.resumeTitle}
+              </Link>
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -178,14 +270,19 @@ function DiagnosisReport({
           <p className="mt-1 text-xs text-muted-foreground">/ 100</p>
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
-          <div
-            className={cn(
-              "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium",
-              verdict.className
-            )}
-          >
-            <VerdictIcon className="h-3.5 w-3.5" aria-hidden="true" />
-            {copy.verdictLabels[diagnosis.hrThreeSecondVerdict]}
+          <div className="flex flex-wrap gap-2">
+            <div
+              className={cn(
+                "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium",
+                verdict.className
+              )}
+            >
+              <VerdictIcon className="h-3.5 w-3.5" aria-hidden="true" />
+              {copy.verdictLabels[diagnosis.hrThreeSecondVerdict]}
+            </div>
+            <div className="inline-flex items-center rounded-full border border-border bg-secondary/30 px-3 py-1 text-xs font-medium text-muted-foreground">
+              {copy.verdictLevelLabels[diagnosis.verdictLevel]}
+            </div>
           </div>
           <p className="mt-4 text-sm leading-6 text-foreground">
             {diagnosis.summary}
@@ -193,26 +290,93 @@ function DiagnosisReport({
         </div>
       </div>
 
-      <ReportList title={copy.strengths} items={diagnosis.strengths} />
+      <RadarScores dictionary={dictionary} scores={diagnosis.radarScores} />
+      <ReportList
+        emptyLabel={copy.noStrengthsReturned}
+        title={copy.strengths}
+        items={diagnosis.strengths}
+      />
       <GapsList
         dictionary={dictionary}
         gaps={diagnosis.gaps}
         title={copy.gaps}
       />
       <ReportList
+        emptyLabel={copy.noRecommendedActionsReturned}
         title={copy.recommendedActions}
         items={diagnosis.recommendedActions}
       />
-      <BulletSuggestionList
+      <RewriteTargetsList
         dictionary={dictionary}
-        suggestions={diagnosis.bulletSuggestions}
-        title={copy.bulletSuggestions}
+        targets={diagnosis.rewriteTargets}
+        title={copy.rewriteTargets}
+      />
+      <ReportList
+        emptyLabel={copy.noWarningsReturned}
+        title={copy.warnings}
+        items={diagnosis.warnings}
       />
     </div>
   );
 }
 
-function ReportList({ items, title }: { items: string[]; title: string }) {
+function RadarScores({
+  dictionary,
+  scores,
+}: {
+  dictionary: Pick<AppDictionary, "workspace">;
+  scores: Diagnosis["radarScores"];
+}) {
+  const copy = dictionary.workspace.applicationDetail.diagnosis;
+  const rows = [
+    ["skills", scores.skills],
+    ["experience", scores.experience],
+    ["projects", scores.projects],
+    ["keywords", scores.keywords],
+    ["seniority", scores.seniority],
+  ] as const;
+
+  return (
+    <section>
+      <h3 className="text-sm font-medium text-foreground">
+        {copy.radarScores}
+      </h3>
+      <div className="mt-2 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        {rows.map(([key, score]) => (
+          <div
+            key={key}
+            className="rounded-xl border border-border bg-secondary/20 p-3"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-medium text-muted-foreground">
+                {copy.radarScoreLabels[key]}
+              </p>
+              <p className="text-sm font-medium text-foreground">
+                {Math.round(score)}
+              </p>
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary">
+              <div
+                className="h-full rounded-full bg-primary"
+                style={{ width: `${Math.round(score)}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ReportList({
+  emptyLabel,
+  items,
+  title,
+}: {
+  emptyLabel: string;
+  items: string[];
+  title: string;
+}) {
   return (
     <section>
       <h3 className="text-sm font-medium text-foreground">{title}</h3>
@@ -227,7 +391,11 @@ function ReportList({ items, title }: { items: string[]; title: string }) {
             </li>
           ))}
         </ul>
-      ) : null}
+      ) : (
+        <p className="mt-2 rounded-xl border border-dashed border-border bg-secondary/20 px-4 py-3 text-sm leading-6 text-muted-foreground">
+          {emptyLabel}
+        </p>
+      )}
     </section>
   );
 }
@@ -263,21 +431,29 @@ function GapsList({
                 </span>
               </div>
               <p className="mt-1 text-muted-foreground">{gap.evidence}</p>
+              <p className="mt-3 text-xs font-medium text-muted-foreground">
+                {copy.recommendation}
+              </p>
+              <p className="mt-1 text-foreground">{gap.recommendation}</p>
             </div>
           ))}
         </div>
-      ) : null}
+      ) : (
+        <p className="mt-2 rounded-xl border border-dashed border-border bg-secondary/20 px-4 py-3 text-sm leading-6 text-muted-foreground">
+          {copy.noGapsReturned}
+        </p>
+      )}
     </section>
   );
 }
 
-function BulletSuggestionList({
+function RewriteTargetsList({
   dictionary,
-  suggestions,
+  targets,
   title,
 }: {
   dictionary: Pick<AppDictionary, "workspace">;
-  suggestions: Diagnosis["bulletSuggestions"];
+  targets: Diagnosis["rewriteTargets"];
   title: string;
 }) {
   const copy = dictionary.workspace.applicationDetail.diagnosis;
@@ -285,33 +461,35 @@ function BulletSuggestionList({
   return (
     <section>
       <h3 className="text-sm font-medium text-foreground">{title}</h3>
-      {suggestions.length > 0 ? (
+      {targets.length > 0 ? (
         <div className="mt-2 space-y-3">
-          {suggestions.map((suggestion) => (
+          {targets.map((target) => (
             <div
-              key={`${suggestion.original}-${suggestion.suggestion}`}
+              key={`${target.resumeBulletId}-${target.originalText}`}
               className="rounded-xl border border-border bg-card p-4 text-sm leading-6"
             >
-              <p className="text-xs font-medium text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-border bg-secondary/30 px-2 py-0.5 text-xs text-muted-foreground">
+                  {copy.priorityLabels[target.priority]}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {copy.displayOnly}
+                </span>
+              </div>
+              <p className="mt-3 text-xs font-medium text-muted-foreground">
                 {copy.originalBullet}
               </p>
-              <p className="mt-1 text-muted-foreground">
-                {suggestion.original}
-              </p>
-              <p className="mt-3 text-xs font-medium text-muted-foreground">
-                {copy.suggestedDirection}
-              </p>
-              <p className="mt-1 text-foreground">{suggestion.suggestion}</p>
+              <p className="mt-1 text-foreground">{target.originalText}</p>
               <p className="mt-3 text-xs font-medium text-muted-foreground">
                 {copy.reason}
               </p>
-              <p className="mt-1 text-muted-foreground">{suggestion.reason}</p>
+              <p className="mt-1 text-muted-foreground">{target.reason}</p>
             </div>
           ))}
         </div>
       ) : (
-        <p className="mt-2 text-sm text-muted-foreground">
-          {copy.noBulletSuggestions}
+        <p className="mt-2 rounded-xl border border-dashed border-border bg-secondary/20 px-4 py-3 text-sm leading-6 text-muted-foreground">
+          {copy.noRewriteTargetsReturned}
         </p>
       )}
     </section>

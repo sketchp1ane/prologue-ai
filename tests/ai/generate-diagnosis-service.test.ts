@@ -34,13 +34,29 @@ const jdText =
   "Acme is hiring a Frontend Engineer to build React onboarding workflows with TypeScript and accessibility best practices.";
 const privateResumeText =
   "Alex Chen built private customer onboarding workflows with React.";
+const validJdExtract = {
+  companyName: "Acme",
+  confidence: 0.9,
+  employmentType: null,
+  keywords: ["React", "TypeScript"],
+  location: "Remote",
+  preferredSkills: ["Accessibility"],
+  requiredSkills: ["React", "TypeScript"],
+  responsibilities: ["Build onboarding workflows."],
+  roleTitle: "Frontend Engineer",
+  seniority: null,
+  warnings: [],
+};
 
 function mockOpenAIResponse(params?: {
   outputParsed?: unknown;
   usage?: unknown;
 }) {
   mocks.responsesParse.mockResolvedValue({
-    output_parsed: params?.outputParsed ?? validDiagnosisFixture,
+    output_parsed:
+      params && "outputParsed" in params
+        ? params.outputParsed
+        : validDiagnosisFixture,
     usage:
       params?.usage ??
       {
@@ -164,6 +180,33 @@ describe("generateDiagnosis", () => {
     );
   });
 
+  it("accepts valid JD extract JSON when raw JD text is unavailable", async () => {
+    await expect(
+      generateDiagnosis({
+        ...diagnosisParams(),
+        application: {
+          ...diagnosisParams().application,
+          jdExtract: validJdExtract,
+          jdText: null,
+        },
+      })
+    ).resolves.toEqual(validDiagnosisFixture);
+
+    expect(mocks.responsesParse).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: expect.stringContaining('"jdText":null'),
+      })
+    );
+    expect(mocks.aiGenerationCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        metadata: expect.objectContaining({
+          jdTextLength: 0,
+        }),
+        status: "SUCCESS",
+      }),
+    });
+  });
+
   it("records a failed generation for schema failures without raw private input", async () => {
     mockOpenAIResponse({
       outputParsed: {
@@ -173,7 +216,7 @@ describe("generateDiagnosis", () => {
 
     await expectServiceError(
       generateDiagnosis(diagnosisParams()),
-      "diagnosis_failed"
+      "schema_validation_failed"
     );
 
     expect(mocks.aiGenerationCreate).toHaveBeenCalledWith({
@@ -193,6 +236,25 @@ describe("generateDiagnosis", () => {
     expect(JSON.stringify(mocks.aiGenerationCreate.mock.calls[0]?.[0])).not.toContain(
       jdText
     );
+  });
+
+  it("maps missing parsed output to a schema validation failure", async () => {
+    mockOpenAIResponse({
+      outputParsed: null,
+    });
+
+    await expectServiceError(
+      generateDiagnosis(diagnosisParams()),
+      "schema_validation_failed"
+    );
+
+    expect(mocks.aiGenerationCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        errorMessage: "The model did not return diagnosis data.",
+        feature: "DIAGNOSIS",
+        status: "FAILED",
+      }),
+    });
   });
 
   it("rejects rewrite targets that reference unknown resume bullets", async () => {
@@ -294,6 +356,7 @@ describe("generateDiagnosis", () => {
         ...diagnosisParams(),
         application: {
           ...diagnosisParams().application,
+          jdExtract: null,
           jdText: "   ",
         },
       }),

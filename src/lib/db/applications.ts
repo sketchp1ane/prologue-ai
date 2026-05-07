@@ -9,6 +9,7 @@ type ApplicationDiagnosisDb = Pick<PrismaClient, "application">;
 
 const attachedResumeSelect = {
   id: true,
+  parsedJson: true,
   status: true,
   title: true,
   updatedAt: true,

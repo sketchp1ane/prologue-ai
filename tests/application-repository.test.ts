@@ -82,6 +82,7 @@ describe("application repository", () => {
         resume: {
           select: {
             id: true,
+            parsedJson: true,
             status: true,
             title: true,
             updatedAt: true,
