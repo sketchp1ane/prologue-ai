@@ -67,6 +67,14 @@ The public homepage is available at `/`. Clerk-backed auth pages are available a
 
 If Clerk environment variables are missing, public pages still load with a setup notice and protected workspace routes redirect to `/sign-in`. JD Extract and Resume Parse require `OPENAI_API_KEY` and model configuration from `.env.example`; PDF upload also requires `BLOB_READ_WRITE_TOKEN`.
 
+For local browser QA with Clerk, create a dedicated user in your Clerk development instance, copy its `user_id` into `CLERK_TEST_USER_ID` in `.env.local`, then run:
+
+```bash
+pnpm dev:clerk-login -- --next=/applications
+```
+
+Open the printed one-time URL in the browser. The `/dev/clerk-ticket` page is development-only, consumes the Clerk sign-in token, and redirects to the requested local path.
+
 PDF privacy note: uploaded PDFs are stored privately in Vercel Blob. When parsing is triggered, the server sends the PDF to OpenAI as a file input; OpenAI may scan file inputs for safety and PDF parsing can use more tokens than pasted text. If PDF parsing fails, create a pasted-text resume version as the fallback.
 
 ## Validation commands

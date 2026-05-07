@@ -106,6 +106,27 @@ For each task:
 8. If a command cannot run, document the exact reason.
 9. Update `DEVLOG.md` after each meaningful slice.
 
+## Authenticated browser QA
+
+When Codex needs to test authenticated workspace routes in the in-app browser,
+use the local Clerk ticket login flow instead of bypassing auth:
+
+```bash
+pnpm dev:clerk-login -- --next=/applications
+```
+
+Requirements and safety rules:
+
+- `CLERK_SECRET_KEY` and `CLERK_TEST_USER_ID` should live only in `.env.local`.
+- Open the printed `/dev/clerk-ticket?...` URL in the browser; the page consumes
+  the one-time Clerk sign-in token and redirects to the local `--next` path.
+- Do not paste, log, commit, or summarize the token value. Treat it as a secret.
+- `/dev/clerk-ticket` is development-only. Do not add a production auth bypass.
+- If `CLERK_TEST_USER_ID` is missing and the user explicitly asks Codex to log in
+  for QA, Codex may use a read-only local database lookup for an existing
+  `Application.userId` or `Resume.userId` to mint a short-lived token. Do not
+  persist that fallback value; document that this fallback was used.
+
 ## Quality bar
 
 A feature is complete only when:

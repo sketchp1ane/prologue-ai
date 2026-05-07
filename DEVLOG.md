@@ -1,5 +1,73 @@
 # DEVLOG
 
+## 2026-05-07 — Codex Clerk login guidance
+
+Documented the local Clerk ticket login flow in the AI/Codex guidance files so
+future browser QA can enter authenticated workspace routes safely.
+
+Included:
+
+- Added `pnpm dev:clerk-login -- --next=/applications` guidance to `AGENTS.md`
+- Added the same authenticated browser QA convention to
+  `docs/CODEX_INIT_SCHEME.md`
+- Documented token handling, dev-only constraints, and the read-only local
+  `userId` fallback for explicit QA requests
+
+Validation:
+
+- `pnpm check` passed
+
+## 2026-05-07 — Local Clerk ticket login
+
+Added a local-only Clerk ticket login path for browser QA in authenticated
+workspace routes.
+
+Included:
+
+- Added `pnpm dev:clerk-login -- --next=/applications` to mint a short-lived
+  Clerk sign-in token for `CLERK_TEST_USER_ID`
+- Added `/dev/clerk-ticket` to consume the one-time token through Clerk's ticket
+  strategy and redirect to a sanitized local path
+- Documented the local test-user setup and added regression coverage for
+  production gating, safe redirects, and environment template fields
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test` passed: 25 test files, 158 tests
+- `pnpm build` passed
+- `pnpm check` passed
+- Browser smoke loaded `/dev/clerk-ticket?next=/applications` and showed the
+  missing-token state without a framework overlay
+- Browser QA generated a fresh Clerk sign-in token from a local database
+  `userId`, consumed it through `/dev/clerk-ticket`, and landed on
+  `/applications` with the authenticated application list visible
+- `CLERK_SECRET_KEY= CLERK_TEST_USER_ID= node scripts/dev-clerk-login.mjs
+  --next=/applications` failed safely before making a Clerk request
+
+## 2026-05-07 — Context rail expanded layout fix
+
+Fixed the application detail layout so the expanded diagnosis context rail no
+longer covers the sticky Diagnosis Report section navigation.
+
+Included:
+
+- Synced the desktop grid rail column with the context rail's expanded `22rem`
+  width
+- Kept the collapsed rail at the existing `4.5rem` column width
+- Added regression coverage for the expanded and collapsed grid column classes
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test` passed: 25 test files, 156 tests
+- `pnpm build` passed
+- `pnpm check` passed
+- Browser smoke reached the local app, but authenticated diagnosis-page visual
+  QA was blocked by the in-app browser's signed-out Clerk session
+
 ## 2026-05-07 — Diagnosis section navigation
 
 Added an in-report sticky navigation bar to the application Diagnosis Report so
