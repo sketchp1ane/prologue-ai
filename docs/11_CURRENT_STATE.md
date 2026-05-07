@@ -57,6 +57,7 @@
 - Workspace Data v1 QA closeout completed with documentation updates only and required validation commands passing.
 - Diagnosis Report v1 added for application details: users can generate or regenerate a structured resume-vs-JD report for an application with an attached parsed resume.
 - Diagnosis Report v1 persists `Application.diagnosisJson`, records `AiGeneration` success/failure audit rows, and displays cached reports on `/applications/[id]`.
+- Diagnosis Report v1 QA closeout completed with authenticated browser QA, database persistence checks, error-state checks, and required validation commands passing.
 
 ## Current Homepage Status
 
@@ -107,7 +108,9 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - Dashboard reads current-user applications only and updates stages only when both `Application.id` and `userId` match.
 - Dashboard drag-and-drop and the compact fallback selector both reuse the same user-scoped stage update path.
 - Application detail continues to use the Server Action-backed stage selector.
-- Application detail includes Diagnosis Report v1 with cached report rendering, generate/regenerate action, loading/error/invalid-cache states, and no Bullet Rewrite behavior.
+- Application detail includes Diagnosis Report v1 with cached `Application.diagnosisJson` rendering, explicit generate/regenerate button actions, loading/error/invalid-cache states, and no Bullet Rewrite behavior.
+- Diagnosis Report generation is never triggered automatically on page load; cached reports are read and rendered without calling OpenAI.
+- Diagnosis Report regeneration requires explicit user action and overwrites `Application.diagnosisJson` only after `POST /api/applications/[id]/diagnose` succeeds.
 - Dashboard board columns are fixed from the current `ApplicationStage` enum and do not persist within-column ordering.
 - Resume deletion detaches related applications through `ON DELETE SET NULL` rather than deleting application records.
 - Workspace Data v1 validation passed on 2026-04-28 with `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, and `pnpm check`.
@@ -122,11 +125,12 @@ The imported v0 prototype should not be used as a source for backend logic, auth
 - Workspace dictionary values are serializable data only; client components receive dictionary slices or final strings rather than server helpers.
 - Future AI generation slices should use the shared AI locale instruction so generated prose follows the user's language preference.
 - JD Extract, Resume Parse, and Diagnosis Report are the implemented OpenAI API integrations.
+- Diagnosis Report reads its canonical model from `OPENAI_MODEL_DIAGNOSE`; `OPENAI_MODEL_REASONING` remains only as a legacy fallback for existing deployments.
 - PDF Resume Parse is implemented through OpenAI Responses file inputs. PDF content is sent to OpenAI only when parsing is triggered and may be scanned by OpenAI safety systems and cost more tokens than pasted text.
 - No bullet rewrite, outreach, interview review, or weekly report generation is implemented yet.
 
 ## Next Recommended Step
 
-Move to Bullet Rewrite only after validating Diagnosis Report v1 with real resume/JD data. Keep Bullet Rewrite, Outreach, Interview Review, and Weekly Report as separate slices.
+Move to Bullet Rewrite only after the Diagnosis Report v1 QA closeout remains green. Keep Bullet Rewrite, Outreach, Interview Review, and Weekly Report as separate slices.
 
 For any future UI work, read `docs/10_DESIGN_SYSTEM.md` first and keep the imported homepage as the visual baseline.

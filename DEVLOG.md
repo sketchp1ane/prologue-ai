@@ -1,5 +1,89 @@
 # DEVLOG
 
+## 2026-05-07 — Diagnosis Report v1 QA closeout
+
+Closed Diagnosis Report v1 with authenticated browser QA, database
+persistence checks, error-state checks, and validation.
+
+Implemented Diagnosis Report v1 scope confirmed:
+
+- Diagnosis schema, fixtures, prompt, and OpenAI Responses structured-output
+  service
+- `POST /api/applications/[id]/diagnose` route with authenticated user scope
+- Application detail Diagnosis Report UI with cached report rendering,
+  explicit Generate and Regenerate controls, loading, error, invalid-cache, and
+  prerequisite states
+- `Application.diagnosisJson` persistence for successful reports
+- `AiGeneration` success/failure audit rows without storing raw resume or JD
+  input
+- Regenerate support that overwrites the saved diagnosis only after explicit
+  user action
+
+QA confirmations:
+
+- Authenticated browser QA used the local Clerk ticket flow and the documented
+  read-only database `userId` fallback because `CLERK_TEST_USER_ID` was not set
+  locally
+- A real application with an attached parsed resume, generated resume bullets,
+  and JD text showed the Diagnosis Report generate control
+- Clicking Generate entered the loading state, returned a structured diagnosis,
+  wrote `Application.diagnosisJson`, and created a successful DIAGNOSIS
+  `AiGeneration`
+- Refreshing `/applications/[id]` rendered the cached diagnosis report and did
+  not create another DIAGNOSIS `AiGeneration`
+- Clicking Regenerate explicitly reran diagnosis generation and increased the
+  DIAGNOSIS `AiGeneration` count
+- Anonymous `/applications/[id]` access redirected to `/sign-in`, and anonymous
+  `POST /api/applications/[id]/diagnose` returned `401 unauthorized`
+- An authenticated current user opening another user's application saw the safe
+  not-found screen with no diagnosis control exposed
+- Public homepage files were not modified for Diagnosis Report v1 and contain
+  no Diagnosis, OpenAI, API, or `fetch` wiring
+- Bullet Rewrite was not implemented; only the existing Prisma model, future
+  planning references, and display-only diagnosis rewrite targets exist
+- OpenAI SDK usage remains in server-only `src/lib/ai/` modules
+- `OPENAI_API_KEY` is read only by the server-only OpenAI client helper and is
+  not exposed as a `NEXT_PUBLIC_*` variable
+- Diagnosis uses canonical `OPENAI_MODEL_DIAGNOSE` model routing through
+  `getDiagnoseModel()`, with `OPENAI_MODEL_REASONING` retained as a legacy
+  fallback for existing deployments
+- Application diagnosis reads are scoped by `Application.id` and Clerk `userId`;
+  nested `ResumeBullet` records are filtered by `userId`
+- Application resume attachment paths validate resume ownership before writes
+- Diagnosis persistence uses `updateMany` with both `Application.id` and
+  `userId`
+- Cached `Application.diagnosisJson` renders on `/applications/[id]` without
+  calling OpenAI on page load
+- Generate and Regenerate require explicit button action; the client sends
+  `force: false` for first generation and `force: true` when replacing a cached
+  diagnosis
+- Missing resume, unparsed resume, missing generated resume bullets, and
+  missing JD/JD extract are rejected before OpenAI is called
+- Browser QA verified the no-resume, unparsed-resume, missing-JD,
+  missing-`OPENAI_API_KEY`, and OpenAI-failure retry states
+- QA-only temporary application/resume records created for error-state checks
+  were removed after validation
+
+Validation:
+
+- Focused diagnosis tests passed: 6 files, 44 tests
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test` passed: 25 test files, 158 tests
+- `pnpm build` passed
+- `pnpm check` passed
+
+Known limitations:
+
+- Rate limiting and user-facing cost visibility are not implemented yet
+- Bullet Rewrite, Outreach, Interview Review, and Weekly Report remain separate
+  future slices
+
+Next recommended task:
+
+- Start Bullet Rewrite v1 only after this Diagnosis Report v1 closeout remains
+  green.
+
 ## 2026-05-07 — Codex Clerk login guidance
 
 Documented the local Clerk ticket login flow in the AI/Codex guidance files so
