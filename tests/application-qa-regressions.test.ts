@@ -60,6 +60,7 @@ describe("application QA regressions", () => {
 
     expect(detailPage).toContain("ApplicationStageSelect");
     expect(detailPage).toContain("ApplicationResumeSelect");
+    expect(detailPage).toContain("ApplicationDiagnosisPanel");
     expect(detailPage).toContain('href="/applications"');
     expect(detailPage).toContain('href="/dashboard"');
     expect(detailPage).toContain('href={`/resumes/${application.resume.id}`}');
@@ -80,7 +81,7 @@ describe("application QA regressions", () => {
     expect(detailPage).toContain("copy.keywords");
     expect(detailPage).toContain("copy.warnings");
     expect(detailPage).toContain("copy.invalidExtract");
-    expect(detailPage).not.toContain("Diagnosis");
+    expect(detailPage).toContain("parseDiagnosis");
     expect(detailPage).not.toContain("Bullet Rewrite");
     expect(notFound).toContain("dictionary.workspace.applications.notFoundDescription");
     expect(notFound).toContain('href="/applications"');

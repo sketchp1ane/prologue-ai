@@ -442,6 +442,41 @@ export const dictionaries = {
         seniority: "Seniority",
         employmentType: "Employment type",
         confidence: "Confidence",
+        diagnosis: {
+          title: "Diagnosis Report",
+          description:
+            "Compare the attached parsed resume with this job description.",
+          generate: "Generate diagnosis",
+          regenerate: "Regenerate",
+          generating: "Generating...",
+          generateFailed:
+            "Could not generate this diagnosis report. Check the resume and JD, then try again.",
+          connectionFailed:
+            "Could not reach Diagnosis Report. Check your connection and try again.",
+          empty:
+            "Attach a parsed resume, then generate a match score, HR verdict, strengths, gaps, actions, and bullet-level suggestions.",
+          invalidCached:
+            "The saved diagnosis report could not be displayed safely. Regenerate it to replace the cached result.",
+          overallScore: "Match score",
+          strengths: "Strengths",
+          gaps: "Gaps",
+          recommendedActions: "Recommended actions",
+          bulletSuggestions: "Bullet suggestions",
+          originalBullet: "Original bullet",
+          suggestedDirection: "Suggested direction",
+          reason: "Reason",
+          noBulletSuggestions: "No bullet suggestions returned.",
+          verdictLabels: {
+            strong_match: "Strong match",
+            possible_match: "Possible match",
+            weak_match: "Weak match",
+          },
+          severityLabels: {
+            low: "Low",
+            medium: "Medium",
+            high: "High",
+          },
+        },
       },
       applicationControls: {
         updateStage: "Update stage",
@@ -1178,6 +1213,38 @@ export const dictionaries = {
         seniority: "职级",
         employmentType: "雇佣类型",
         confidence: "置信度",
+        diagnosis: {
+          title: "诊断报告",
+          description: "对比关联的已解析简历和这份职位描述。",
+          generate: "生成诊断",
+          regenerate: "重新生成",
+          generating: "生成中...",
+          generateFailed: "无法生成这份诊断报告。请检查简历和 JD 后重试。",
+          connectionFailed: "无法连接诊断报告服务。请检查网络后重试。",
+          empty:
+            "关联一份已解析简历后，即可生成匹配分、HR 判断、优势、缺口、行动建议和 bullet 级建议。",
+          invalidCached:
+            "已保存的诊断报告无法安全展示。请重新生成以替换缓存结果。",
+          overallScore: "匹配分",
+          strengths: "优势",
+          gaps: "缺口",
+          recommendedActions: "建议行动",
+          bulletSuggestions: "Bullet 建议",
+          originalBullet: "原始 bullet",
+          suggestedDirection: "建议方向",
+          reason: "原因",
+          noBulletSuggestions: "本次未返回 bullet 建议。",
+          verdictLabels: {
+            strong_match: "高度匹配",
+            possible_match: "可能匹配",
+            weak_match: "匹配较弱",
+          },
+          severityLabels: {
+            low: "低",
+            medium: "中",
+            high: "高",
+          },
+        },
       },
       applicationControls: {
         updateStage: "更新阶段",

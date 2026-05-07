@@ -1,5 +1,40 @@
 # DEVLOG
 
+## 2026-05-07 — Diagnosis Report v1
+
+Implemented Diagnosis Report v1 as a focused application detail slice.
+
+Included:
+
+- Added `diagnosis_v1` schema, prompt, and OpenAI Responses service with
+  Structured Outputs through `zodTextFormat`
+- Added `OPENAI_MODEL_REASONING` model routing for diagnosis generation
+- Added user-scoped application diagnosis input loading and
+  `Application.diagnosisJson` persistence
+- Added `POST /api/applications/[id]/diagnose` with authentication,
+  prerequisite errors, cache reuse, forced regeneration, and route
+  revalidation
+- Recorded `AiGeneration` success/failure rows for `DIAGNOSIS` without storing
+  raw resume or JD input
+- Added a localized application detail report card with generate/regenerate,
+  loading, API error, invalid cached JSON, cached result display, score,
+  verdict, strengths, gaps, actions, and bullet suggestions
+
+Not included:
+
+- Bullet Rewrite
+- Streaming
+- Outreach
+- Interview Review
+- Weekly Report
+- Homepage changes
+- New dependencies
+
+Validation:
+
+- Focused diagnosis/application tests passed
+- `pnpm typecheck` passed
+
 ## 2026-05-04 — Resume Parse v1 QA closeout
 
 Closed Resume Parse v1 with documentation-only QA and validation.

@@ -121,6 +121,8 @@ Future tasks must:
 
 ### T08 — Diagnosis report
 
+Status: completed.
+
 Implement diagnosis generation, persistence, report UI, and regenerate action.
 
 ### T09 — Bullet rewrite streaming
