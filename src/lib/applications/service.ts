@@ -47,7 +47,8 @@ type ApplicationDiagnosisServiceErrorCode =
   | "jd_missing"
   | "resume_bullets_missing"
   | "resume_missing"
-  | "resume_not_parsed";
+  | "resume_not_parsed"
+  | "schema_validation_failed";
 
 export class ApplicationDiagnosisServiceError extends Error {
   code: ApplicationDiagnosisServiceErrorCode;
@@ -182,8 +183,9 @@ export async function generateUserApplicationDiagnosis(
   }
 
   const jdText = application.jdText.trim();
+  const parsedJdExtract = jdExtractSchema.safeParse(application.jdExtractJson);
 
-  if (jdText.length === 0) {
+  if (jdText.length === 0 && !parsedJdExtract.success) {
     throw new ApplicationDiagnosisServiceError(
       "Application job description is missing.",
       "jd_missing"
@@ -213,8 +215,6 @@ export async function generateUserApplicationDiagnosis(
     );
   }
 
-  const parsedJdExtract = jdExtractSchema.safeParse(application.jdExtractJson);
-
   let diagnosis: Diagnosis;
 
   try {
@@ -222,7 +222,7 @@ export async function generateUserApplicationDiagnosis(
       application: {
         companyName: application.companyName,
         jdExtract: parsedJdExtract.success ? parsedJdExtract.data : null,
-        jdText,
+        jdText: jdText.length > 0 ? jdText : null,
         location: application.location,
         roleTitle: application.roleTitle,
       },

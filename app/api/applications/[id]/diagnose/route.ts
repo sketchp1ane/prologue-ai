@@ -56,6 +56,12 @@ function serviceErrorResponse(error: ApplicationDiagnosisServiceError) {
         "openai_not_configured",
         "OpenAI diagnosis is not configured. Add the required environment variables and restart the dev server."
       );
+    case "schema_validation_failed":
+      return apiError(
+        502,
+        "schema_validation_failed",
+        "The diagnosis response did not match the expected schema. Please try again."
+      );
     case "diagnosis_failed":
     default:
       return apiError(

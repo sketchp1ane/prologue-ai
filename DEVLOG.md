@@ -1,5 +1,34 @@
 # DEVLOG
 
+## 2026-05-07 — Diagnosis API persistence alignment
+
+Aligned Task C with the existing Diagnosis Report route, service, and
+persistence path without changing the homepage or expanding into Bullet
+Rewrite, streaming, Outreach, Interview Review, or Weekly Report.
+
+Included:
+
+- Kept `POST /api/applications/[id]/diagnose` as the Diagnosis Report
+  endpoint with the existing `{ force?: boolean }` request shape
+- Preserved cached `Application.diagnosisJson` reads so page load does not call
+  OpenAI, and forced regenerate overwrites the persisted diagnosis
+- Allowed Diagnosis generation when either raw `Application.jdText` is present
+  or stored `Application.jdExtractJson` validates against `jdExtractSchema`
+- Kept application, resume, resume bullet, and diagnosis persistence paths
+  scoped by Clerk `userId`
+- Added a distinct `schema_validation_failed` error code for model output that
+  does not match the diagnosis schema
+- Expanded diagnosis service, route, and OpenAI service tests for JD fallback
+  and schema validation error mapping
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test` passed: 25 test files, 155 tests
+- `pnpm build` passed
+- `pnpm check` passed
+
 ## 2026-05-07 — Diagnosis OpenAI service alignment
 
 Aligned the existing Diagnosis Report OpenAI service with the Task B
