@@ -15,9 +15,14 @@ import {
   AppCardHeader,
 } from "@/components/app/AppCard";
 import { PageHeader } from "@/components/app/PageHeader";
+import { ApplicationDiagnosisPanel } from "@/components/applications/ApplicationDiagnosisPanel";
 import { ApplicationResumeSelect } from "@/components/applications/ApplicationResumeSelect";
 import { ApplicationStageSelect } from "@/components/applications/ApplicationStageSelect";
 import { Button } from "@/components/ui/button";
+import {
+  diagnosisSchema,
+  type Diagnosis,
+} from "@/src/lib/ai/schemas/diagnosis";
 import { jdExtractSchema, type JdExtract } from "@/src/lib/ai/schemas/jd-extract";
 import {
   getApplicationStageLabel,
@@ -72,6 +77,32 @@ function parseExtract(value: unknown):
   };
 }
 
+function parseDiagnosis(value: unknown):
+  | { status: "missing"; data: null }
+  | { status: "invalid"; data: null }
+  | { status: "valid"; data: Diagnosis } {
+  if (!value) {
+    return {
+      data: null,
+      status: "missing",
+    };
+  }
+
+  const parsed = diagnosisSchema.safeParse(value);
+
+  if (!parsed.success) {
+    return {
+      data: null,
+      status: "invalid",
+    };
+  }
+
+  return {
+    data: parsed.data,
+    status: "valid",
+  };
+}
+
 function fill(template: string, values: Record<string, string>) {
   return Object.entries(values).reduce(
     (result, [key, value]) => result.replace(`{${key}}`, value),
@@ -99,6 +130,7 @@ export default async function ApplicationDetailPage({
   }
 
   const extract = parseExtract(application.jdExtractJson);
+  const diagnosis = parseDiagnosis(application.diagnosisJson);
   const stageOptions = getApplicationStageOptions(dictionary.applicationStages);
 
   return (
@@ -154,6 +186,15 @@ export default async function ApplicationDetailPage({
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="space-y-5">
+          <ApplicationDiagnosisPanel
+            applicationId={application.id}
+            dictionary={dictionary}
+            initialDiagnosis={
+              diagnosis.status === "valid" ? diagnosis.data : null
+            }
+            initialState={diagnosis.status}
+          />
+
           <AppCard padding="lg">
             <div className="flex items-start gap-4 border-b border-border pb-6">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-primary/5 text-primary">

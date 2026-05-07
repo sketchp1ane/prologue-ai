@@ -31,6 +31,8 @@
 - Authenticated dashboard, applications, resumes, JD Extract, billing, and placeholder workspace pages resolve visible UI copy from the i18n dictionary.
 - User-visible application and resume form/action errors follow the current locale.
 - Workspace dictionaries are serializable data only so they can be safely passed to client components.
+- User can generate, cache, view, and regenerate a Diagnosis Report for a current-user application with an attached parsed resume and generated resume bullets.
+- Diagnosis Report persists `Application.diagnosisJson` and records success/failure `AiGeneration` audit rows without storing raw resume or JD input.
 
 ## Future global acceptance
 
@@ -52,12 +54,6 @@
 
 - User can filter, sort, or group applications beyond the current stage board.
 - Dashboard can persist within-column ordering if drag order becomes product-critical.
-
-## Remaining diagnosis flow
-
-- User can generate a diagnosis for one application.
-- Report includes verdict, score, strengths, gaps, and actions.
-- Report is persisted and can be regenerated.
 
 ## Remaining bullet rewrite flow
 

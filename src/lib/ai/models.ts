@@ -19,3 +19,13 @@ export function getParseModel() {
 
   return model;
 }
+
+export function getReasoningModel() {
+  const model = process.env.OPENAI_MODEL_REASONING;
+
+  if (!model) {
+    throw new Error("OPENAI_MODEL_REASONING is not configured.");
+  }
+
+  return model;
+}

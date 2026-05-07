@@ -6,7 +6,9 @@ import {
   applicationListItemSelect,
   createApplicationForUser,
   getApplicationByIdForUser,
+  getApplicationDiagnosisInputForUser,
   listApplicationsByUser,
+  saveApplicationDiagnosisForUser,
   updateApplicationResumeForUser,
   updateApplicationStageForUser,
 } from "../src/lib/db/applications";
@@ -86,6 +88,39 @@ describe("application repository", () => {
           },
         },
       },
+      where: {
+        id: "application_1",
+        userId: "user_1",
+      },
+    });
+  });
+
+  it("loads diagnosis input only by id and userId", async () => {
+    const { application, db } = createApplicationDb();
+
+    await getApplicationDiagnosisInputForUser(
+      "user_1",
+      "application_1",
+      db
+    );
+
+    expect(application.findFirst).toHaveBeenCalledWith({
+      select: expect.objectContaining({
+        diagnosisJson: true,
+        jdExtractJson: true,
+        jdText: true,
+        resume: expect.objectContaining({
+          select: expect.objectContaining({
+            bullets: expect.objectContaining({
+              where: {
+                userId: "user_1",
+              },
+            }),
+            parsedJson: true,
+          }),
+        }),
+        resumeId: true,
+      }),
       where: {
         id: "application_1",
         userId: "user_1",
@@ -267,6 +302,33 @@ describe("application repository", () => {
     expect(application.updateMany).toHaveBeenCalledWith({
       data: {
         resumeId: "resume_1",
+      },
+      where: {
+        id: "application_1",
+        userId: "user_1",
+      },
+    });
+  });
+
+  it("saves diagnosis JSON only when id and userId both match", async () => {
+    const { application, db } = createApplicationDb();
+    const diagnosisJson = {
+      overallScore: 80,
+      summary: "Possible match.",
+    };
+
+    await saveApplicationDiagnosisForUser(
+      {
+        diagnosisJson,
+        id: "application_1",
+        userId: "user_1",
+      },
+      db
+    );
+
+    expect(application.updateMany).toHaveBeenCalledWith({
+      data: {
+        diagnosisJson,
       },
       where: {
         id: "application_1",

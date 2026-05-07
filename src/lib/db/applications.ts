@@ -5,6 +5,7 @@ import { ApplicationStage, Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "./prisma";
 
 type ApplicationDb = Pick<PrismaClient, "application" | "resume">;
+type ApplicationDiagnosisDb = Pick<PrismaClient, "application">;
 
 const attachedResumeSelect = {
   id: true,
@@ -59,6 +60,58 @@ export async function getApplicationByIdForUser(
     },
   });
 }
+
+export async function getApplicationDiagnosisInputForUser(
+  userId: string,
+  applicationId: string,
+  db: ApplicationDiagnosisDb = prisma
+) {
+  return db.application.findFirst({
+    select: {
+      companyName: true,
+      diagnosisJson: true,
+      id: true,
+      jdExtractJson: true,
+      jdText: true,
+      location: true,
+      resume: {
+        select: {
+          bullets: {
+            orderBy: {
+              orderIndex: "asc",
+            },
+            select: {
+              currentText: true,
+              id: true,
+              orderIndex: true,
+              originalText: true,
+              sectionTitle: true,
+              sectionType: true,
+            },
+            where: {
+              userId,
+            },
+          },
+          id: true,
+          parsedJson: true,
+          status: true,
+          title: true,
+        },
+      },
+      resumeId: true,
+      roleTitle: true,
+      userId: true,
+    },
+    where: {
+      id: applicationId,
+      userId,
+    },
+  });
+}
+
+export type ApplicationDiagnosisInput = NonNullable<
+  Awaited<ReturnType<typeof getApplicationDiagnosisInputForUser>>
+>;
 
 export async function createApplicationForUser(
   params: {
@@ -167,4 +220,23 @@ export async function updateApplicationResumeForUser(
   }
 
   return getApplicationByIdForUser(params.userId, params.id, db);
+}
+
+export async function saveApplicationDiagnosisForUser(
+  params: {
+    diagnosisJson: Prisma.InputJsonValue;
+    id: string;
+    userId: string;
+  },
+  db: ApplicationDiagnosisDb = prisma
+) {
+  return db.application.updateMany({
+    data: {
+      diagnosisJson: params.diagnosisJson,
+    },
+    where: {
+      id: params.id,
+      userId: params.userId,
+    },
+  });
 }

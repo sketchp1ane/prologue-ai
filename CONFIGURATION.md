@@ -86,12 +86,13 @@ For providers with pooled and direct URLs, use a migration-safe connection strin
 
 ### OpenAI
 
-Required for JD Extract and Resume Parse. Manual Application creation and resume creation can still work without OpenAI, but parsing will show a configuration error.
+Required for JD Extract, Resume Parse, and Diagnosis Report. Manual Application creation and resume creation can still work without OpenAI, but AI actions will show a configuration error.
 
 ```env
 OPENAI_API_KEY=sk-proj_...
 OPENAI_MODEL_EXTRACT=gpt-5.4-nano
 OPENAI_MODEL_PARSE=gpt-5.4-mini
+OPENAI_MODEL_REASONING=gpt-5.4
 ```
 
 How to configure:
@@ -99,14 +100,14 @@ How to configure:
 1. Create or open an OpenAI platform project.
 2. Create an API key.
 3. Put it in `OPENAI_API_KEY`.
-4. Set `OPENAI_MODEL_EXTRACT` and `OPENAI_MODEL_PARSE` to models available to your account that support the Responses API and Structured Outputs. PDF Resume Parse also needs file input support.
+4. Set `OPENAI_MODEL_EXTRACT`, `OPENAI_MODEL_PARSE`, and `OPENAI_MODEL_REASONING` to models available to your account that support the Responses API and Structured Outputs. PDF Resume Parse also needs file input support.
 
 Reference:
 
 - [OpenAI API keys](https://platform.openai.com/settings/organization/api-keys)
 - [OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
 
-The app does not hardcode model IDs in business logic. JD Extract reads the model from `OPENAI_MODEL_EXTRACT`; Resume Parse reads from `OPENAI_MODEL_PARSE`.
+The app does not hardcode model IDs in business logic. JD Extract reads the model from `OPENAI_MODEL_EXTRACT`; Resume Parse reads from `OPENAI_MODEL_PARSE`; Diagnosis Report reads from `OPENAI_MODEL_REASONING`.
 
 ### Vercel Blob
 
@@ -126,10 +127,9 @@ These variables exist in `.env.example`, but the current resume/application slic
 
 ```env
 OPENAI_MODEL_GENERATE=gpt-5.4-mini
-OPENAI_MODEL_REASONING=gpt-5.4
 ```
 
-Reserved for later features such as generation, diagnosis, rewrite, outreach, interview review, and weekly report.
+Reserved for later generation features such as rewrite, outreach, interview review, and weekly report.
 
 ### Rate Limit / Cache
 

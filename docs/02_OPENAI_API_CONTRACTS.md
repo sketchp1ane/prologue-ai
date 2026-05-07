@@ -6,6 +6,8 @@ JD Extract is implemented through `src/lib/ai/services/extract-jd.ts` and expose
 
 Resume Parse is implemented for existing pasted-text and private PDF resume records through `src/lib/ai/services/parse-resume.ts` and exposed by `POST /api/resumes/[id]/parse`. PDF parsing uses OpenAI Responses file inputs from the stored private PDF.
 
+Diagnosis Report is implemented for applications with an attached parsed resume through `src/lib/ai/services/generate-diagnosis.ts` and exposed by `POST /api/applications/[id]/diagnose`.
+
 ## Model routing
 
 Use environment variables, not hardcoded model IDs:
@@ -103,7 +105,7 @@ Output includes:
 
 ### Diagnosis
 
-Status: planned.
+Status: implemented.
 
 Output includes:
 

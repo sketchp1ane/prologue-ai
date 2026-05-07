@@ -1,0 +1,14 @@
+{
+  "overallScore": 120,
+  "hrThreeSecondVerdict": "maybe",
+  "summary": "Invalid diagnosis fixture.",
+  "strengths": [],
+  "gaps": [
+    {
+      "label": "Missing severity",
+      "evidence": "This gap is missing a valid severity."
+    }
+  ],
+  "recommendedActions": [],
+  "bulletSuggestions": []
+}
