@@ -9,7 +9,7 @@ Use names like:
 ```txt
 resume_parse_v1
 jd_extract_v1
-diagnosis_v1
+diagnosis_v2
 bullet_rewrite_v1
 outreach_v1
 interview_review_v1

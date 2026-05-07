@@ -84,6 +84,22 @@ function getUsageTokens(usage: unknown) {
   };
 }
 
+function assertRewriteTargetsUseExistingBullets(
+  diagnosis: Diagnosis,
+  bullets: DiagnosisResumeBullet[]
+) {
+  const bulletIds = new Set(bullets.map((bullet) => bullet.id));
+  const unknownTarget = diagnosis.rewriteTargets.find(
+    (target) => !bulletIds.has(target.resumeBulletId)
+  );
+
+  if (unknownTarget) {
+    throw new DiagnosisServiceError(
+      "Diagnosis referenced an unknown resume bullet."
+    );
+  }
+}
+
 async function recordGeneration(params: {
   applicationId: string;
   errorMessage?: string;
@@ -195,6 +211,7 @@ export async function generateDiagnosis(params: {
     }
 
     const diagnosis = diagnosisSchema.parse(response.output_parsed);
+    assertRewriteTargetsUseExistingBullets(diagnosis, params.bullets);
     const usage = response.usage as Prisma.InputJsonValue | undefined;
     const { inputTokens, outputTokens } = getUsageTokens(response.usage);
 
