@@ -1,5 +1,36 @@
 # DEVLOG
 
+## 2026-05-07 — Diagnosis Report UI completion
+
+Completed the Task D application-detail Diagnosis Report UI without changing
+the homepage, OpenAI service, API route, Bullet Rewrite, streaming, or Outreach.
+
+Included:
+
+- `/applications/[id]` now computes whether the attached resume is missing,
+  unparsed, or ready for diagnosis before rendering the report panel
+- The Diagnosis Report panel disables generation until prerequisites are met
+  and guides users to create, attach, or parse a resume
+- Cached `Application.diagnosisJson` still renders on page load without
+  calling OpenAI automatically
+- Generate and Regenerate continue to use `POST /api/applications/[id]/diagnose`
+  with `force` set from whether a valid cached report exists
+- The report now renders overall score, HR verdict, verdict level, summary,
+  radar scores as simple bars, strengths, gaps with recommendations,
+  recommended actions, display-only rewrite targets, and warnings
+- English and Simplified Chinese diagnosis copy now covers prerequisites,
+  retry, score labels, rewrite targets, warnings, priorities, and empty states
+- Regression coverage now locks the prerequisite wiring, full report rendering
+  fields, no chart dependency imports, and no future AI feature scope
+
+Validation:
+
+- `pnpm lint` passed
+- `pnpm typecheck` passed
+- `pnpm test` passed: 25 test files, 156 tests
+- `pnpm build` passed
+- `pnpm check` passed
+
 ## 2026-05-07 — Diagnosis API persistence alignment
 
 Aligned Task C with the existing Diagnosis Report route, service, and
