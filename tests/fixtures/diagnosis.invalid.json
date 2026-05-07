@@ -1,7 +1,15 @@
 {
   "overallScore": 120,
   "hrThreeSecondVerdict": "maybe",
+  "verdictLevel": "blue",
   "summary": "Invalid diagnosis fixture.",
+  "radarScores": {
+    "skills": 101,
+    "experience": 50,
+    "projects": 50,
+    "keywords": 50,
+    "seniority": 50
+  },
   "strengths": [],
   "gaps": [
     {
@@ -10,5 +18,13 @@
     }
   ],
   "recommendedActions": [],
-  "bulletSuggestions": []
+  "rewriteTargets": [
+    {
+      "resumeBulletId": "fake_bullet",
+      "originalText": "Invalid target.",
+      "reason": "Invalid priority.",
+      "priority": "urgent"
+    }
+  ],
+  "warnings": []
 }

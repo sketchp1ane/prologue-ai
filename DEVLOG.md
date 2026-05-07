@@ -1,5 +1,26 @@
 # DEVLOG
 
+## 2026-05-07 — Diagnosis schema contract v2
+
+Updated the Diagnosis Report structured output contract without adding OpenAI
+calls, UI feature scope, Bullet Rewrite, streaming, or homepage changes.
+
+Included:
+
+- Replaced the diagnosis schema with the v2 score, verdict, radar, gap,
+  action, rewrite target, and warning contract
+- Tightened diagnosis prompt safety rules around untrusted resume/JD input,
+  evidence grounding, and existing ResumeBullet ids
+- Added service validation that rejects rewrite targets pointing at unknown
+  ResumeBullet ids
+- Updated diagnosis fixtures and schema tests for the new contract
+- Preserved the existing Diagnosis Report UI files unchanged
+- Updated the OpenAI API contract documentation
+
+Validation:
+
+- Full command results are recorded in the task final response
+
 ## 2026-05-07 — Diagnosis Report v1
 
 Implemented Diagnosis Report v1 as a focused application detail slice.

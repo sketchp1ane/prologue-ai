@@ -113,11 +113,30 @@ Output includes:
 {
   overallScore: number;
   hrThreeSecondVerdict: "strong_match" | "possible_match" | "weak_match";
+  verdictLevel: "green" | "yellow" | "red";
   summary: string;
+  radarScores: {
+    skills: number;
+    experience: number;
+    projects: number;
+    keywords: number;
+    seniority: number;
+  };
   strengths: string[];
-  gaps: Array<{ label: string; severity: "low" | "medium" | "high"; evidence: string }>;
+  gaps: Array<{
+    label: string;
+    severity: "low" | "medium" | "high";
+    evidence: string;
+    recommendation: string;
+  }>;
   recommendedActions: string[];
-  bulletSuggestions: Array<{ original: string; suggestion: string; reason: string }>;
+  rewriteTargets: Array<{
+    resumeBulletId: string;
+    originalText: string;
+    reason: string;
+    priority: "low" | "medium" | "high";
+  }>;
+  warnings: string[];
 }
 ```
 

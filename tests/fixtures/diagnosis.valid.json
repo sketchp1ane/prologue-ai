@@ -1,7 +1,15 @@
 {
   "overallScore": 78,
   "hrThreeSecondVerdict": "possible_match",
+  "verdictLevel": "yellow",
   "summary": "The resume shows relevant frontend experience, but the JD asks for stronger accessibility and performance evidence.",
+  "radarScores": {
+    "skills": 82,
+    "experience": 76,
+    "projects": 64,
+    "keywords": 72,
+    "seniority": 80
+  },
   "strengths": [
     "React and TypeScript experience is visible in recent product work.",
     "The candidate has shipped customer-facing workflow improvements."
@@ -10,18 +18,24 @@
     {
       "label": "Accessibility evidence",
       "severity": "medium",
-      "evidence": "The JD mentions accessibility, but the resume bullets do not explicitly show WCAG or inclusive design work."
+      "evidence": "The JD mentions accessibility, but the resume bullets do not explicitly show WCAG or inclusive design work.",
+      "recommendation": "Add a truthful accessibility detail to an existing frontend bullet if the work happened."
     }
   ],
   "recommendedActions": [
     "Add one truthful bullet that names accessibility or performance work if it exists.",
     "Bring the strongest React workflow bullet higher in the resume."
   ],
-  "bulletSuggestions": [
+  "rewriteTargets": [
     {
-      "original": "Built React and TypeScript interfaces for customer onboarding workflows.",
-      "suggestion": "Emphasize the onboarding workflow impact and any truthful accessibility or performance detail.",
-      "reason": "This is the closest bullet to the JD's frontend product requirements."
+      "resumeBulletId": "bullet_1",
+      "originalText": "Built React and TypeScript interfaces for customer onboarding workflows.",
+      "reason": "This is the closest existing resume bullet to the JD's frontend product requirements.",
+      "priority": "high"
     }
-  ]
+  ],
+  "warnings": [
+    "Do not add accessibility claims unless they are true for the candidate's work."
+  ],
+  "bulletSuggestions": []
 }
