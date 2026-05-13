@@ -1,11 +1,8 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  BarChart3,
   Briefcase,
-  FileSearch,
   FileText,
   LayoutDashboard,
-  MessageSquare,
   Settings,
   Users,
 } from "lucide-react";
@@ -38,12 +35,6 @@ export const appNavigationItems: AppNavigationItem[] = [
     icon: LayoutDashboard,
   },
   {
-    labelKey: "jdExtract",
-    href: "/jd-extract",
-    icon: FileSearch,
-    badgeKey: "new",
-  },
-  {
     labelKey: "resumes",
     href: "/resumes",
     icon: FileText,
@@ -57,16 +48,6 @@ export const appNavigationItems: AppNavigationItem[] = [
     labelKey: "applications",
     href: "/applications",
     icon: Briefcase,
-  },
-  {
-    labelKey: "interviews",
-    href: "/interviews",
-    icon: MessageSquare,
-  },
-  {
-    labelKey: "analytics",
-    href: "/analytics",
-    icon: BarChart3,
   },
 ];
 

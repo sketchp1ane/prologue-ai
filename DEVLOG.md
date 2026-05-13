@@ -1,5 +1,22 @@
 # DEVLOG
 
+## 2026-05-13 — Hide unfinished workspace nav modules
+
+Removed unfinished module entrypoints from the authenticated workspace navigation.
+
+Included:
+
+- Removed JD Extract, Interviews, and Analytics from the visible app navigation items
+- Updated the app shell navigation regression test to match the reduced nav set
+- Kept the existing routes, protected route configuration, APIs, and application creation JD extraction flow intact
+
+Not included:
+
+- Deleting `/jd-extract`, `/interviews`, or `/analytics` route files
+- Removing JD extraction from application creation
+- Changing Clerk route protection
+- Product feature changes
+
 ## 2026-05-07 — Diagnosis Report v1 QA closeout
 
 Closed Diagnosis Report v1 with authenticated browser QA, database
