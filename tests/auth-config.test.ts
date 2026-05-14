@@ -72,8 +72,8 @@ describe("Clerk auth configuration", () => {
     expect(isDevClerkTicketRouteEnabled("production")).toBe(false);
     expect(ticketPage).toContain("notFound()");
     expect(ticketPage).toContain("isDevClerkTicketRouteEnabled()");
-    expect(ticketClient).toContain('strategy: "ticket"');
-    expect(ticketClient).toContain("setActive({");
+    expect(ticketClient).toContain("signIn.ticket({");
+    expect(ticketClient).toContain("signIn.finalize()");
     expect(packageJson).toContain('"dev:clerk-login"');
     expect(script).toContain("https://api.clerk.com/v1/sign_in_tokens");
     expect(script).not.toContain("CLERK_SECRET_KEY=");

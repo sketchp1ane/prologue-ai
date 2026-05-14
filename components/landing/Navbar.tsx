@@ -1,7 +1,7 @@
 import Link from "next/link";
 
+import { LandingAuthControls } from "@/components/landing/LandingAuthControls";
 import { HomepageLanguageSelect } from "@/components/landing/HomepageLanguageSelect";
-import { Button } from "@/components/ui/button";
 import type { AppLocale } from "@/src/lib/i18n/config";
 import type { AppDictionary } from "@/src/lib/i18n/dictionaries";
 
@@ -55,15 +55,10 @@ export function Navbar({
             ariaLabel={dictionary.aria.language}
             locale={locale}
           />
-          <Link
-            href="/sign-in"
-            className="hidden h-8 items-center rounded-full border border-border bg-background px-3 text-sm font-medium text-foreground transition hover:bg-secondary sm:inline-flex"
-          >
-            {dictionary.cta.signIn}
-          </Link>
-          <Button asChild size="sm" className="rounded-full px-4">
-            <Link href="/sign-up">{dictionary.cta.startFree}</Link>
-          </Button>
+          <LandingAuthControls
+            signInLabel={dictionary.cta.signIn}
+            signUpLabel={dictionary.cta.startFree}
+          />
         </div>
       </nav>
     </header>
