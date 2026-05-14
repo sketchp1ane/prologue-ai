@@ -53,6 +53,23 @@ describe("Clerk auth configuration", () => {
     expect(signUpPage).toContain("ClerkConfigurationNotice");
   });
 
+  it("pins Clerk auth completion to the workspace dashboard", () => {
+    const signInPage = readProjectFile("app/sign-in/[[...sign-in]]/page.tsx");
+    const signUpPage = readProjectFile("app/sign-up/[[...sign-up]]/page.tsx");
+    const landingAuthControls = readProjectFile(
+      "components/landing/LandingAuthControls.tsx"
+    );
+
+    expect(signInPage).toContain('authFallbackRedirectUrl = "/dashboard"');
+    expect(signInPage).toContain("fallbackRedirectUrl={authFallbackRedirectUrl}");
+    expect(signUpPage).toContain('authFallbackRedirectUrl = "/dashboard"');
+    expect(signUpPage).toContain("fallbackRedirectUrl={authFallbackRedirectUrl}");
+    expect(landingAuthControls).toContain('authFallbackRedirectUrl = "/dashboard"');
+    expect(landingAuthControls).toContain(
+      "fallbackRedirectUrl={authFallbackRedirectUrl}"
+    );
+  });
+
   it("localizes Clerk components from the root provider", () => {
     const rootLayout = readProjectFile("app/layout.tsx");
 

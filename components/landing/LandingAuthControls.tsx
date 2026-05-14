@@ -1,9 +1,17 @@
 "use client";
 
-import { Show, SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
+import {
+  Show,
+  SignInButton,
+  SignUpButton,
+  UserButton,
+  useUser,
+} from "@clerk/nextjs";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+
+const authFallbackRedirectUrl = "/dashboard";
 
 export function LandingAuthControls({
   signInLabel,
@@ -33,7 +41,10 @@ export function LandingAuthControls({
   return (
     <>
       <Show when="signed-out">
-        <SignInButton mode="redirect">
+        <SignInButton
+          mode="redirect"
+          fallbackRedirectUrl={authFallbackRedirectUrl}
+        >
           <button
             type="button"
             className="hidden h-8 items-center rounded-full border border-border bg-background px-3 text-sm font-medium text-foreground transition hover:bg-secondary sm:inline-flex"
@@ -41,7 +52,10 @@ export function LandingAuthControls({
             {signInLabel}
           </button>
         </SignInButton>
-        <SignUpButton mode="redirect">
+        <SignUpButton
+          mode="redirect"
+          fallbackRedirectUrl={authFallbackRedirectUrl}
+        >
           <Button type="button" size="sm" className="rounded-full px-4">
             {signUpLabel}
           </Button>
