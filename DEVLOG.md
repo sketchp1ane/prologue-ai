@@ -1,5 +1,55 @@
 # DEVLOG
 
+## 2026-05-14 — Clerk App Router compliance refresh
+
+Aligned the existing Clerk integration with the latest App Router quickstart
+surface while preserving the current Prologue auth pages and workspace shell.
+
+Included:
+
+- Upgraded `@clerk/nextjs` and `@clerk/localizations` with the existing pnpm
+  package manager
+- Updated the landing navbar to use Clerk `Show`, `SignInButton`,
+  `SignUpButton`, and `UserButton` components through a small client auth
+  control
+- Kept `clerkMiddleware()` in `proxy.ts`, `ClerkProvider` inside the root
+  `<body>`, custom `/sign-in` and `/sign-up` pages, and the localized workspace
+  shell unchanged
+- Documented that production deployment on `https://www.diyi.page` needs Clerk
+  live keys and both `www` and apex domains configured in Clerk
+
+Not included:
+
+- Adding a global quickstart header to `app/layout.tsx`
+- Touching Clerk live secrets
+- Replacing the authenticated workspace topbar user menu
+- Adding backend APIs, Prisma schema changes, or migrations
+
+## 2026-05-13 — Portfolio demo deployment prep
+
+Prepared the repository for a controlled Vercel portfolio demo deployment.
+
+Included:
+
+- Added `pnpm db:deploy` for non-development Prisma migration application with
+  `prisma migrate deploy`
+- Updated `CONFIGURATION.md` with the `prologue-ai` Vercel deployment target,
+  required production and preview environment variables, manual migration
+  instructions, custom-domain notes, and a portfolio demo runbook
+- Expanded the release checklist for Vercel Postgres, Vercel Blob, Clerk
+  production domains, OpenAI budget controls, preview smoke testing, production
+  smoke testing, and post-demo access review
+- Updated current-state docs to record that deployment preparation is aimed at a
+  controlled portfolio demo, not a broad public SaaS launch
+
+Not included:
+
+- Running production migrations
+- Creating or modifying Vercel, Clerk, OpenAI, DNS, database, or Blob resources
+- Adding rate limits, cost dashboard UI, or public SaaS launch hardening
+- Changing business APIs, Prisma schema, OpenAI services, or Vercel build
+  migration behavior
+
 ## 2026-05-13 — Hide unfinished workspace nav modules
 
 Removed unfinished module entrypoints from the authenticated workspace navigation.

@@ -35,14 +35,18 @@ export function ClerkTicketClient({
   token,
 }: ClerkTicketClientProps) {
   const router = useRouter();
-  const signInState = useSignIn();
+  const { fetchStatus, signIn } = useSignIn();
   const { isLoaded: isUserLoaded, isSignedIn } = useUser();
   const consumedTokenRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const displayError = error ?? (token ? null : "Missing Clerk sign-in token.");
 
   useEffect(() => {
-    if (!signInState.isLoaded || !isUserLoaded || consumedTokenRef.current) {
+    if (
+      fetchStatus === "fetching" ||
+      !isUserLoaded ||
+      consumedTokenRef.current
+    ) {
       return;
     }
 
@@ -57,27 +61,28 @@ export function ClerkTicketClient({
       return;
     }
 
-    const { setActive, signIn } = signInState;
     consumedTokenRef.current = true;
 
     async function consumeTicket() {
       try {
-        const signInAttempt = await signIn.create({
-          strategy: "ticket",
+        const ticketResult = await signIn.ticket({
           ticket,
         });
 
-        if (
-          signInAttempt.status !== "complete" ||
-          !signInAttempt.createdSessionId
-        ) {
+        if (ticketResult.error) {
+          throw ticketResult.error;
+        }
+
+        if (signIn.status !== "complete" || !signIn.createdSessionId) {
           setError("Clerk sign-in is not complete for this token.");
           return;
         }
 
-        await setActive({
-          session: signInAttempt.createdSessionId,
-        });
+        const finalizeResult = await signIn.finalize();
+
+        if (finalizeResult.error) {
+          throw finalizeResult.error;
+        }
 
         router.replace(nextPath);
       } catch (error) {
@@ -95,9 +100,10 @@ export function ClerkTicketClient({
   }, [
     isSignedIn,
     isUserLoaded,
+    fetchStatus,
     nextPath,
     router,
-    signInState,
+    signIn,
     token,
   ]);
 

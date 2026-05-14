@@ -83,6 +83,7 @@ const clerkAppearance = {
 } as const;
 
 const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const authFallbackRedirectUrl = "/dashboard";
 
 export default async function SignInPage() {
   const locale = await getCurrentLocale();
@@ -173,7 +174,10 @@ export default async function SignInPage() {
               </div>
 
               {clerkPublishableKey ? (
-                <SignIn appearance={clerkAppearance} />
+                <SignIn
+                  appearance={clerkAppearance}
+                  fallbackRedirectUrl={authFallbackRedirectUrl}
+                />
               ) : (
                 <ClerkConfigurationNotice
                   dictionary={auth.clerkNotice}

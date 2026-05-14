@@ -53,6 +53,23 @@ describe("Clerk auth configuration", () => {
     expect(signUpPage).toContain("ClerkConfigurationNotice");
   });
 
+  it("pins Clerk auth completion to the workspace dashboard", () => {
+    const signInPage = readProjectFile("app/sign-in/[[...sign-in]]/page.tsx");
+    const signUpPage = readProjectFile("app/sign-up/[[...sign-up]]/page.tsx");
+    const landingAuthControls = readProjectFile(
+      "components/landing/LandingAuthControls.tsx"
+    );
+
+    expect(signInPage).toContain('authFallbackRedirectUrl = "/dashboard"');
+    expect(signInPage).toContain("fallbackRedirectUrl={authFallbackRedirectUrl}");
+    expect(signUpPage).toContain('authFallbackRedirectUrl = "/dashboard"');
+    expect(signUpPage).toContain("fallbackRedirectUrl={authFallbackRedirectUrl}");
+    expect(landingAuthControls).toContain('authFallbackRedirectUrl = "/dashboard"');
+    expect(landingAuthControls).toContain(
+      "fallbackRedirectUrl={authFallbackRedirectUrl}"
+    );
+  });
+
   it("localizes Clerk components from the root provider", () => {
     const rootLayout = readProjectFile("app/layout.tsx");
 
@@ -72,8 +89,8 @@ describe("Clerk auth configuration", () => {
     expect(isDevClerkTicketRouteEnabled("production")).toBe(false);
     expect(ticketPage).toContain("notFound()");
     expect(ticketPage).toContain("isDevClerkTicketRouteEnabled()");
-    expect(ticketClient).toContain('strategy: "ticket"');
-    expect(ticketClient).toContain("setActive({");
+    expect(ticketClient).toContain("signIn.ticket({");
+    expect(ticketClient).toContain("signIn.finalize()");
     expect(packageJson).toContain('"dev:clerk-login"');
     expect(script).toContain("https://api.clerk.com/v1/sign_in_tokens");
     expect(script).not.toContain("CLERK_SECRET_KEY=");
